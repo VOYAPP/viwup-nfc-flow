@@ -1,24 +1,27 @@
 (function () {
   'use strict';
 
-  const state = { garzon: null, rating: 0 };
+  var state = { garzon: null, rating: 0 };
 
-  const screens = {
+  var screens = {
     inicio: document.getElementById('screen-inicio'),
     sos: document.getElementById('screen-sos'),
     seo: document.getElementById('screen-seo'),
     exito: document.getElementById('screen-exito'),
   };
 
-  const chipsContainer = document.getElementById('chips-container');
-  const stars = document.querySelectorAll('.star');
-  const inputComentario = document.getElementById('input-comentario');
-  const ctaSos = document.getElementById('cta-sos');
-  const ctaSeo = document.getElementById('cta-seo');
-  const errorSos = document.getElementById('error-sos');
-  const errorSeo = document.getElementById('error-seo');
-  const logoPlaceholder = document.getElementById('logo-placeholder');
+  var chipsContainer = document.getElementById('chips-container');
+  var stars = document.querySelectorAll('.star');
+  var inputComentario = document.getElementById('input-comentario');
+  var ctaSos = document.getElementById('cta-sos');
+  var ctaSeo = document.getElementById('cta-seo');
+  var errorSos = document.getElementById('error-sos');
+  var errorSeo = document.getElementById('error-seo');
+  var logoPlaceholder = document.getElementById('logo-placeholder');
 
+  // =============================================
+  // INIT
+  // =============================================
   function init() {
     document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
     if (CONFIG.logoUrl) {
@@ -41,6 +44,9 @@
     screens[name].classList.add('active');
   }
 
+  // =============================================
+  // EVENTS
+  // =============================================
   function bindEvents() {
     chipsContainer.addEventListener('click', function(e) {
       var chip = e.target.closest('.chip');
@@ -70,6 +76,100 @@
     ctaSeo.addEventListener('click', function() { submitSeo(); });
   }
 
+  // =============================================
+  // ENVIAR A MAKE WEBHOOK
+  // =============================================
+  function sendToWebhook(payload) {
+    if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes('TU_WEBHOOK_AQUI')) {
+      console.log('[TESTEO] Payload que se enviaría a Make:', JSON.stringify(payload, null, 2));
+      return Promise.resolve({ ok: true });
+    }
+
+    return fetch(CONFIG.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /**
+   * Construye el payload estándar para Make → Google Sheets
+   * 
+   * Columnas esperadas en la Base Maestra:
+   * | fecha | idLocal | local | garzon | rating | tipo | comentario | estado |
+   */
+  function buildPayload(tipo, extra) {
+    var base = {
+      fecha: new Date().toISOString(),
+      idLocal: CONFIG.idLocal,
+      local: CONFIG.localName,
+      garzon: state.garzon || 'No seleccionado',
+      rating: state.rating,
+      tipo: tipo,          // "SOS" o "SEO"
+      comentario: '',      // Solo SOS llena esto
+      estado: 'enviado',
+    };
+
+    // Merge extra fields
+    if (extra) {
+      Object.keys(extra).forEach(function(key) { base[key] = extra[key]; });
+    }
+
+    return base;
+  }
+
+  // =============================================
+  // FLUJO SOS (1-3 estrellas) → Comentario privado
+  // =============================================
+  function submitSos() {
+    var comentario = inputComentario.value.trim();
+    if (!comentario) return;
+
+    setLoading(ctaSos, true);
+    errorSos.classList.add('hidden');
+
+    var payload = buildPayload('SOS', {
+      comentario: comentario,
+      estado: 'comentario_privado_enviado',
+    });
+
+    sendToWebhook(payload).then(function(r) {
+      if (r && !r.ok && r.status) throw new Error('HTTP ' + r.status);
+      setConfirmed(ctaSos, '✓ Enviado');
+      setTimeout(function() { navigateTo('exito'); }, 1000);
+    }).catch(function() {
+      setLoading(ctaSos, false);
+      errorSos.classList.remove('hidden');
+    });
+  }
+
+  // =============================================
+  // FLUJO SEO (4-5 estrellas) → Redirige a Google Maps
+  // =============================================
+  function submitSeo() {
+    setLoading(ctaSeo, true);
+    errorSeo.classList.add('hidden');
+
+    var payload = buildPayload('SEO', {
+      estado: 'redirigido_google_maps',
+    });
+
+    sendToWebhook(payload).then(function(r) {
+      if (r && !r.ok && r.status) throw new Error('HTTP ' + r.status);
+      setConfirmed(ctaSeo, '✓ Publicado');
+      setTimeout(function() {
+        window.open(CONFIG.googleMapsUrl, '_blank');
+        navigateTo('exito');
+      }, 800);
+    }).catch(function() {
+      setLoading(ctaSeo, false);
+      errorSeo.classList.remove('hidden');
+    });
+  }
+
+  // =============================================
+  // BUTTON STATES
+  // =============================================
   function setLoading(btn, on) {
     var label = btn.querySelector('.btn-primary__label');
     var loading = btn.querySelector('.btn-primary__loading');
@@ -89,53 +189,6 @@
     label.textContent = text;
     label.classList.remove('hidden');
     loading.classList.add('hidden');
-  }
-
-  function submitSos() {
-    var comentario = inputComentario.value.trim();
-    if (!comentario) return;
-    setLoading(ctaSos, true);
-    errorSos.classList.add('hidden');
-
-    var payload = {
-      type: 'comentario_privado',
-      garzon: state.garzon,
-      rating: state.rating,
-      comentario: comentario,
-      timestamp: new Date().toISOString()
-    };
-
-    if (CONFIG.webhookUrl) {
-      fetch(CONFIG.webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(function(r) {
-        if (!r.ok) throw new Error('fail');
-        setConfirmed(ctaSos, '✓ Enviado');
-        setTimeout(function() { navigateTo('exito'); }, 1000);
-      }).catch(function() {
-        setLoading(ctaSos, false);
-        errorSos.classList.remove('hidden');
-      });
-    } else {
-      setTimeout(function() {
-        setConfirmed(ctaSos, '✓ Enviado');
-        setTimeout(function() { navigateTo('exito'); }, 1000);
-      }, 800);
-    }
-  }
-
-  function submitSeo() {
-    setLoading(ctaSeo, true);
-    errorSeo.classList.add('hidden');
-    setTimeout(function() {
-      setConfirmed(ctaSeo, '✓ Publicado');
-      setTimeout(function() {
-        window.open(CONFIG.googleMapsUrl, '_blank');
-        navigateTo('exito');
-      }, 800);
-    }, 500);
   }
 
   init();
