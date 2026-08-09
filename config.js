@@ -10,7 +10,7 @@ const CONFIG = {
   localName: 'Restaurante Demo',
   
   // === MAKE WEBHOOK (pegar URL del escenario) ===
-  webhookUrl: 'https://hook.us1.make.com/TU_WEBHOOK_AQUI',
+  webhookUrl: 'https://hook.us2.make.com/2f2amy2uq88ptk4fksltadyxn485xeov',
   
   // === WHITE-LABEL VISUAL ===
   primaryColor: '#1B7A6E',
