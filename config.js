@@ -1,15 +1,13 @@
 /**
  * WHITE-LABEL CONFIG — ViwUp Flujo Proactivo NFC
- * 
- * webhookUrl: pegar aquí la URL del Custom Webhook de Make
- * idLocal: identificador único del restaurante en la Base Maestra
+ * Local de prueba para testeo
  */
 const CONFIG = {
   // === IDENTIFICACIÓN DEL LOCAL ===
   idLocal: 'REST_VIWUP_01',
   localName: 'Restaurante Demo',
   
-  // === MAKE WEBHOOK (pegar URL del escenario) ===
+  // === MAKE WEBHOOK (CONECTADO) ===
   webhookUrl: 'https://hook.us2.make.com/2f2amy2uq88ptk4fksltadyxn485xeov',
   
   // === WHITE-LABEL VISUAL ===
@@ -18,5 +16,5 @@ const CONFIG = {
   
   // === DATOS DEL LOCAL ===
   garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
-  googleMapsUrl: 'https://maps.google.com',
+  googleMapsUrl: 'https://search.google.com/local/writereview?placeid=TU_PLACE_ID',
 };
