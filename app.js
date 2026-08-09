@@ -80,7 +80,7 @@
   // ENVIAR A MAKE WEBHOOK
   // =============================================
   function sendToWebhook(payload) {
-    if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes('https://hook.us2.make.com/2f2amy2uq88ptk4fksltadyxn485xeov')) {
+    if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes('TU_WEBHOOK_AQUI')) {
       console.log('[TESTEO] Payload que se enviaría a Make:', JSON.stringify(payload, null, 2));
       return Promise.resolve({ ok: true });
     }
