@@ -16,5 +16,5 @@ const CONFIG = {
   
   // === DATOS DEL LOCAL ===
   garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
-  googleMapsUrl: 'https://search.google.com/local/writereview?placeid=TU_PLACE_ID',
+  googleMapsUrl: 'https://maps.google.com',
 };
