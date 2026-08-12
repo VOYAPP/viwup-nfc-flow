@@ -1,195 +1,252 @@
-(function () {
-  'use strict';
+// ╔═══════════════════════════════════════════════════════════════╗
+// ║  app.js — Flujo Proactivo NFC (SPA)                        ║
+// ║  4 pantallas: 01-Inicio → 02-SOS / 03-SEO → 04-Éxito      ║
+// ║  02-SOS tiene 3 estados de botón: Loading, Error, Confirmado║
+// ╚═══════════════════════════════════════════════════════════════╝
 
-  var state = { garzon: null, rating: 0 };
+// ─── State ───
+let selectedGarzon = null;
+let selectedRating = 0;
+let selectedMotivos = []; // Multi-select: ['Servicio', 'Cocina', 'Barra']
 
-  var screens = {
-    inicio: document.getElementById('screen-inicio'),
-    sos: document.getElementById('screen-sos'),
-    seo: document.getElementById('screen-seo'),
-    exito: document.getElementById('screen-exito'),
+// ─── Init ───
+document.addEventListener('DOMContentLoaded', () => {
+  applyWhiteLabel();
+  renderChipsGarzon();
+  renderStars();
+  renderChipsMotivo();
+});
+
+// ═══════════════ WHITE LABEL ═══════════════
+function applyWhiteLabel() {
+  document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
+
+  // Logo en todas las pantallas que lo tengan
+  const logos = [
+    { container: 'logo-inicio', fallback: 'logo-fallback-inicio' },
+    { container: 'logo-sos', fallback: 'logo-fallback-sos' },
+    { container: 'logo-seo', fallback: 'logo-fallback-seo' },
+  ];
+  logos.forEach(({ container, fallback }) => {
+    const el = document.getElementById(container);
+    const fb = document.getElementById(fallback);
+    if (!el) return;
+    if (CONFIG.logoUrl) {
+      const img = document.createElement('img');
+      img.src = CONFIG.logoUrl;
+      img.alt = CONFIG.localName;
+      el.innerHTML = '';
+      el.appendChild(img);
+    } else if (fb) {
+      fb.textContent = CONFIG.localName.charAt(0).toUpperCase();
+    }
+  });
+}
+
+// ═══════════════ CHIPS GARZÓN (single-select) ═══════════════
+function renderChipsGarzon() {
+  const container = document.getElementById('chips-garzon');
+  container.innerHTML = '';
+  CONFIG.garzones.forEach(name => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = name;
+    chip.onclick = () => {
+      selectedGarzon = name;
+      container.querySelectorAll('.chip').forEach(c =>
+        c.classList.toggle('selected', c.textContent === name)
+      );
+    };
+    container.appendChild(chip);
+  });
+}
+
+// Render garzón chips on the SOS screen (mirrors selection from Inicio)
+function renderChipsGarzonSOS() {
+  const container = document.getElementById('chips-garzon-sos');
+  container.innerHTML = '';
+  CONFIG.garzones.forEach(name => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    if (name === selectedGarzon) chip.classList.add('selected');
+    chip.textContent = name;
+    chip.onclick = () => {
+      selectedGarzon = name;
+      container.querySelectorAll('.chip').forEach(c =>
+        c.classList.toggle('selected', c.textContent === name)
+      );
+    };
+    container.appendChild(chip);
+  });
+}
+
+// ═══════════════ ESTRELLAS ═══════════════
+function renderStars() {
+  const container = document.getElementById('stars-container');
+  container.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.innerHTML = `<svg viewBox="0 0 44 44"><path d="M22 6l4.9 9.9 10.9 1.6-7.9 7.7 1.9 10.8L22 31l-9.8 5 1.9-10.8-7.9-7.7 10.9-1.6z"/></svg>`;
+    star.onclick = () => selectRating(i);
+    container.appendChild(star);
+  }
+}
+
+// Render stars on SOS screen (shows the selected rating, not interactive)
+function renderStarsSOS() {
+  const container = document.getElementById('stars-sos');
+  container.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const star = document.createElement('div');
+    star.className = 'star' + (i <= selectedRating ? ' active' : '');
+    star.innerHTML = `<svg viewBox="0 0 44 44"><path d="M22 6l4.9 9.9 10.9 1.6-7.9 7.7 1.9 10.8L22 31l-9.8 5 1.9-10.8-7.9-7.7 10.9-1.6z"/></svg>`;
+    container.appendChild(star);
+  }
+}
+
+function selectRating(rating) {
+  selectedRating = rating;
+  document.querySelectorAll('#stars-container .star').forEach((star, i) => {
+    star.classList.toggle('active', i < rating);
+  });
+
+  const caption = document.getElementById('rating-caption');
+
+  if (rating <= 3) {
+    // ★1-3 → Navegar a pantalla 02-SOS
+    caption.textContent = 'Cuéntanos qué pasó';
+    setTimeout(() => {
+      renderChipsGarzonSOS();
+      renderStarsSOS();
+      showScreen('sos');
+    }, 400);
+  } else {
+    // ★4-5 → Navegar a pantalla 03-SEO
+    caption.textContent = rating === 5 ? '¡Excelente!' : '¡Muy bien!';
+    setTimeout(() => showScreen('seo'), 400);
+  }
+}
+
+// ═══════════════ CHIPS MOTIVO (multi-select) ═══════════════
+function renderChipsMotivo() {
+  const container = document.getElementById('chips-motivo');
+  container.innerHTML = '';
+  CONFIG.motivos.forEach(motivo => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = motivo;
+    chip.onclick = () => {
+      const idx = selectedMotivos.indexOf(motivo);
+      if (idx >= 0) {
+        selectedMotivos.splice(idx, 1);
+        chip.classList.remove('selected');
+      } else {
+        selectedMotivos.push(motivo);
+        chip.classList.add('selected');
+      }
+    };
+    container.appendChild(chip);
+  });
+}
+
+// ═══════════════ SOS SUBMIT (3 estados: Loading → Confirmado/Error) ═══════════════
+async function handleSOSSubmit() {
+  const btn = document.getElementById('btn-sos');
+  const errorEl = document.getElementById('sos-error');
+  const comentario = document.getElementById('input-sos').value.trim();
+
+  // → Estado Loading: botón "Enviando..." con opacidad reducida
+  btn.textContent = 'Enviando...';
+  btn.classList.add('loading');
+  btn.disabled = true;
+  errorEl.style.display = 'none';
+
+  const payload = {
+    fecha: new Date().toISOString(),
+    idLocal: CONFIG.idLocal,
+    local: CONFIG.localName,
+    garzon: selectedGarzon || 'No seleccionado',
+    rating: selectedRating,
+    tipo: 'SOS',
+    motivos: selectedMotivos.join(', ') || 'No especificado',
+    comentario: comentario || 'Sin comentario',
+    estado: 'comentario_privado_enviado'
   };
 
-  var chipsContainer = document.getElementById('chips-container');
-  var stars = document.querySelectorAll('.star');
-  var inputComentario = document.getElementById('input-comentario');
-  var ctaSos = document.getElementById('cta-sos');
-  var ctaSeo = document.getElementById('cta-seo');
-  var errorSos = document.getElementById('error-sos');
-  var errorSeo = document.getElementById('error-seo');
-  var logoPlaceholder = document.getElementById('logo-placeholder');
+  const success = await sendToWebhook(payload);
 
-  // =============================================
-  // INIT
-  // =============================================
-  function init() {
-    document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
-    if (CONFIG.logoUrl) {
-      logoPlaceholder.innerHTML = '<img src="' + CONFIG.logoUrl + '" alt="' + CONFIG.localName + '" class="logo-placeholder__img">';
-    } else {
-      logoPlaceholder.querySelector('.logo-placeholder__letter').textContent = CONFIG.localName.charAt(0).toUpperCase();
-    }
-    renderChips();
-    bindEvents();
+  if (success) {
+    // → Estado Confirmado: botón "✓ Enviado" (transicional ~1.5s → Éxito)
+    btn.textContent = '✓ Enviado';
+    btn.classList.remove('loading');
+    btn.classList.add('success');
+    setTimeout(() => showScreen('exito'), 1500);
+  } else {
+    // → Estado Error: restaurar botón + mostrar error caption
+    btn.textContent = 'Enviar comentario privado';
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    errorEl.style.display = 'block';
+  }
+}
+
+// ═══════════════ SEO REDIRECT ═══════════════
+async function handleSEORedirect() {
+  const payload = {
+    fecha: new Date().toISOString(),
+    idLocal: CONFIG.idLocal,
+    local: CONFIG.localName,
+    garzon: selectedGarzon || 'No seleccionado',
+    rating: selectedRating,
+    tipo: 'SEO',
+    motivos: '',
+    comentario: '',
+    estado: 'redirigido_google_maps'
+  };
+
+  await sendToWebhook(payload);
+
+  // Abrir Google Maps review
+  if (CONFIG.googleMapsUrl && !CONFIG.googleMapsUrl.includes('TU_PLACE_ID')) {
+    window.open(CONFIG.googleMapsUrl, '_blank');
   }
 
-  function renderChips() {
-    chipsContainer.innerHTML = CONFIG.garzones
-      .map(function(n) { return '<button class="chip" data-garzon="' + n + '">' + n + '</button>'; })
-      .join('');
+  showScreen('exito');
+}
+
+// ═══════════════ WEBHOOK (Make → Google Sheets) ═══════════════
+async function sendToWebhook(payload) {
+  console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+
+  if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes('TU_WEBHOOK_AQUI')) {
+    console.log('⚠️ Webhook no configurado — datos solo en consola');
+    return true;
   }
 
-  function navigateTo(name) {
-    Object.values(screens).forEach(function(s) { s.classList.remove('active'); });
-    screens[name].classList.add('active');
-  }
-
-  // =============================================
-  // EVENTS
-  // =============================================
-  function bindEvents() {
-    chipsContainer.addEventListener('click', function(e) {
-      var chip = e.target.closest('.chip');
-      if (!chip) return;
-      chipsContainer.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
-      chip.classList.add('selected');
-      state.garzon = chip.dataset.garzon;
-    });
-
-    stars.forEach(function(star) {
-      star.addEventListener('click', function() {
-        state.rating = parseInt(this.dataset.value);
-        stars.forEach(function(s) {
-          s.classList.toggle('active', parseInt(s.dataset.value) <= state.rating);
-        });
-        setTimeout(function() {
-          navigateTo(state.rating <= 3 ? 'sos' : 'seo');
-        }, 300);
-      });
-    });
-
-    inputComentario.addEventListener('input', function() {
-      ctaSos.disabled = this.value.trim().length === 0;
-    });
-
-    ctaSos.addEventListener('click', function() { submitSos(); });
-    ctaSeo.addEventListener('click', function() { submitSeo(); });
-  }
-
-  // =============================================
-  // ENVIAR A MAKE WEBHOOK
-  // =============================================
-  function sendToWebhook(payload) {
-    if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes('TU_WEBHOOK_AQUI')) {
-      console.log('[TESTEO] Payload que se enviaría a Make:', JSON.stringify(payload, null, 2));
-      return Promise.resolve({ ok: true });
-    }
-
-    return fetch(CONFIG.webhookUrl, {
+  try {
+    const response = await fetch(CONFIG.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-  }
-
-  /**
-   * Construye el payload estándar para Make → Google Sheets
-   * 
-   * Columnas esperadas en la Base Maestra:
-   * | fecha | idLocal | local | garzon | rating | tipo | comentario | estado |
-   */
-  function buildPayload(tipo, extra) {
-    var base = {
-      fecha: new Date().toISOString(),
-      idLocal: CONFIG.idLocal,
-      local: CONFIG.localName,
-      garzon: state.garzon || 'No seleccionado',
-      rating: state.rating,
-      tipo: tipo,          // "SOS" o "SEO"
-      comentario: '',      // Solo SOS llena esto
-      estado: 'enviado',
-    };
-
-    // Merge extra fields
-    if (extra) {
-      Object.keys(extra).forEach(function(key) { base[key] = extra[key]; });
-    }
-
-    return base;
-  }
-
-  // =============================================
-  // FLUJO SOS (1-3 estrellas) → Comentario privado
-  // =============================================
-  function submitSos() {
-    var comentario = inputComentario.value.trim();
-    if (!comentario) return;
-
-    setLoading(ctaSos, true);
-    errorSos.classList.add('hidden');
-
-    var payload = buildPayload('SOS', {
-      comentario: comentario,
-      estado: 'comentario_privado_enviado',
+      body: JSON.stringify(payload)
     });
 
-    sendToWebhook(payload).then(function(r) {
-      if (r && !r.ok && r.status) throw new Error('HTTP ' + r.status);
-      setConfirmed(ctaSos, '✓ Enviado');
-      setTimeout(function() { navigateTo('exito'); }, 1000);
-    }).catch(function() {
-      setLoading(ctaSos, false);
-      errorSos.classList.remove('hidden');
-    });
-  }
-
-  // =============================================
-  // FLUJO SEO (4-5 estrellas) → Redirige a Google Maps
-  // =============================================
-  function submitSeo() {
-    setLoading(ctaSeo, true);
-    errorSeo.classList.add('hidden');
-
-    var payload = buildPayload('SEO', {
-      estado: 'redirigido_google_maps',
-    });
-
-    sendToWebhook(payload).then(function(r) {
-      if (r && !r.ok && r.status) throw new Error('HTTP ' + r.status);
-      setConfirmed(ctaSeo, '✓ Publicado');
-      setTimeout(function() {
-        window.open(CONFIG.googleMapsUrl, '_blank');
-        navigateTo('exito');
-      }, 800);
-    }).catch(function() {
-      setLoading(ctaSeo, false);
-      errorSeo.classList.remove('hidden');
-    });
-  }
-
-  // =============================================
-  // BUTTON STATES
-  // =============================================
-  function setLoading(btn, on) {
-    var label = btn.querySelector('.btn-primary__label');
-    var loading = btn.querySelector('.btn-primary__loading');
-    if (on) {
-      btn.classList.add('loading'); btn.disabled = true;
-      label.classList.add('hidden'); loading.classList.remove('hidden');
+    if (response.ok) {
+      console.log('✅ Webhook enviado correctamente');
+      return true;
     } else {
-      btn.classList.remove('loading'); btn.disabled = false;
-      label.classList.remove('hidden'); loading.classList.add('hidden');
+      console.error('❌ Webhook error:', response.status, response.statusText);
+      return false;
     }
+  } catch (err) {
+    console.error('❌ Error de red:', err.message);
+    return false;
   }
+}
 
-  function setConfirmed(btn, text) {
-    btn.classList.remove('loading');
-    var label = btn.querySelector('.btn-primary__label');
-    var loading = btn.querySelector('.btn-primary__loading');
-    label.textContent = text;
-    label.classList.remove('hidden');
-    loading.classList.add('hidden');
-  }
-
-  init();
-})();
+// ═══════════════ NAVEGACIÓN ═══════════════
+function showScreen(screenName) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(`screen-${screenName}`);
+  if (target) target.classList.add('active');
+}
