@@ -122,11 +122,14 @@ function selectRating(rating) {
       showScreen('sos');
     }, 400);
   } else {
-    // ★4-5 → Navegar a pantalla 03-SEO
+    // ★4-5 → Mostrar pantalla o sección de Gift Card de Lealtad Diaria + Opción SEO
     caption.textContent = rating === 5 ? '¡Excelente!' : '¡Muy bien!';
-    setTimeout(() => showScreen('seo'), 400);
+    setTimeout(() => {
+      // Aquí activas tu lógica de la Gift Card Diaria y el botón para Google Maps
+      renderGiftCardDiaria(); // Función que desplegará la tarjeta virtual y el botón alternativo
+      showScreen('seo'); // O la pantalla adaptada para la Gift Card y el acceso opcional a Google
+    }, 400);
   }
-}
 
 // ═══════════════ CHIPS MOTIVO (multi-select) ═══════════════
 function renderChipsMotivo() {
