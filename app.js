@@ -1,96 +1,72 @@
-// ╔═══════════════════════════════════════════════════════════════╗
-// ║  app.js — Flujo Proactivo NFC (SPA)                        ║
-// ║  4 pantallas: 01-Inicio → 02-SOS (★1-3) → 04-Éxito        ║
-// ║               01-Inicio → 03-SEO (★4-5) → Google Maps     ║
-// ║               Al volver de Google Maps → 04-Éxito           ║
-// ╚═══════════════════════════════════════════════════════════════╝
+/* ============================================
+   app.js — SPA Logic for ViwUp NFC Flow
+   ============================================ */
 
 let selectedGarzon = null;
 let selectedRating = 0;
 let selectedMotivos = [];
 let waitingForGoogleMaps = false;
 
+const STAR_SVG = `<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+  <path class="star-icon" d="M14 2.5L17.09 9.02L24.18 10.02L19.09 14.85L20.18 21.88L14 18.62L7.82 21.88L8.91 14.85L3.82 10.02L10.91 9.02L14 2.5Z"/>
+</svg>`;
+
 document.addEventListener('DOMContentLoaded', () => {
   applyWhiteLabel();
-  renderChipsGarzon();
-  renderStars();
-  renderChipsMotivo();
-
-  // Al volver de Google Maps → mostrar Éxito
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && waitingForGoogleMaps) {
-      waitingForGoogleMaps = false;
-      showScreen('exito');
-    }
-  });
+  renderChipsGarzon('chips-garzon-inicio');
+  renderStars('stars-inicio');
 });
 
 function applyWhiteLabel() {
   document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
-  const logos = [
-    { container: 'logo-inicio', fallback: 'logo-fallback-inicio' },
-    { container: 'logo-sos', fallback: 'logo-fallback-sos' },
-    { container: 'logo-seo', fallback: 'logo-fallback-seo' },
-  ];
-  logos.forEach(({ container, fallback }) => {
-    const el = document.getElementById(container);
-    const fb = document.getElementById(fallback);
-    if (!el) return;
+  ['inicio', 'sos'].forEach(screen => {
+    const logoEl = document.getElementById(`logo-${screen}`);
+    const initialEl = document.getElementById(`logo-initial-${screen}`);
     if (CONFIG.logoUrl) {
       const img = document.createElement('img');
       img.src = CONFIG.logoUrl;
       img.alt = CONFIG.localName;
-      el.innerHTML = '';
-      el.appendChild(img);
-    } else if (fb) {
-      fb.textContent = CONFIG.localName.charAt(0).toUpperCase();
+      logoEl.innerHTML = '';
+      logoEl.appendChild(img);
+    } else {
+      initialEl.textContent = CONFIG.localName.charAt(0).toUpperCase();
     }
   });
 }
 
-function renderChipsGarzon() {
-  const container = document.getElementById('chips-garzon');
+function renderChipsGarzon(containerId) {
+  const container = document.getElementById(containerId);
   container.innerHTML = '';
   CONFIG.garzones.forEach(name => {
     const chip = document.createElement('button');
     chip.className = 'chip';
     chip.textContent = name;
-    chip.onclick = () => {
-      selectedGarzon = name;
-      container.querySelectorAll('.chip').forEach(c =>
-        c.classList.toggle('selected', c.textContent === name)
-      );
-    };
+    chip.addEventListener('click', () => selectGarzon(name));
     container.appendChild(chip);
   });
 }
 
-function renderChipsGarzonSOS() {
-  const container = document.getElementById('chips-garzon-sos');
-  container.innerHTML = '';
-  CONFIG.garzones.forEach(name => {
-    const chip = document.createElement('button');
-    chip.className = 'chip';
-    if (name === selectedGarzon) chip.classList.add('selected');
-    chip.textContent = name;
-    chip.onclick = () => {
-      selectedGarzon = name;
-      container.querySelectorAll('.chip').forEach(c =>
-        c.classList.toggle('selected', c.textContent === name)
-      );
-    };
-    container.appendChild(chip);
+function selectGarzon(name) {
+  selectedGarzon = name;
+  updateChipSelection('chips-garzon-inicio', name);
+}
+
+function updateChipSelection(containerId, selectedName) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  Array.from(container.children).forEach(chip => {
+    chip.classList.toggle('selected', chip.textContent === selectedName);
   });
 }
 
-function renderStars() {
-  const container = document.getElementById('stars-container');
+function renderStars(containerId) {
+  const container = document.getElementById(containerId);
   container.innerHTML = '';
   for (let i = 1; i <= 5; i++) {
-    const star = document.createElement('div');
+    const star = document.createElement('button');
     star.className = 'star';
-    star.innerHTML = `<svg viewBox="0 0 44 44"><path d="M22 6l4.9 9.9 10.9 1.6-7.9 7.7 1.9 10.8L22 31l-9.8 5 1.9-10.8-7.9-7.7 10.9-1.6z"/></svg>`;
-    star.onclick = () => selectRating(i);
+    star.innerHTML = STAR_SVG;
+    star.addEventListener('click', () => selectRating(i));
     container.appendChild(star);
   }
 }
@@ -99,87 +75,85 @@ function renderStarsSOS() {
   const container = document.getElementById('stars-sos');
   container.innerHTML = '';
   for (let i = 1; i <= 5; i++) {
-    const star = document.createElement('div');
-    star.className = 'star' + (i <= selectedRating ? ' active' : '');
-    star.innerHTML = `<svg viewBox="0 0 44 44"><path d="M22 6l4.9 9.9 10.9 1.6-7.9 7.7 1.9 10.8L22 31l-9.8 5 1.9-10.8-7.9-7.7 10.9-1.6z"/></svg>`;
+    const star = document.createElement('button');
+    star.className = 'star';
+    if (i <= selectedRating) star.classList.add('active');
+    star.innerHTML = STAR_SVG;
+    star.addEventListener('click', () => selectRating(i));
     container.appendChild(star);
   }
 }
 
 function selectRating(rating) {
   selectedRating = rating;
-  document.querySelectorAll('#stars-container .star').forEach((star, i) => {
-    star.classList.toggle('active', i < rating);
-  });
-  const caption = document.getElementById('rating-caption');
   if (rating <= 3) {
-    caption.textContent = 'Cuéntanos qué pasó';
-    setTimeout(() => {
-      renderChipsGarzonSOS();
-      renderStarsSOS();
-      showScreen('sos');
-    }, 400);
+    showScreen('screen-sos');
+    renderChipsGarzon('chips-garzon-sos');
+    if (selectedGarzon) updateChipSelection('chips-garzon-sos', selectedGarzon);
+    renderStarsSOS();
+    renderChipsMotivo();
   } else {
-    caption.textContent = rating === 5 ? '¡Excelente!' : '¡Muy bien!';
-    setTimeout(() => showScreen('seo'), 400);
+    showScreen('screen-seo');
   }
 }
 
 function renderChipsMotivo() {
   const container = document.getElementById('chips-motivo');
   container.innerHTML = '';
+  selectedMotivos = [];
   CONFIG.motivos.forEach(motivo => {
     const chip = document.createElement('button');
     chip.className = 'chip';
     chip.textContent = motivo;
-    chip.onclick = () => {
-      const idx = selectedMotivos.indexOf(motivo);
-      if (idx >= 0) {
-        selectedMotivos.splice(idx, 1);
-        chip.classList.remove('selected');
-      } else {
-        selectedMotivos.push(motivo);
-        chip.classList.add('selected');
-      }
-    };
+    chip.addEventListener('click', () => toggleMotivo(motivo, chip));
     container.appendChild(chip);
   });
 }
 
-async function handleSOSSubmit() {
-  const btn = document.getElementById('btn-sos');
-  const errorEl = document.getElementById('sos-error');
-  const comentario = document.getElementById('input-sos').value.trim();
+function toggleMotivo(motivo, chipEl) {
+  const idx = selectedMotivos.indexOf(motivo);
+  if (idx === -1) {
+    selectedMotivos.push(motivo);
+    chipEl.classList.add('selected');
+  } else {
+    selectedMotivos.splice(idx, 1);
+    chipEl.classList.remove('selected');
+  }
+}
 
-  btn.textContent = 'Enviando...';
-  btn.classList.add('loading');
-  btn.disabled = true;
-  errorEl.style.display = 'none';
+async function handleSOSSubmit() {
+  const ctaBtn = document.getElementById('cta-sos');
+  const errorEl = document.getElementById('error-sos');
+  const comentario = document.getElementById('input-comentario').value.trim();
+
+  ctaBtn.textContent = 'Enviando...';
+  ctaBtn.classList.add('loading');
+  ctaBtn.disabled = true;
+  errorEl.classList.remove('visible');
 
   const payload = {
     fecha: new Date().toISOString(),
     idLocal: CONFIG.idLocal,
     local: CONFIG.localName,
-    garzon: selectedGarzon || 'No seleccionado',
+    garzon: selectedGarzon || '',
     rating: selectedRating,
     tipo: 'SOS',
-    motivos: selectedMotivos.join(', ') || 'No especificado',
-    comentario: comentario || 'Sin comentario',
-    estado: 'comentario_privado_enviado'
+    motivos: selectedMotivos.join(', '),
+    comentario: comentario,
+    estado: 'enviado',
   };
 
-  const success = await sendToWebhook(payload);
-
-  if (success) {
-    btn.textContent = '✓ Enviado';
-    btn.classList.remove('loading');
-    btn.classList.add('success');
-    setTimeout(() => showScreen('exito'), 1500);
-  } else {
-    btn.textContent = 'Enviar comentario privado';
-    btn.classList.remove('loading');
-    btn.disabled = false;
-    errorEl.style.display = 'block';
+  try {
+    await sendToWebhook(payload);
+    ctaBtn.textContent = '✓ Enviado';
+    ctaBtn.classList.remove('loading');
+    ctaBtn.classList.add('confirmed');
+    setTimeout(() => showScreen('screen-exito'), 1500);
+  } catch (err) {
+    ctaBtn.textContent = 'Enviar comentario privado';
+    ctaBtn.classList.remove('loading');
+    ctaBtn.disabled = false;
+    errorEl.classList.add('visible');
   }
 }
 
@@ -188,51 +162,39 @@ async function handleSEORedirect() {
     fecha: new Date().toISOString(),
     idLocal: CONFIG.idLocal,
     local: CONFIG.localName,
-    garzon: selectedGarzon || 'No seleccionado',
+    garzon: selectedGarzon || '',
     rating: selectedRating,
     tipo: 'SEO',
     motivos: '',
     comentario: '',
-    estado: 'redirigido_google_maps'
+    estado: 'redirigido_google',
   };
 
-  await sendToWebhook(payload);
+  try { await sendToWebhook(payload); } catch (err) { /* continue */ }
 
-  if (CONFIG.googleMapsUrl && !CONFIG.googleMapsUrl.includes('TU_PLACE_ID')) {
-    waitingForGoogleMaps = true;
-    window.open(CONFIG.googleMapsUrl, '_blank');
-  } else {
-    showScreen('exito');
+  waitingForGoogleMaps = true;
+  window.open(CONFIG.googleMapsUrl, '_blank');
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && waitingForGoogleMaps) {
+    waitingForGoogleMaps = false;
+    showScreen('screen-exito');
   }
+});
+
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  window.scrollTo(0, 0);
 }
 
 async function sendToWebhook(payload) {
-  console.log('📦 Payload:', JSON.stringify(payload, null, 2));
-  if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes('TU_WEBHOOK_AQUI')) {
-    console.log('⚠️ Webhook no configurado — datos solo en consola');
-    return true;
-  }
-  try {
-    const response = await fetch(CONFIG.webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (response.ok) {
-      console.log('✅ Webhook enviado correctamente');
-      return true;
-    } else {
-      console.error('❌ Webhook error:', response.status, response.statusText);
-      return false;
-    }
-  } catch (err) {
-    console.error('❌ Error de red:', err.message);
-    return false;
-  }
-}
-
-function showScreen(screenName) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const target = document.getElementById(`screen-${screenName}`);
-  if (target) target.classList.add('active');
+  const response = await fetch(CONFIG.webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response;
 }
