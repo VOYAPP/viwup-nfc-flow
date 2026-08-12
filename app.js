@@ -1,30 +1,19 @@
-/* ============================================
-   app.js — SPA Logic for ViwUp NFC Flow
-   ============================================ */
-
 var selectedGarzon = null;
 var selectedRating = 0;
 var selectedMotivos = [];
 var waitingForGoogleMaps = false;
 
-/* Star SVG — proper 5-point star path that renders in all browsers */
-var STAR_SVG = '<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">' +
-  '<polygon class="star-icon" points="14,3 17.5,10.5 25.5,11.5 19.75,16.75 21,24.5 14,20.75 7,24.5 8.25,16.75 2.5,11.5 10.5,10.5" />' +
-  '</svg>';
-
 document.addEventListener('DOMContentLoaded', function() {
   applyWhiteLabel();
   renderChipsGarzon('chips-garzon-inicio');
-  renderStars('stars-inicio');
 });
 
 function applyWhiteLabel() {
   document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
   var screens = ['inicio', 'sos'];
   for (var i = 0; i < screens.length; i++) {
-    var screen = screens[i];
-    var logoEl = document.getElementById('logo-' + screen);
-    var initialEl = document.getElementById('logo-initial-' + screen);
+    var logoEl = document.getElementById('logo-' + screens[i]);
+    var initialEl = document.getElementById('logo-initial-' + screens[i]);
     if (CONFIG.logoUrl) {
       var img = document.createElement('img');
       img.src = CONFIG.logoUrl;
@@ -37,19 +26,21 @@ function applyWhiteLabel() {
   }
 }
 
+function createChip(text, onClick) {
+  var btn = document.createElement('button');
+  btn.className = 'chip';
+  btn.textContent = text;
+  btn.onclick = onClick;
+  return btn;
+}
+
 function renderChipsGarzon(containerId) {
   var container = document.getElementById(containerId);
   container.innerHTML = '';
   for (var i = 0; i < CONFIG.garzones.length; i++) {
-    var name = CONFIG.garzones[i];
-    var chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.textContent = name;
-    chip.setAttribute('data-name', name);
-    chip.addEventListener('click', function() {
-      selectGarzon(this.getAttribute('data-name'));
-    });
-    container.appendChild(chip);
+    (function(name) {
+      container.appendChild(createChip(name, function() { selectGarzon(name); }));
+    })(CONFIG.garzones[i]);
   }
 }
 
@@ -58,47 +49,13 @@ function selectGarzon(name) {
   updateChipSelection('chips-garzon-inicio', name);
 }
 
-function updateChipSelection(containerId, selectedName) {
+function updateChipSelection(containerId, name) {
   var container = document.getElementById(containerId);
   if (!container) return;
-  var chips = container.children;
-  for (var i = 0; i < chips.length; i++) {
-    if (chips[i].textContent === selectedName) {
-      chips[i].classList.add('selected');
-    } else {
-      chips[i].classList.remove('selected');
-    }
-  }
-}
-
-function renderStars(containerId) {
-  var container = document.getElementById(containerId);
-  container.innerHTML = '';
-  for (var i = 1; i <= 5; i++) {
-    var star = document.createElement('button');
-    star.className = 'star';
-    star.innerHTML = STAR_SVG;
-    star.setAttribute('data-rating', i);
-    star.addEventListener('click', function() {
-      selectRating(parseInt(this.getAttribute('data-rating')));
-    });
-    container.appendChild(star);
-  }
-}
-
-function renderStarsSOS() {
-  var container = document.getElementById('stars-sos');
-  container.innerHTML = '';
-  for (var i = 1; i <= 5; i++) {
-    var star = document.createElement('button');
-    star.className = 'star';
-    if (i <= selectedRating) star.classList.add('active');
-    star.innerHTML = STAR_SVG;
-    star.setAttribute('data-rating', i);
-    star.addEventListener('click', function() {
-      selectRating(parseInt(this.getAttribute('data-rating')));
-    });
-    container.appendChild(star);
+  for (var i = 0; i < container.children.length; i++) {
+    var c = container.children[i];
+    if (c.textContent === name) { c.classList.add('selected'); }
+    else { c.classList.remove('selected'); }
   }
 }
 
@@ -115,31 +72,39 @@ function selectRating(rating) {
   }
 }
 
+function renderStarsSOS() {
+  var container = document.getElementById('stars-sos');
+  container.innerHTML = '';
+  for (var i = 1; i <= 5; i++) {
+    (function(r) {
+      var btn = document.createElement('button');
+      btn.className = 'star';
+      if (r <= selectedRating) btn.classList.add('active');
+      btn.innerHTML = '<svg viewBox="0 0 28 28"><polygon class="star-icon" points="14,3 17.5,10.5 25.5,11.5 19.75,16.75 21,24.5 14,20.75 7,24.5 8.25,16.75 2.5,11.5 10.5,10.5"/></svg>';
+      btn.onclick = function() { selectRating(r); };
+      container.appendChild(btn);
+    })(i);
+  }
+}
+
 function renderChipsMotivo() {
   var container = document.getElementById('chips-motivo');
   container.innerHTML = '';
   selectedMotivos = [];
   for (var i = 0; i < CONFIG.motivos.length; i++) {
-    var motivo = CONFIG.motivos[i];
-    var chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.textContent = motivo;
-    chip.setAttribute('data-motivo', motivo);
-    chip.addEventListener('click', function() {
-      toggleMotivo(this.getAttribute('data-motivo'), this);
-    });
-    container.appendChild(chip);
-  }
-}
-
-function toggleMotivo(motivo, chipEl) {
-  var idx = selectedMotivos.indexOf(motivo);
-  if (idx === -1) {
-    selectedMotivos.push(motivo);
-    chipEl.classList.add('selected');
-  } else {
-    selectedMotivos.splice(idx, 1);
-    chipEl.classList.remove('selected');
+    (function(motivo) {
+      var chip = createChip(motivo, function() {
+        var idx = selectedMotivos.indexOf(motivo);
+        if (idx === -1) {
+          selectedMotivos.push(motivo);
+          this.classList.add('selected');
+        } else {
+          selectedMotivos.splice(idx, 1);
+          this.classList.remove('selected');
+        }
+      });
+      container.appendChild(chip);
+    })(CONFIG.motivos[i]);
   }
 }
 
@@ -153,7 +118,7 @@ function handleSOSSubmit() {
   ctaBtn.disabled = true;
   errorEl.classList.remove('visible');
 
-  var payload = {
+  sendToWebhook({
     fecha: new Date().toISOString(),
     idLocal: CONFIG.idLocal,
     local: CONFIG.localName,
@@ -163,10 +128,8 @@ function handleSOSSubmit() {
     motivos: selectedMotivos.join(', '),
     comentario: comentario,
     estado: 'enviado'
-  };
-
-  sendToWebhook(payload).then(function() {
-    ctaBtn.textContent = '✓ Enviado';
+  }).then(function() {
+    ctaBtn.textContent = '\u2713 Enviado';
     ctaBtn.classList.remove('loading');
     ctaBtn.classList.add('confirmed');
     setTimeout(function() { showScreen('screen-exito'); }, 1500);
@@ -179,7 +142,7 @@ function handleSOSSubmit() {
 }
 
 function handleSEORedirect() {
-  var payload = {
+  sendToWebhook({
     fecha: new Date().toISOString(),
     idLocal: CONFIG.idLocal,
     local: CONFIG.localName,
@@ -189,9 +152,7 @@ function handleSEORedirect() {
     motivos: '',
     comentario: '',
     estado: 'redirigido_google'
-  };
-
-  sendToWebhook(payload).catch(function() {});
+  }).catch(function() {});
   waitingForGoogleMaps = true;
   window.open(CONFIG.googleMapsUrl, '_blank');
 }
@@ -204,10 +165,8 @@ document.addEventListener('visibilitychange', function() {
 });
 
 function showScreen(screenId) {
-  var screens = document.querySelectorAll('.screen');
-  for (var i = 0; i < screens.length; i++) {
-    screens[i].classList.remove('active');
-  }
+  var all = document.querySelectorAll('.screen');
+  for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
   document.getElementById(screenId).classList.add('active');
   window.scrollTo(0, 0);
 }
@@ -217,8 +176,8 @@ function sendToWebhook(payload) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  }).then(function(response) {
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    return response;
+  }).then(function(r) {
+    if (!r.ok) throw new Error(r.status);
+    return r;
   });
 }
