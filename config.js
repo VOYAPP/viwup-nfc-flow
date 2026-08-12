@@ -1,20 +1,26 @@
-/**
- * WHITE-LABEL CONFIG — ViwUp Flujo Proactivo NFC
- * Local de prueba para testeo
- */
+// ╔═══════════════════════════════════════════════════════════════╗
+// ║  config.js — ÚNICO ARCHIVO QUE CAMBIA POR LOCAL (cliente)   ║
+// ╚═══════════════════════════════════════════════════════════════╝
 const CONFIG = {
-  // === IDENTIFICACIÓN DEL LOCAL ===
+  // Identidad del local
   idLocal: 'REST_VIWUP_01',
   localName: 'Restaurante Demo',
-  
-  // === MAKE WEBHOOK (CONECTADO) ===
+
+  // Webhook Make → Google Sheets
   webhookUrl: 'https://hook.us2.make.com/2f2amy2uq88ptk4fksltadyxn485xeov',
-  
-  // === WHITE-LABEL VISUAL ===
+
+  // White-label: color primario
   primaryColor: '#1B7A6E',
+
+  // Logo del local (null = fallback inicial con letra)
   logoUrl: null,
-  
-  // === DATOS DEL LOCAL ===
+
+  // Garzones del local
   garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
-  googleMapsUrl: 'https://maps.google.com',
+
+  // Motivos de queja SOS (multi-select)
+  motivos: ['Servicio', 'Cocina', 'Barra'],
+
+  // Google Maps review link
+  googleMapsUrl: 'https://search.google.com',
 };
