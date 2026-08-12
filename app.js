@@ -2,34 +2,31 @@
    app.js — SPA Logic for ViwUp NFC Flow
    ============================================ */
 
-/* ---------- State ---------- */
-let selectedGarzon = null;
-let selectedRating = 0;
-let selectedMotivos = [];
-let waitingForGoogleMaps = false;
+var selectedGarzon = null;
+var selectedRating = 0;
+var selectedMotivos = [];
+var waitingForGoogleMaps = false;
 
-/* ---------- SVG Template ----------
-   Figma: STAR 28×28 inside 44×44 container */
-const STAR_SVG = `<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-  <path class="star-icon" d="M14 2.5L17.09 9.02L24.18 10.02L19.09 14.85L20.18 21.88L14 18.62L7.82 21.88L8.91 14.85L3.82 10.02L10.91 9.02L14 2.5Z"/>
-</svg>`;
+/* Star SVG — proper 5-point star path that renders in all browsers */
+var STAR_SVG = '<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">' +
+  '<polygon class="star-icon" points="14,3 17.5,10.5 25.5,11.5 19.75,16.75 21,24.5 14,20.75 7,24.5 8.25,16.75 2.5,11.5 10.5,10.5" />' +
+  '</svg>';
 
-/* ---------- Init ---------- */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
   applyWhiteLabel();
   renderChipsGarzon('chips-garzon-inicio');
   renderStars('stars-inicio');
 });
 
-/* ---------- White-Label ---------- */
 function applyWhiteLabel() {
   document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
-
-  ['inicio', 'sos'].forEach(screen => {
-    const logoEl = document.getElementById(`logo-${screen}`);
-    const initialEl = document.getElementById(`logo-initial-${screen}`);
+  var screens = ['inicio', 'sos'];
+  for (var i = 0; i < screens.length; i++) {
+    var screen = screens[i];
+    var logoEl = document.getElementById('logo-' + screen);
+    var initialEl = document.getElementById('logo-initial-' + screen);
     if (CONFIG.logoUrl) {
-      const img = document.createElement('img');
+      var img = document.createElement('img');
       img.src = CONFIG.logoUrl;
       img.alt = CONFIG.localName;
       logoEl.innerHTML = '';
@@ -37,20 +34,23 @@ function applyWhiteLabel() {
     } else {
       initialEl.textContent = CONFIG.localName.charAt(0).toUpperCase();
     }
-  });
+  }
 }
 
-/* ---------- Chips Garzón (single-select) ---------- */
 function renderChipsGarzon(containerId) {
-  const container = document.getElementById(containerId);
+  var container = document.getElementById(containerId);
   container.innerHTML = '';
-  CONFIG.garzones.forEach(name => {
-    const chip = document.createElement('button');
+  for (var i = 0; i < CONFIG.garzones.length; i++) {
+    var name = CONFIG.garzones[i];
+    var chip = document.createElement('button');
     chip.className = 'chip';
     chip.textContent = name;
-    chip.addEventListener('click', () => selectGarzon(name));
+    chip.setAttribute('data-name', name);
+    chip.addEventListener('click', function() {
+      selectGarzon(this.getAttribute('data-name'));
+    });
     container.appendChild(chip);
-  });
+  }
 }
 
 function selectGarzon(name) {
@@ -59,72 +59,81 @@ function selectGarzon(name) {
 }
 
 function updateChipSelection(containerId, selectedName) {
-  const container = document.getElementById(containerId);
+  var container = document.getElementById(containerId);
   if (!container) return;
-  Array.from(container.children).forEach(chip => {
-    chip.classList.toggle('selected', chip.textContent === selectedName);
-  });
+  var chips = container.children;
+  for (var i = 0; i < chips.length; i++) {
+    if (chips[i].textContent === selectedName) {
+      chips[i].classList.add('selected');
+    } else {
+      chips[i].classList.remove('selected');
+    }
+  }
 }
 
-/* ---------- Stars ---------- */
 function renderStars(containerId) {
-  const container = document.getElementById(containerId);
+  var container = document.getElementById(containerId);
   container.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
-    const star = document.createElement('button');
+  for (var i = 1; i <= 5; i++) {
+    var star = document.createElement('button');
     star.className = 'star';
     star.innerHTML = STAR_SVG;
-    star.addEventListener('click', () => selectRating(i));
+    star.setAttribute('data-rating', i);
+    star.addEventListener('click', function() {
+      selectRating(parseInt(this.getAttribute('data-rating')));
+    });
     container.appendChild(star);
   }
 }
 
 function renderStarsSOS() {
-  const container = document.getElementById('stars-sos');
+  var container = document.getElementById('stars-sos');
   container.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
-    const star = document.createElement('button');
+  for (var i = 1; i <= 5; i++) {
+    var star = document.createElement('button');
     star.className = 'star';
     if (i <= selectedRating) star.classList.add('active');
     star.innerHTML = STAR_SVG;
-    star.addEventListener('click', () => selectRating(i));
+    star.setAttribute('data-rating', i);
+    star.addEventListener('click', function() {
+      selectRating(parseInt(this.getAttribute('data-rating')));
+    });
     container.appendChild(star);
   }
 }
 
-/* ---------- Rating Selection ---------- */
 function selectRating(rating) {
   selectedRating = rating;
-
   if (rating <= 3) {
-    // ★1-3 → SOS
     showScreen('screen-sos');
     renderChipsGarzon('chips-garzon-sos');
     if (selectedGarzon) updateChipSelection('chips-garzon-sos', selectedGarzon);
     renderStarsSOS();
     renderChipsMotivo();
   } else {
-    // ★4-5 → SEO
     showScreen('screen-seo');
   }
 }
 
-/* ---------- Chips Motivo (multi-select) ---------- */
 function renderChipsMotivo() {
-  const container = document.getElementById('chips-motivo');
+  var container = document.getElementById('chips-motivo');
   container.innerHTML = '';
   selectedMotivos = [];
-  CONFIG.motivos.forEach(motivo => {
-    const chip = document.createElement('button');
+  for (var i = 0; i < CONFIG.motivos.length; i++) {
+    var motivo = CONFIG.motivos[i];
+    var chip = document.createElement('button');
     chip.className = 'chip';
     chip.textContent = motivo;
-    chip.addEventListener('click', () => toggleMotivo(motivo, chip));
+    chip.setAttribute('data-motivo', motivo);
+    chip.addEventListener('click', function() {
+      toggleMotivo(this.getAttribute('data-motivo'), this);
+    });
     container.appendChild(chip);
-  });
+  }
 }
 
 function toggleMotivo(motivo, chipEl) {
-  const idx = selectedMotivos.indexOf(motivo);
+  var idx = selectedMotivos.indexOf(motivo);
   if (idx === -1) {
     selectedMotivos.push(motivo);
     chipEl.classList.add('selected');
@@ -134,19 +143,17 @@ function toggleMotivo(motivo, chipEl) {
   }
 }
 
-/* ---------- SOS Submit ---------- */
-async function handleSOSSubmit() {
-  const ctaBtn = document.getElementById('cta-sos');
-  const errorEl = document.getElementById('error-sos');
-  const comentario = document.getElementById('input-comentario').value.trim();
+function handleSOSSubmit() {
+  var ctaBtn = document.getElementById('cta-sos');
+  var errorEl = document.getElementById('error-sos');
+  var comentario = document.getElementById('input-comentario').value.trim();
 
-  // Loading state
   ctaBtn.textContent = 'Enviando...';
   ctaBtn.classList.add('loading');
   ctaBtn.disabled = true;
   errorEl.classList.remove('visible');
 
-  const payload = {
+  var payload = {
     fecha: new Date().toISOString(),
     idLocal: CONFIG.idLocal,
     local: CONFIG.localName,
@@ -155,28 +162,24 @@ async function handleSOSSubmit() {
     tipo: 'SOS',
     motivos: selectedMotivos.join(', '),
     comentario: comentario,
-    estado: 'enviado',
+    estado: 'enviado'
   };
 
-  try {
-    await sendToWebhook(payload);
-    // Confirmado
+  sendToWebhook(payload).then(function() {
     ctaBtn.textContent = '✓ Enviado';
     ctaBtn.classList.remove('loading');
     ctaBtn.classList.add('confirmed');
-    setTimeout(() => showScreen('screen-exito'), 1500);
-  } catch (err) {
-    // Error
+    setTimeout(function() { showScreen('screen-exito'); }, 1500);
+  }).catch(function() {
     ctaBtn.textContent = 'Enviar comentario privado';
     ctaBtn.classList.remove('loading');
     ctaBtn.disabled = false;
     errorEl.classList.add('visible');
-  }
+  });
 }
 
-/* ---------- SEO Redirect ---------- */
-async function handleSEORedirect() {
-  const payload = {
+function handleSEORedirect() {
+  var payload = {
     fecha: new Date().toISOString(),
     idLocal: CONFIG.idLocal,
     local: CONFIG.localName,
@@ -185,41 +188,37 @@ async function handleSEORedirect() {
     tipo: 'SEO',
     motivos: '',
     comentario: '',
-    estado: 'redirigido_google',
+    estado: 'redirigido_google'
   };
 
-  try {
-    await sendToWebhook(payload);
-  } catch (err) {
-    // Continue anyway
-  }
-
+  sendToWebhook(payload).catch(function() {});
   waitingForGoogleMaps = true;
   window.open(CONFIG.googleMapsUrl, '_blank');
 }
 
-/* ---------- Detect return from Google Maps ---------- */
-document.addEventListener('visibilitychange', () => {
+document.addEventListener('visibilitychange', function() {
   if (!document.hidden && waitingForGoogleMaps) {
     waitingForGoogleMaps = false;
     showScreen('screen-exito');
   }
 });
 
-/* ---------- Screen Navigation ---------- */
 function showScreen(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].classList.remove('active');
+  }
   document.getElementById(screenId).classList.add('active');
   window.scrollTo(0, 0);
 }
 
-/* ---------- Webhook ---------- */
-async function sendToWebhook(payload) {
-  const response = await fetch(CONFIG.webhookUrl, {
+function sendToWebhook(payload) {
+  return fetch(CONFIG.webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
+  }).then(function(response) {
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return response;
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return response;
 }
