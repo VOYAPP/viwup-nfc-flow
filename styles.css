@@ -1,12 +1,8 @@
-/* ============================================
-   ViwUp NFC Flow — White-Label Styles
-   Pixel-perfect match to Figma specs
-   ============================================ */
-
+/* === Variables Figma (Brand collection) === */
 :root {
   --color-primary: #1b7a6e;
   --color-primary-text-on: #ffffff;
-  --color-background: #ffffff;
+  --color-bg: #ffffff;
   --color-surface: #f8f9fa;
   --color-text-primary: #1a1a1a;
   --color-text-secondary: #6b7280;
@@ -14,34 +10,18 @@
   --color-success: #22c55e;
   --color-star-inactive: #d1d5da;
   --color-error: #ef4444;
-
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
 }
 
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--color-background);
+  background: var(--color-bg);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Screen container — Figma: 390×844, VERTICAL, gap=24, pad=32/24/32/24 */
+/* === SCREEN === Figma: 390×844 VERTICAL gap=24 pad=32/24/32/24 cross=CENTER */
 .screen {
   display: none;
   flex-direction: column;
@@ -52,36 +32,34 @@ body {
   margin: 0 auto;
   padding: 32px 24px;
   gap: 24px;
+  background: var(--color-bg);
 }
+.screen.active { display: flex; }
 
-.screen.active {
-  display: flex;
-}
+/* Éxito: main=CENTER (vertical center) */
+#screen-exito { justify-content: center; }
 
-#screen-exito {
-  justify-content: center;
-}
-
-/* Logo — 80×80 circle, surface bg */
+/* === LOGO === Figma: 80×80 r=8 fill=surface stroke=border w=1 */
+/* User override: circular */
 .logo {
   width: 80px;
   height: 80px;
   border-radius: 50%;
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
 }
-
 .logo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-
+/* Figma: 32px Bold color=text-secondary */
 .logo .fallback-initial {
   font-size: 32px;
   font-weight: 700;
@@ -89,49 +67,44 @@ body {
   line-height: 1;
 }
 
-/* Heading — 24px Bold, center */
+/* === TYPOGRAPHY === */
+/* Figma: 24px Bold lh=32px CENTER color=text-primary */
 .heading-lg {
   font-size: 24px;
   font-weight: 700;
-  line-height: 1.33;
+  line-height: 32px;
   text-align: center;
   color: var(--color-text-primary);
   width: 100%;
 }
-
-/* Label — 18px Semi Bold */
+/* Figma: 18px SemiBold lh=24px color=text-primary */
 .heading-sm {
   font-size: 18px;
   font-weight: 600;
-  line-height: 1.33;
+  line-height: 24px;
   color: var(--color-text-primary);
-  width: 100%;
 }
-
-.heading-sm.text-left { text-align: left; }
-.heading-sm.text-center { text-align: center; }
-
-/* Body — 16px Regular, secondary, center */
+/* Figma: 16px Regular lh=24px CENTER color=text-secondary */
 .body-md {
   font-size: 16px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 24px;
   color: var(--color-text-secondary);
   text-align: center;
   width: 100%;
 }
-
-/* Caption — 12px Regular, secondary, center */
+/* Figma: 12px Regular lh=16px CENTER color=text-secondary */
 .caption-xs {
   font-size: 12px;
   font-weight: 400;
-  line-height: 1.33;
+  line-height: 16px;
   color: var(--color-text-secondary);
   text-align: center;
   width: 100%;
 }
 
-/* Sección Garzón — VERTICAL, gap=16, align left */
+/* === SECTIONS === */
+/* Figma Sección Garzón: VERTICAL gap=16 cross=MIN(left) width=FILL */
 .seccion-garzon {
   display: flex;
   flex-direction: column;
@@ -139,8 +112,7 @@ body {
   gap: 16px;
   width: 100%;
 }
-
-/* Sección Rating — VERTICAL, gap=16, center */
+/* Figma Sección Rating: VERTICAL gap=16 cross=CENTER width=FILL */
 .seccion-rating {
   display: flex;
   flex-direction: column;
@@ -148,8 +120,7 @@ body {
   gap: 16px;
   width: 100%;
 }
-
-/* Sección SOS — VERTICAL, gap=16, center */
+/* Figma Sección SOS: VERTICAL gap=16 cross=CENTER width=FILL */
 .seccion-sos {
   display: flex;
   flex-direction: column;
@@ -158,23 +129,29 @@ body {
   width: 100%;
 }
 
-/* Chips container — HORIZONTAL, gap=8, wrap */
+/* === CHIPS === */
+/* Container: HORIZONTAL gap=8 wrap */
 .chips-container {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+/* Figma Chips Garzón: main=MIN(left) width=FILL */
+.chips-garzon {
+  justify-content: flex-start;
   width: 100%;
 }
+/* Figma Chips Motivo: main=CENTER hSize=HUG */
+.chips-motivo {
+  justify-content: center;
+}
 
-.chips-garzon { justify-content: flex-start; }
-.chips-motivo { justify-content: center; }
-
-/* Chip — 44px height, pad 4/8, pill, surface bg, border */
+/* Figma chip: HUG×HUG pad=4/8 r=9999 fill=surface stroke=border w=1
+   font=16px Regular lh=24px color=text-primary */
 .chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
   padding: 4px 8px;
   border-radius: 9999px;
   background: var(--color-surface);
@@ -182,15 +159,14 @@ body {
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 400;
+  line-height: 24px;
   color: var(--color-text-primary);
   cursor: pointer;
-  transition: all 0.15s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
 }
-
 .chip:active { transform: scale(0.97); }
-
 .chip.selected {
   background: var(--color-primary);
   border-color: var(--color-primary);
@@ -198,12 +174,13 @@ body {
   font-weight: 600;
 }
 
-/* Stars — 44×44 each, 28×28 icon, gap=4 */
+/* === STARS === */
+/* Figma: HORIZONTAL gap=4 */
 .stars-container {
   display: flex;
   gap: 4px;
 }
-
+/* Figma: 44×44 fixed */
 .star {
   width: 44px;
   height: 44px;
@@ -216,49 +193,39 @@ body {
   border: none;
   padding: 0;
 }
-
-.star svg {
-  width: 28px;
-  height: 28px;
-}
-
+/* Figma: icon 28×28 */
+.star svg { width: 28px; height: 28px; }
 .star .star-icon {
   fill: var(--color-star-inactive);
   transition: fill 0.15s ease;
 }
-
-.star.active .star-icon {
-  fill: var(--color-primary);
-}
-
+.star.active .star-icon { fill: var(--color-primary); }
 .star:active { transform: scale(0.9); }
 
-/* Input — full width, 140px height, pad=16, radius=8, border */
+/* === INPUT === */
+/* Figma: FILL×140 pad=16 r=8 stroke=border w=1 fill=bg
+   font=16px Regular lh=24px placeholder=text-secondary */
 .input-comentario {
   width: 100%;
   height: 140px;
   padding: 16px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  background: var(--color-background);
+  background: var(--color-bg);
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 400;
+  line-height: 24px;
   color: var(--color-text-primary);
   resize: none;
   outline: none;
-  transition: border-color 0.15s ease;
 }
+.input-comentario::placeholder { color: var(--color-text-secondary); }
+.input-comentario:focus { border-color: var(--color-primary); }
 
-.input-comentario::placeholder {
-  color: var(--color-text-secondary);
-}
-
-.input-comentario:focus {
-  border-color: var(--color-primary);
-}
-
-/* CTA Button — full width, 56px height, pad 16/24, pill */
+/* === CTA === */
+/* Figma: FILL×HUG pad=16/24 r=9999 fill=primary
+   font=16px SemiBold lh=24px CENTER color=primary-text-on */
 .cta {
   width: 100%;
   height: 56px;
@@ -270,29 +237,27 @@ body {
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 600;
+  line-height: 24px;
   text-align: center;
   cursor: pointer;
-  transition: opacity 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-
 .cta:active { opacity: 0.9; }
 .cta.loading { opacity: 0.6; cursor: not-allowed; }
 .cta.confirmed { background: var(--color-success); }
 
-/* Error text */
+/* === ERROR === */
 .error-text {
   font-size: 14px;
-  font-weight: 400;
   color: var(--color-error);
   text-align: center;
   width: 100%;
   display: none;
 }
-
 .error-text.visible { display: block; }
 
-/* Ícono Éxito — 64×64 green circle + checkmark */
+/* === ÍCONO ÉXITO === */
+/* Figma: 64×64 circle fill=success, checkmark 32px white */
 .icon-exito {
   width: 64px;
   height: 64px;
@@ -303,24 +268,14 @@ body {
   justify-content: center;
   flex-shrink: 0;
 }
+.icon-exito svg { width: 32px; height: 32px; }
 
-.icon-exito svg {
-  width: 32px;
-  height: 32px;
-}
-
-/* Sello Agencia — 48×48 ViwUp logo, pushed to bottom */
+/* === SELLO === */
+/* Figma: 48×48 fixed, pushed to bottom */
 .sello {
   width: 48px;
   height: 48px;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin-top: auto;
 }
-
-.sello svg {
-  width: 48px;
-  height: 48px;
-}
+.sello svg { width: 48px; height: 48px; }
