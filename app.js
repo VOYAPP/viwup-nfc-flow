@@ -1,6 +1,7 @@
 // ╔═══════════════════════════════════════════════════════════════╗
 // ║  app.js — Flujo Proactivo NFC (SPA)                        ║
-// ║  4 pantallas: 01-Inicio → 02-SOS / 03-SEO → 04-Éxito      ║
+// ║  3 pantallas: 01-Inicio → 02-SOS (★1-3) → 04-Éxito        ║
+// ║               01-Inicio → Google Maps directo (★4-5)       ║
 // ║  02-SOS tiene 3 estados de botón: Loading, Error, Confirmado║
 // ╚═══════════════════════════════════════════════════════════════╝
 
@@ -25,7 +26,6 @@ function applyWhiteLabel() {
   const logos = [
     { container: 'logo-inicio', fallback: 'logo-fallback-inicio' },
     { container: 'logo-sos', fallback: 'logo-fallback-sos' },
-    { container: 'logo-seo', fallback: 'logo-fallback-seo' },
   ];
   logos.forEach(({ container, fallback }) => {
     const el = document.getElementById(container);
@@ -122,14 +122,11 @@ function selectRating(rating) {
       showScreen('sos');
     }, 400);
   } else {
-    // ★4-5 → Mostrar pantalla o sección de Gift Card de Lealtad Diaria + Opción SEO
+    // ★4-5 → Registrar SEO + redirigir directo a Google Maps
     caption.textContent = rating === 5 ? '¡Excelente!' : '¡Muy bien!';
-    setTimeout(() => {
-      // Aquí activas tu lógica de la Gift Card Diaria y el botón para Google Maps
-      renderGiftCardDiaria(); // Función que desplegará la tarjeta virtual y el botón alternativo
-      showScreen('seo'); // O la pantalla adaptada para la Gift Card y el acceso opcional a Google
-    }, 400);
+    setTimeout(() => handleSEORedirect(), 400);
   }
+}
 
 // ═══════════════ CHIPS MOTIVO (multi-select) ═══════════════
 function renderChipsMotivo() {
@@ -210,12 +207,13 @@ async function handleSEORedirect() {
 
   await sendToWebhook(payload);
 
-  // Abrir Google Maps review
+  // Redirigir directo a Google Maps (misma pestaña, zero friction)
   if (CONFIG.googleMapsUrl && !CONFIG.googleMapsUrl.includes('TU_PLACE_ID')) {
-    window.open(CONFIG.googleMapsUrl, '_blank');
+    window.location.href = CONFIG.googleMapsUrl;
+  } else {
+    // Fallback si no hay Place ID configurado
+    showScreen('exito');
   }
-
-  showScreen('exito');
 }
 
 // ═══════════════ WEBHOOK (Make → Google Sheets) ═══════════════
