@@ -1,31 +1,36 @@
 // ╔═══════════════════════════════════════════════════════════════╗
 // ║  app.js — Flujo Proactivo NFC (SPA)                        ║
-// ║  3 pantallas: 01-Inicio → 02-SOS (★1-3) → 04-Éxito        ║
-// ║               01-Inicio → Google Maps directo (★4-5)       ║
-// ║  02-SOS tiene 3 estados de botón: Loading, Error, Confirmado║
+// ║  4 pantallas: 01-Inicio → 02-SOS (★1-3) → 04-Éxito        ║
+// ║               01-Inicio → 03-SEO (★4-5) → Google Maps     ║
+// ║               Al volver de Google Maps → 04-Éxito           ║
 // ╚═══════════════════════════════════════════════════════════════╝
 
-// ─── State ───
 let selectedGarzon = null;
 let selectedRating = 0;
-let selectedMotivos = []; // Multi-select: ['Servicio', 'Cocina', 'Barra']
+let selectedMotivos = [];
+let waitingForGoogleMaps = false;
 
-// ─── Init ───
 document.addEventListener('DOMContentLoaded', () => {
   applyWhiteLabel();
   renderChipsGarzon();
   renderStars();
   renderChipsMotivo();
+
+  // Al volver de Google Maps → mostrar Éxito
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && waitingForGoogleMaps) {
+      waitingForGoogleMaps = false;
+      showScreen('exito');
+    }
+  });
 });
 
-// ═══════════════ WHITE LABEL ═══════════════
 function applyWhiteLabel() {
   document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
-
-  // Logo en todas las pantallas que lo tengan
   const logos = [
     { container: 'logo-inicio', fallback: 'logo-fallback-inicio' },
     { container: 'logo-sos', fallback: 'logo-fallback-sos' },
+    { container: 'logo-seo', fallback: 'logo-fallback-seo' },
   ];
   logos.forEach(({ container, fallback }) => {
     const el = document.getElementById(container);
@@ -43,7 +48,6 @@ function applyWhiteLabel() {
   });
 }
 
-// ═══════════════ CHIPS GARZÓN (single-select) ═══════════════
 function renderChipsGarzon() {
   const container = document.getElementById('chips-garzon');
   container.innerHTML = '';
@@ -61,7 +65,6 @@ function renderChipsGarzon() {
   });
 }
 
-// Render garzón chips on the SOS screen (mirrors selection from Inicio)
 function renderChipsGarzonSOS() {
   const container = document.getElementById('chips-garzon-sos');
   container.innerHTML = '';
@@ -80,7 +83,6 @@ function renderChipsGarzonSOS() {
   });
 }
 
-// ═══════════════ ESTRELLAS ═══════════════
 function renderStars() {
   const container = document.getElementById('stars-container');
   container.innerHTML = '';
@@ -93,7 +95,6 @@ function renderStars() {
   }
 }
 
-// Render stars on SOS screen (shows the selected rating, not interactive)
 function renderStarsSOS() {
   const container = document.getElementById('stars-sos');
   container.innerHTML = '';
@@ -110,11 +111,8 @@ function selectRating(rating) {
   document.querySelectorAll('#stars-container .star').forEach((star, i) => {
     star.classList.toggle('active', i < rating);
   });
-
   const caption = document.getElementById('rating-caption');
-
   if (rating <= 3) {
-    // ★1-3 → Navegar a pantalla 02-SOS
     caption.textContent = 'Cuéntanos qué pasó';
     setTimeout(() => {
       renderChipsGarzonSOS();
@@ -122,13 +120,11 @@ function selectRating(rating) {
       showScreen('sos');
     }, 400);
   } else {
-    // ★4-5 → Registrar SEO + redirigir directo a Google Maps
     caption.textContent = rating === 5 ? '¡Excelente!' : '¡Muy bien!';
-    setTimeout(() => handleSEORedirect(), 400);
+    setTimeout(() => showScreen('seo'), 400);
   }
 }
 
-// ═══════════════ CHIPS MOTIVO (multi-select) ═══════════════
 function renderChipsMotivo() {
   const container = document.getElementById('chips-motivo');
   container.innerHTML = '';
@@ -150,13 +146,11 @@ function renderChipsMotivo() {
   });
 }
 
-// ═══════════════ SOS SUBMIT (3 estados: Loading → Confirmado/Error) ═══════════════
 async function handleSOSSubmit() {
   const btn = document.getElementById('btn-sos');
   const errorEl = document.getElementById('sos-error');
   const comentario = document.getElementById('input-sos').value.trim();
 
-  // → Estado Loading: botón "Enviando..." con opacidad reducida
   btn.textContent = 'Enviando...';
   btn.classList.add('loading');
   btn.disabled = true;
@@ -177,13 +171,11 @@ async function handleSOSSubmit() {
   const success = await sendToWebhook(payload);
 
   if (success) {
-    // → Estado Confirmado: botón "✓ Enviado" (transicional ~1.5s → Éxito)
     btn.textContent = '✓ Enviado';
     btn.classList.remove('loading');
     btn.classList.add('success');
     setTimeout(() => showScreen('exito'), 1500);
   } else {
-    // → Estado Error: restaurar botón + mostrar error caption
     btn.textContent = 'Enviar comentario privado';
     btn.classList.remove('loading');
     btn.disabled = false;
@@ -191,7 +183,6 @@ async function handleSOSSubmit() {
   }
 }
 
-// ═══════════════ SEO REDIRECT ═══════════════
 async function handleSEORedirect() {
   const payload = {
     fecha: new Date().toISOString(),
@@ -207,31 +198,26 @@ async function handleSEORedirect() {
 
   await sendToWebhook(payload);
 
-  // Redirigir directo a Google Maps (misma pestaña, zero friction)
   if (CONFIG.googleMapsUrl && !CONFIG.googleMapsUrl.includes('TU_PLACE_ID')) {
-    window.location.href = CONFIG.googleMapsUrl;
+    waitingForGoogleMaps = true;
+    window.open(CONFIG.googleMapsUrl, '_blank');
   } else {
-    // Fallback si no hay Place ID configurado
     showScreen('exito');
   }
 }
 
-// ═══════════════ WEBHOOK (Make → Google Sheets) ═══════════════
 async function sendToWebhook(payload) {
   console.log('📦 Payload:', JSON.stringify(payload, null, 2));
-
   if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes('TU_WEBHOOK_AQUI')) {
     console.log('⚠️ Webhook no configurado — datos solo en consola');
     return true;
   }
-
   try {
     const response = await fetch(CONFIG.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     if (response.ok) {
       console.log('✅ Webhook enviado correctamente');
       return true;
@@ -245,7 +231,6 @@ async function sendToWebhook(payload) {
   }
 }
 
-// ═══════════════ NAVEGACIÓN ═══════════════
 function showScreen(screenName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(`screen-${screenName}`);
