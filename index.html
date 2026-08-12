@@ -1,78 +1,137 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ViwUp — Flujo Proactivo NFC</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Feedback</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app">
-    <section id="screen-inicio" class="screen active">
-      <div class="screen__content">
-        <div class="logo-placeholder" id="logo-placeholder">
-          <span class="logo-placeholder__letter">L</span>
-        </div>
-        <h1 class="heading-lg">¿Cómo fue tu experiencia?</h1>
-        <div class="garzon-section">
-          <p class="heading-sm">¿Quién te atendió?</p>
-          <div class="chips-wrap" id="chips-container"></div>
-        </div>
-        <div class="stars-section">
-          <p class="heading-sm">Califica tu visita</p>
-          <div class="stars-row" id="stars-container">
-            <button class="star" data-value="1" aria-label="1 estrella"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-            <button class="star" data-value="2" aria-label="2 estrellas"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-            <button class="star" data-value="3" aria-label="3 estrellas"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-            <button class="star" data-value="4" aria-label="4 estrellas"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-            <button class="star" data-value="5" aria-label="5 estrellas"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-          </div>
-          <p class="caption-xs stars-hint">Toca una estrella para calificar</p>
-        </div>
-      </div>
-      <div class="sello-agencia"><svg class="sello-agencia__svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg"><path d="M581 777L581 782 580 783 580 798 582 805 586 809 592 811 600 810 604 807 606 807 607 810 611 810 611 777 606 777 606 800 602 805 598 807 590 806 586 802 585 800 585 777ZM387 777L387 799 389 805 393 809 399 811 406 810 409 808 412 808 413 810 418 810 418 777 413 777 413 799 412 801 405 807 399 807 394 804 392 800 392 777ZM489 777L482 783 480 787 480 790 479 791 480 800 482 804 486 808 490 810 493 810 494 811 503 810 509 806 507 803 499 807 494 807 489 805 485 801 484 796 485 795 512 795 512 787 509 781 503 777 500 776 492 776ZM484 788L485 786 492 780 501 780 507 785 508 790 507 791 485 791ZM554 767L553 768 553 775 551 777 546 777 547 780 552 780 553 781 553 804 554 807 557 810 560 810 561 811 568 810 569 809 568 806 561 807 557 803 557 781 558 780 568 780 568 777 559 777 557 775 557 768ZM434 763L434 810 438 810 439 807 441 807 449 811 454 811 460 809 465 804 468 796 468 790 466 784 462 779 455 776 449 776 448 777 445 777 441 780 439 780 438 779 438 763ZM448 780L454 780 458 782 463 789 463 798 462 800 456 806 453 807 448 807 444 805 440 801 438 796 439 787 444 782ZM351 763L342 768 340 772 340 779 343 784 349 787 357 788 366 791 369 795 369 800 365 805 360 807 349 806 340 801 338 804 343 808 348 810 353 810 354 811 364 810 371 806 373 803 374 794 372 790 366 786 354 784 347 781 345 779 344 774 346 770 351 767 362 767 369 772 372 768 362 763ZM429 493L428 495 428 503 455 584 457 587 477 649 479 652 484 670 489 678 497 682 529 682 536 679 540 675 544 667 546 659 550 651 554 638 561 622 563 614 567 606 570 595 577 579 580 580 597 632 599 635 599 638 601 641 605 653 605 656 607 659 611 673 616 679 622 682 656 682 665 677 670 669 683 630 688 619 695 597 697 594 705 570 710 559 713 548 715 545 720 529 722 526 724 518 726 515 729 504 731 501 730 492 727 489 722 487 687 487 680 490 676 494 663 533 661 536 643 592 641 596 638 597 604 495 599 490 592 487 572 487 571 488 568 488 564 490 559 495 557 499 548 526 546 529 538 553 533 564 530 575 525 586 522 597 519 598 517 596 513 580 510 573 508 563 505 556 503 546 499 536 499 533 497 529 497 526 494 519 493 512 487 494 482 489 477 487 438 487 433 489ZM364 487L356 491 352 499 352 670 355 677 363 682 403 682 408 680 413 675 415 671 415 498 413 494 408 489 403 487ZM79 429L75 435 76 444 80 452 81 457 87 470 93 488 99 501 100 506 106 519 107 524 113 537 114 542 120 555 121 560 129 578 130 583 136 596 137 601 139 604 139 606 141 609 141 611 143 614 143 616 145 619 145 621 147 624 147 626 149 629 149 631 151 634 151 636 153 639 153 641 155 644 156 649 159 654 160 659 165 671 171 678 180 682 230 682 240 678 246 672 249 667 249 665 252 660 252 658 255 653 258 644 262 637 264 630 278 600 280 593 285 584 285 582 292 568 297 554 301 547 301 545 308 531 308 529 311 524 311 522 314 517 314 515 317 510 317 508 320 503 320 501 323 496 323 494 326 489 329 480 333 473 333 471 336 466 336 464 339 459 339 457 342 452 342 450 347 439 346 432 340 427 291 427 286 429 280 434 277 439 277 441 275 444 275 446 273 449 273 451 271 454 271 456 269 459 269 461 267 464 267 466 265 469 255 496 252 501 244 523 241 528 237 540 229 557 229 559 222 574 222 576 213 596 211 603 208 604 206 602 204 594 202 591 200 583 198 580 196 572 194 569 192 561 190 558 188 550 186 547 178 523 176 520 173 509 171 506 169 498 167 495 164 484 158 470 148 439 145 434 141 430 134 427 83 427Z" fill="#06172F" fill-rule="evenodd"/><path d="M921 801L918 803 918 808 920 810 924 811 926 810 927 808 927 803 924 801ZM184 787L187 792 275 792 277 789 277 786 274 783 188 783 186 784ZM980 783L980 786 982 789 1070 789 1072 788 1073 784 1070 780 983 780 981 781ZM873 777L873 810 880 810 880 792 881 791 881 788 886 783 893 783 897 786 898 788 898 793 899 794 899 810 906 810 906 788 904 782 900 778 896 776 889 776 883 779 881 779 880 777ZM841 776L836 778 830 784 828 789 828 799 830 803 836 809 842 811 849 811 856 808 860 804 863 797 863 791 860 783 856 779 849 776ZM841 783L849 783 855 790 855 797 853 801 851 803 846 805 841 804 836 799 836 796 835 795 836 788ZM812 776L810 777 810 810 817 810 817 777ZM764 777L764 809 765 810 772 810 772 789 773 787 778 783 785 783 790 789 790 810 797 810 798 809 798 790 796 783 791 778 787 776 780 776 774 779 772 779 771 777ZM747 776L744 777 744 810 752 810 752 777ZM726 778L721 776 714 776 708 779 706 779 705 777 698 777 698 825 705 825 705 809 706 808 708 808 714 811 720 811 726 809 730 806 734 798 734 789 732 784ZM712 783L720 783 723 785 726 789 726 797 724 801 720 804 712 804 706 797 706 789ZM664 777L660 779 656 783 653 790 653 798 655 803 663 810 666 810 667 811 678 810 680 809 687 801 688 798 688 790 685 783 678 777 675 777 674 776ZM667 783L674 783 676 784 680 789 680 798 679 800 674 804 667 804 665 803 661 798 661 789 662 787ZM854 763L853 762 846 762 844 764 841 771 847 771ZM810 763L809 768 811 770 816 770 818 768 818 764 816 762ZM746 762L744 764 744 768 749 771 752 769 753 766 750 762ZM1137 498L1125 491 1107 485 1095 484 1094 483 1073 483 1072 484 1065 484 1064 485 1056 486 1042 491 1030 498 1020 507 1018 507 1017 506 1017 496 1016 494 1011 489 1006 487 968 487 961 491 957 499 957 722 960 729 962 731 969 734 1006 734 1013 731 1015 729 1018 723 1018 667 1019 666 1022 666 1032 674 1042 679 1054 683 1063 684 1064 685 1072 685 1073 686 1091 686 1092 685 1099 685 1100 684 1108 683 1117 680 1129 674 1139 667 1154 652 1164 637 1168 629 1174 612 1174 609 1176 604 1176 599 1177 598 1177 590 1178 589 1177 566 1176 565 1176 560 1175 559 1174 552 1165 530 1155 515ZM1060 533L1077 533 1078 534 1085 535 1095 540 1099 543 1109 554 1115 566 1116 573 1117 574 1117 582 1118 583 1117 594 1114 604 1110 612 1107 616 1095 627 1087 631 1081 633 1077 633 1076 634 1060 634 1059 633 1055 633 1046 630 1035 623 1026 613 1021 603 1019 597 1019 592 1018 591 1018 576 1019 575 1019 571 1021 565 1029 551 1036 544 1043 539 1049 536 1059 534ZM382 414L375 417 370 421 366 426 362 436 362 449 364 455 368 461 374 466 382 469 393 469 399 467 405 463 412 454 414 448 414 434 408 422 402 417 395 414ZM908 344L901 344 895 347 839 409 836 416 837 425 842 431 848 434 856 434 860 432 872 420 875 421 875 602 870 617 860 628 855 631 849 633 845 633 844 634 828 633 816 628 810 622 804 610 803 599 802 598 802 462 803 461 803 455 802 454 802 448 800 444 793 440 783 440 770 445 761 452 752 464 747 475 747 478 745 483 745 490 744 491 744 610 745 611 745 617 746 618 748 629 755 645 765 659 772 666 783 674 795 680 804 683 807 683 812 685 818 685 819 686 848 687 849 686 859 686 860 685 870 684 885 679 901 670 914 658 925 642 931 627 933 615 934 614 934 606 935 605 935 420 938 419 950 432 955 434 963 434 970 430 974 423 974 414 971 408 948 384 915 347Z" fill="url(#upGrad)" fill-rule="evenodd"/><defs><linearGradient id="upGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0B8F8A"/><stop offset="55%" stop-color="#12B8A5"/><stop offset="100%" stop-color="#0CAFA0"/></linearGradient></defs></svg></div>
-    </section>
+  <div class="app" id="app">
 
-    <section id="screen-sos" class="screen">
-      <div class="screen__content">
-        <h1 class="heading-lg">Cuéntanos qué pasó</h1>
-        <p class="body-md text-secondary">Tu comentario es privado y nos ayuda a mejorar. No será publicado.</p>
-        <textarea id="input-comentario" class="input-textarea" placeholder="¿Qué podemos mejorar?" rows="5" maxlength="500"></textarea>
-        <button id="cta-sos" class="btn-primary btn-large" disabled>
-          <span class="btn-primary__label">Enviar comentario privado</span>
-          <span class="btn-primary__loading hidden">Enviando...</span>
+    <!-- ══════════════ 01 - INICIO (rating) ══════════════ -->
+    <div id="screen-inicio" class="screen active">
+
+      <!-- Logo Placeholder -->
+      <div class="logo" id="logo-inicio">
+        <span class="fallback" id="logo-fallback-inicio">L</span>
+      </div>
+
+      <h1 class="heading-lg">¿Cómo fue tu experiencia?</h1>
+
+      <!-- Sección Garzón -->
+      <div class="section">
+        <span class="section-label">¿Quién te atendió?</span>
+        <div class="chips" id="chips-garzon"></div>
+      </div>
+
+      <!-- Sección Rating -->
+      <div class="section">
+        <span class="section-label">Califica tu visita</span>
+        <div class="stars" id="stars-container"></div>
+        <span class="caption-xs" id="rating-caption">Toca una estrella para calificar</span>
+      </div>
+
+      <!-- Sello Agencia -->
+      <div class="sello">
+        <svg viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="16" font-family="Inter" font-size="11" font-weight="600" fill="#9CA3AF">ViwUp</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ══════════════ 02 - SOS (pantalla separada) ══════════════ -->
+    <div id="screen-sos" class="screen">
+
+      <div class="logo" id="logo-sos">
+        <span class="fallback" id="logo-fallback-sos">L</span>
+      </div>
+
+      <h1 class="heading-lg">¿Cómo fue tu experiencia?</h1>
+
+      <!-- Sección Garzón (muestra selección) -->
+      <div class="section">
+        <span class="section-label">¿Quién te atendió?</span>
+        <div class="chips" id="chips-garzon-sos"></div>
+      </div>
+
+      <!-- Sección Rating (muestra selección) -->
+      <div class="section">
+        <span class="section-label">Califica tu visita</span>
+        <div class="stars" id="stars-sos"></div>
+        <span class="caption-xs">Toca una estrella para calificar</span>
+      </div>
+
+      <!-- Sección SOS: Motivos + Input + CTA -->
+      <div class="section" id="seccion-sos">
+        <span class="heading-sm">¿Qué estuvo mal?</span>
+        <div class="chips" id="chips-motivo"></div>
+        <textarea class="textarea" id="input-sos" placeholder="Escribe aquí..."></textarea>
+        <button class="btn-primary" id="btn-sos" onclick="handleSOSSubmit()">
+          Enviar comentario privado
         </button>
-        <p id="error-sos" class="caption-xs error-msg hidden">Error de conexión. Intenta de nuevo.</p>
+        <span class="error-text" id="sos-error" style="display:none">
+          Error de conexión. Intenta de nuevo.
+        </span>
       </div>
-      <div class="sello-agencia"><svg class="sello-agencia__svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg"><use href="#viwup-paths"/></svg></div>
-    </section>
 
-    <section id="screen-seo" class="screen">
-      <div class="screen__content">
-        <h1 class="heading-lg">¡Nos alegra!</h1>
-        <p class="body-md text-secondary">Comparte tu experiencia en Google Maps y ayuda a otros a descubrirnos.</p>
-        <button id="cta-seo" class="btn-primary btn-large">
-          <span class="btn-primary__label">Publicar en Google Maps</span>
-          <span class="btn-primary__loading hidden">Publicando...</span>
-        </button>
-        <p id="error-seo" class="caption-xs error-msg hidden">Error de conexión. Intenta de nuevo.</p>
+      <div class="sello">
+        <svg viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="16" font-family="Inter" font-size="11" font-weight="600" fill="#9CA3AF">ViwUp</text>
+        </svg>
       </div>
-      <div class="sello-agencia"><svg class="sello-agencia__svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg"><use href="#viwup-paths"/></svg></div>
-    </section>
+    </div>
 
-    <section id="screen-exito" class="screen">
-      <div class="screen__content screen__content--centered">
-        <div class="icon-exito">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </div>
+    <!-- ══════════════ 03 - SEO ══════════════ -->
+    <div id="screen-seo" class="screen">
+
+      <div class="logo" id="logo-seo">
+        <span class="fallback" id="logo-fallback-seo">L</span>
+      </div>
+
+      <h1 class="heading-lg">¡Nos alegra!</h1>
+
+      <p class="body-md" style="text-align:center;color:var(--color-text-secondary)">
+        Comparte tu experiencia en Google Maps y ayuda a otros a descubrirnos.
+      </p>
+
+      <button class="btn-primary" onclick="handleSEORedirect()">
+        Publicar en Google Maps
+      </button>
+
+      <button class="btn-secondary" onclick="showScreen('exito')">
+        No, gracias
+      </button>
+
+      <div class="sello">
+        <svg viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="16" font-family="Inter" font-size="11" font-weight="600" fill="#9CA3AF">ViwUp</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ══════════════ 04 - ÉXITO ══════════════ -->
+    <div id="screen-exito" class="screen">
+      <div class="exito-content">
+        <svg class="check-icon" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="var(--color-success)"/>
+          <path d="M20 33L28 41L44 24" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
         <h1 class="heading-lg">¡Gracias!</h1>
-        <p class="body-md text-secondary">Tu opinión nos ayuda a seguir mejorando.</p>
+        <p class="body-md" style="color:var(--color-text-secondary)">
+          Tu opinión nos ayuda a seguir mejorando.
+        </p>
       </div>
-      <div class="sello-agencia"><svg class="sello-agencia__svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg"><use href="#viwup-paths"/></svg></div>
-    </section>
+      <div class="sello">
+        <svg viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="16" font-family="Inter" font-size="11" font-weight="600" fill="#9CA3AF">ViwUp</text>
+        </svg>
+      </div>
+    </div>
+
   </div>
 
   <script src="config.js"></script>
