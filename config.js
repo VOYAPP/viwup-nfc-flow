@@ -22,5 +22,5 @@ const CONFIG = {
   motivos: ['Servicio', 'Cocina', 'Barra'],
 
   // Google Maps review link
-  googleMapsUrl: 'https://search.google.com',
+  googleMapsUrl: 'https://www.google.com/maps',
 };
