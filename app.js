@@ -2,23 +2,29 @@
    app.js — SPA Logic for ViwUp NFC Flow
    ============================================ */
 
+/* ---------- State ---------- */
 let selectedGarzon = null;
 let selectedRating = 0;
 let selectedMotivos = [];
 let waitingForGoogleMaps = false;
 
+/* ---------- SVG Template ----------
+   Figma: STAR 28×28 inside 44×44 container */
 const STAR_SVG = `<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
   <path class="star-icon" d="M14 2.5L17.09 9.02L24.18 10.02L19.09 14.85L20.18 21.88L14 18.62L7.82 21.88L8.91 14.85L3.82 10.02L10.91 9.02L14 2.5Z"/>
 </svg>`;
 
+/* ---------- Init ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   applyWhiteLabel();
   renderChipsGarzon('chips-garzon-inicio');
   renderStars('stars-inicio');
 });
 
+/* ---------- White-Label ---------- */
 function applyWhiteLabel() {
   document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);
+
   ['inicio', 'sos'].forEach(screen => {
     const logoEl = document.getElementById(`logo-${screen}`);
     const initialEl = document.getElementById(`logo-initial-${screen}`);
@@ -34,6 +40,7 @@ function applyWhiteLabel() {
   });
 }
 
+/* ---------- Chips Garzón (single-select) ---------- */
 function renderChipsGarzon(containerId) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
@@ -59,6 +66,7 @@ function updateChipSelection(containerId, selectedName) {
   });
 }
 
+/* ---------- Stars ---------- */
 function renderStars(containerId) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
@@ -84,19 +92,24 @@ function renderStarsSOS() {
   }
 }
 
+/* ---------- Rating Selection ---------- */
 function selectRating(rating) {
   selectedRating = rating;
+
   if (rating <= 3) {
+    // ★1-3 → SOS
     showScreen('screen-sos');
     renderChipsGarzon('chips-garzon-sos');
     if (selectedGarzon) updateChipSelection('chips-garzon-sos', selectedGarzon);
     renderStarsSOS();
     renderChipsMotivo();
   } else {
+    // ★4-5 → SEO
     showScreen('screen-seo');
   }
 }
 
+/* ---------- Chips Motivo (multi-select) ---------- */
 function renderChipsMotivo() {
   const container = document.getElementById('chips-motivo');
   container.innerHTML = '';
@@ -121,11 +134,13 @@ function toggleMotivo(motivo, chipEl) {
   }
 }
 
+/* ---------- SOS Submit ---------- */
 async function handleSOSSubmit() {
   const ctaBtn = document.getElementById('cta-sos');
   const errorEl = document.getElementById('error-sos');
   const comentario = document.getElementById('input-comentario').value.trim();
 
+  // Loading state
   ctaBtn.textContent = 'Enviando...';
   ctaBtn.classList.add('loading');
   ctaBtn.disabled = true;
@@ -145,11 +160,13 @@ async function handleSOSSubmit() {
 
   try {
     await sendToWebhook(payload);
+    // Confirmado
     ctaBtn.textContent = '✓ Enviado';
     ctaBtn.classList.remove('loading');
     ctaBtn.classList.add('confirmed');
     setTimeout(() => showScreen('screen-exito'), 1500);
   } catch (err) {
+    // Error
     ctaBtn.textContent = 'Enviar comentario privado';
     ctaBtn.classList.remove('loading');
     ctaBtn.disabled = false;
@@ -157,6 +174,7 @@ async function handleSOSSubmit() {
   }
 }
 
+/* ---------- SEO Redirect ---------- */
 async function handleSEORedirect() {
   const payload = {
     fecha: new Date().toISOString(),
@@ -170,12 +188,17 @@ async function handleSEORedirect() {
     estado: 'redirigido_google',
   };
 
-  try { await sendToWebhook(payload); } catch (err) { /* continue */ }
+  try {
+    await sendToWebhook(payload);
+  } catch (err) {
+    // Continue anyway
+  }
 
   waitingForGoogleMaps = true;
   window.open(CONFIG.googleMapsUrl, '_blank');
 }
 
+/* ---------- Detect return from Google Maps ---------- */
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && waitingForGoogleMaps) {
     waitingForGoogleMaps = false;
@@ -183,12 +206,14 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+/* ---------- Screen Navigation ---------- */
 function showScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screenId).classList.add('active');
   window.scrollTo(0, 0);
 }
 
+/* ---------- Webhook ---------- */
 async function sendToWebhook(payload) {
   const response = await fetch(CONFIG.webhookUrl, {
     method: 'POST',
