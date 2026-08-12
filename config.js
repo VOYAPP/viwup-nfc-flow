@@ -9,5 +9,5 @@ const CONFIG = {
   logoUrl: null,
   garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
   motivos: ['Servicio', 'Cocina', 'Barra'],
-  googleMapsUrl: 'https://search.google.com/maps',
+  googleMapsUrl: 'https://www.google.com/maps',
 };
