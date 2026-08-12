@@ -1,8 +1,11 @@
-/* === Variables Figma (Brand collection) === */
+/* ============================================
+   ViwUp NFC Flow — White-Label Styles
+   ============================================ */
+
 :root {
   --color-primary: #1b7a6e;
   --color-primary-text-on: #ffffff;
-  --color-bg: #ffffff;
+  --color-background: #ffffff;
   --color-surface: #f8f9fa;
   --color-text-primary: #1a1a1a;
   --color-text-secondary: #6b7280;
@@ -12,16 +15,20 @@
   --color-error: #ef4444;
 }
 
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--color-bg);
+  background: var(--color-background);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
-/* === SCREEN === Figma: 390×844 VERTICAL gap=24 pad=32/24/32/24 cross=CENTER */
+/* Screen: 390 wide, VERTICAL, gap=24, pad=32/24 */
 .screen {
   display: none;
   flex-direction: column;
@@ -32,34 +39,36 @@ body {
   margin: 0 auto;
   padding: 32px 24px;
   gap: 24px;
-  background: var(--color-bg);
 }
-.screen.active { display: flex; }
 
-/* Éxito: main=CENTER (vertical center) */
-#screen-exito { justify-content: center; }
+.screen.active {
+  display: flex;
+}
 
-/* === LOGO === Figma: 80×80 r=8 fill=surface stroke=border w=1 */
-/* User override: circular */
+#screen-exito {
+  justify-content: center;
+}
+
+/* Logo: 80×80 circle */
 .logo {
   width: 80px;
   height: 80px;
   border-radius: 50%;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
 }
+
 .logo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-/* Figma: 32px Bold color=text-secondary */
+
 .logo .fallback-initial {
   font-size: 32px;
   font-weight: 700;
@@ -67,8 +76,7 @@ body {
   line-height: 1;
 }
 
-/* === TYPOGRAPHY === */
-/* Figma: 24px Bold lh=32px CENTER color=text-primary */
+/* Heading: 24px Bold, center */
 .heading-lg {
   font-size: 24px;
   font-weight: 700;
@@ -77,14 +85,20 @@ body {
   color: var(--color-text-primary);
   width: 100%;
 }
-/* Figma: 18px SemiBold lh=24px color=text-primary */
+
+/* Label: 18px SemiBold */
 .heading-sm {
   font-size: 18px;
   font-weight: 600;
   line-height: 24px;
   color: var(--color-text-primary);
+  width: 100%;
 }
-/* Figma: 16px Regular lh=24px CENTER color=text-secondary */
+
+.heading-sm.text-left { text-align: left; }
+.heading-sm.text-center { text-align: center; }
+
+/* Body: 16px Regular, secondary */
 .body-md {
   font-size: 16px;
   font-weight: 400;
@@ -93,7 +107,8 @@ body {
   text-align: center;
   width: 100%;
 }
-/* Figma: 12px Regular lh=16px CENTER color=text-secondary */
+
+/* Caption: 12px Regular, secondary, center */
 .caption-xs {
   font-size: 12px;
   font-weight: 400;
@@ -103,8 +118,7 @@ body {
   width: 100%;
 }
 
-/* === SECTIONS === */
-/* Figma Sección Garzón: VERTICAL gap=16 cross=MIN(left) width=FILL */
+/* Sección Garzón: vertical, gap=16, left aligned */
 .seccion-garzon {
   display: flex;
   flex-direction: column;
@@ -112,7 +126,8 @@ body {
   gap: 16px;
   width: 100%;
 }
-/* Figma Sección Rating: VERTICAL gap=16 cross=CENTER width=FILL */
+
+/* Sección Rating: vertical, gap=16, center */
 .seccion-rating {
   display: flex;
   flex-direction: column;
@@ -120,7 +135,8 @@ body {
   gap: 16px;
   width: 100%;
 }
-/* Figma Sección SOS: VERTICAL gap=16 cross=CENTER width=FILL */
+
+/* Sección SOS: vertical, gap=16, center */
 .seccion-sos {
   display: flex;
   flex-direction: column;
@@ -129,29 +145,23 @@ body {
   width: 100%;
 }
 
-/* === CHIPS === */
-/* Container: HORIZONTAL gap=8 wrap */
+/* Chips container: horizontal, gap=8, wrap */
 .chips-container {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-/* Figma Chips Garzón: main=MIN(left) width=FILL */
-.chips-garzon {
-  justify-content: flex-start;
   width: 100%;
 }
-/* Figma Chips Motivo: main=CENTER hSize=HUG */
-.chips-motivo {
-  justify-content: center;
-}
 
-/* Figma chip: HUG×HUG pad=4/8 r=9999 fill=surface stroke=border w=1
-   font=16px Regular lh=24px color=text-primary */
+.chips-garzon { justify-content: flex-start; }
+.chips-motivo { justify-content: center; }
+
+/* Chip: height=44, pad=4/8, pill, surface bg, border */
 .chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  height: 44px;
   padding: 4px 8px;
   border-radius: 9999px;
   background: var(--color-surface);
@@ -166,7 +176,9 @@ body {
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s ease;
 }
+
 .chip:active { transform: scale(0.97); }
+
 .chip.selected {
   background: var(--color-primary);
   border-color: var(--color-primary);
@@ -174,13 +186,12 @@ body {
   font-weight: 600;
 }
 
-/* === STARS === */
-/* Figma: HORIZONTAL gap=4 */
+/* Stars: gap=4, each 44×44 */
 .stars-container {
   display: flex;
   gap: 4px;
 }
-/* Figma: 44×44 fixed */
+
 .star {
   width: 44px;
   height: 44px;
@@ -193,25 +204,32 @@ body {
   border: none;
   padding: 0;
 }
-/* Figma: icon 28×28 */
-.star svg { width: 28px; height: 28px; }
+
+.star svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
 .star .star-icon {
   fill: var(--color-star-inactive);
   transition: fill 0.15s ease;
 }
-.star.active .star-icon { fill: var(--color-primary); }
+
+.star.active .star-icon {
+  fill: var(--color-primary);
+}
+
 .star:active { transform: scale(0.9); }
 
-/* === INPUT === */
-/* Figma: FILL×140 pad=16 r=8 stroke=border w=1 fill=bg
-   font=16px Regular lh=24px placeholder=text-secondary */
+/* Input: full width, 140px tall, pad=16, radius=8, border */
 .input-comentario {
   width: 100%;
   height: 140px;
   padding: 16px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-background);
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -220,12 +238,16 @@ body {
   resize: none;
   outline: none;
 }
-.input-comentario::placeholder { color: var(--color-text-secondary); }
-.input-comentario:focus { border-color: var(--color-primary); }
 
-/* === CTA === */
-/* Figma: FILL×HUG pad=16/24 r=9999 fill=primary
-   font=16px SemiBold lh=24px CENTER color=primary-text-on */
+.input-comentario::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.input-comentario:focus {
+  border-color: var(--color-primary);
+}
+
+/* CTA: full width, 56px tall, pill, primary bg */
 .cta {
   width: 100%;
   height: 56px;
@@ -241,12 +263,14 @@ body {
   text-align: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease;
 }
+
 .cta:active { opacity: 0.9; }
 .cta.loading { opacity: 0.6; cursor: not-allowed; }
 .cta.confirmed { background: var(--color-success); }
 
-/* === ERROR === */
+/* Error text */
 .error-text {
   font-size: 14px;
   color: var(--color-error);
@@ -254,10 +278,10 @@ body {
   width: 100%;
   display: none;
 }
+
 .error-text.visible { display: block; }
 
-/* === ÍCONO ÉXITO === */
-/* Figma: 64×64 circle fill=success, checkmark 32px white */
+/* Ícono éxito: 64×64 green circle */
 .icon-exito {
   width: 64px;
   height: 64px;
@@ -268,14 +292,22 @@ body {
   justify-content: center;
   flex-shrink: 0;
 }
-.icon-exito svg { width: 32px; height: 32px; }
 
-/* === SELLO === */
-/* Figma: 48×48 fixed, pushed to bottom */
+.icon-exito svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Sello: 48×48, pushed to bottom */
 .sello {
   width: 48px;
   height: 48px;
   flex-shrink: 0;
   margin-top: auto;
 }
-.sello svg { width: 48px; height: 48px; }
+
+.sello svg {
+  width: 48px;
+  height: 48px;
+  display: block;
+}
