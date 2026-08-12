@@ -1,10 +1,4 @@
-/* ═══════════════════════════════════════════════════
-   styles.css — Design tokens from Figma variables
-   Brand collection (VariableCollectionId:4:4)
-   ═══════════════════════════════════════════════════ */
-
 :root {
-  /* Color tokens — primary overwritten by config.js */
   --color-primary: #1B7A6E;
   --color-primary-text-on: #FFFFFF;
   --color-background: #FFFFFF;
@@ -15,24 +9,17 @@
   --color-success: #22C55E;
   --color-star-inactive: #D1D5DA;
   --color-error: #DC2626;
-
-  /* Radius tokens */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
   --radius-full: 9999px;
-
-  /* Space tokens */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
 }
-
-/* ─── Reset ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--color-background);
@@ -42,250 +29,81 @@ body {
   justify-content: center;
   -webkit-font-smoothing: antialiased;
 }
-
-/* ─── App Container (390px max = mobile frame) ─── */
 .app {
-  width: 100%;
-  max-width: 390px;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--space-lg);
-  padding-top: var(--space-xl);
-  gap: var(--space-lg);
-  position: relative;
+  width: 100%; max-width: 390px; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: var(--space-lg); padding-top: var(--space-xl);
+  gap: var(--space-lg); position: relative;
 }
-
-/* ─── Screens ─── */
 .screen {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  gap: var(--space-lg);
-  animation: fadeIn 0.3s ease-out;
+  display: none; flex-direction: column; align-items: center;
+  width: 100%; gap: var(--space-lg); animation: fadeIn 0.3s ease-out;
 }
 .screen.active { display: flex; }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ─── Logo Placeholder ─── */
 .logo {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
+  width: 80px; height: 80px; border-radius: var(--radius-full);
+  background: var(--color-surface); display: flex; align-items: center;
+  justify-content: center; overflow: hidden; border: 1px solid var(--color-border);
 }
-.logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.logo .fallback {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-}
-
-/* ─── Typography (matches Figma text styles) ─── */
-.heading-lg {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
-  text-align: center;
-}
-.heading-sm {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-.body-md {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.5;
-}
-.caption-xs {
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
-  color: var(--color-text-secondary);
-}
-
-/* ─── Sections ─── */
-.section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-.section-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-/* ─── Chips (Garzón = single-select, Motivo = multi-select) ─── */
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
+.logo img { width: 100%; height: 100%; object-fit: cover; }
+.logo .fallback { font-size: 32px; font-weight: 700; color: var(--color-text-secondary); }
+.heading-lg { font-size: 24px; font-weight: 700; line-height: 1.3; text-align: center; }
+.heading-sm { font-size: 18px; font-weight: 600; line-height: 1.4; }
+.body-md { font-size: 16px; font-weight: 400; line-height: 1.5; }
+.caption-xs { font-size: 12px; font-weight: 400; line-height: 1.4; color: var(--color-text-secondary); }
+.section { width: 100%; display: flex; flex-direction: column; gap: var(--space-sm); }
+.section-label { font-size: 14px; font-weight: 500; color: var(--color-text-secondary); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
 .chip {
-  min-height: 44px;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  color: var(--color-text-primary);
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 44px; padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-full); border: 1px solid var(--color-border);
+  background: var(--color-background); color: var(--color-text-primary);
+  font-size: 16px; font-weight: 500; cursor: pointer;
+  transition: all 0.2s ease; -webkit-tap-highlight-color: transparent;
+  user-select: none; display: flex; align-items: center; justify-content: center;
 }
 .chip.selected {
-  background: var(--color-primary);
-  color: var(--color-primary-text-on);
+  background: var(--color-primary); color: var(--color-primary-text-on);
   border-color: var(--color-primary);
 }
-
-/* ─── Stars (Estrella component) ─── */
-.stars {
-  display: flex;
-  gap: var(--space-xs);
-  justify-content: center;
-}
+.stars { display: flex; gap: var(--space-xs); justify-content: center; }
 .star {
-  width: 44px;
-  height: 44px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.15s ease;
+  width: 44px; height: 44px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease;
 }
 .star:active { transform: scale(0.9); }
-.star svg {
-  width: 100%;
-  height: 100%;
-}
-.star svg path {
-  fill: var(--color-star-inactive);
-  transition: fill 0.2s ease;
-}
-.star.active svg path {
-  fill: var(--color-primary);
-}
-
-/* ─── Input Text Area ─── */
+.star svg { width: 100%; height: 100%; }
+.star svg path { fill: var(--color-star-inactive); transition: fill 0.2s ease; }
+.star.active svg path { fill: var(--color-primary); }
 .textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  font-family: inherit;
-  font-size: 16px;
-  color: var(--color-text-primary);
-  resize: vertical;
-  outline: none;
+  width: 100%; min-height: 120px; padding: var(--space-md);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-surface); font-family: inherit; font-size: 16px;
+  color: var(--color-text-primary); resize: vertical; outline: none;
   transition: border-color 0.2s ease;
 }
-.textarea:focus {
-  border-color: var(--color-primary);
-}
-.textarea::placeholder {
-  color: var(--color-text-secondary);
-}
-
-/* ─── Botón Primario ─── */
+.textarea:focus { border-color: var(--color-primary); }
+.textarea::placeholder { color: var(--color-text-secondary); }
 .btn-primary {
-  width: 100%;
-  min-height: 56px;
-  padding: var(--space-md) var(--space-lg);
-  border: none;
-  border-radius: var(--radius-lg);
-  background: var(--color-primary);
-  color: var(--color-primary-text-on);
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
+  width: 100%; min-height: 56px; padding: var(--space-md) var(--space-lg);
+  border: none; border-radius: var(--radius-lg); background: var(--color-primary);
+  color: var(--color-primary-text-on); font-family: inherit; font-size: 16px;
+  font-weight: 600; cursor: pointer; transition: opacity 0.2s ease, transform 0.1s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.btn-primary:active {
-  opacity: 0.85;
-  transform: scale(0.98);
-}
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-.btn-primary.loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
-.btn-primary.success {
-  background: var(--color-success);
-}
-
-/* ─── Botón Secundario ─── */
-.btn-secondary {
-  width: 100%;
-  min-height: 48px;
-  padding: var(--space-sm) var(--space-lg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-background);
-  color: var(--color-text-primary);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-.btn-secondary:active { background: var(--color-surface); }
-
-/* ─── Error caption ─── */
-.error-text {
-  color: var(--color-error);
-  font-size: 12px;
-  text-align: center;
-}
-
-/* ─── Éxito screen ─── */
+.btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary.loading { opacity: 0.6; pointer-events: none; }
+.btn-primary.success { background: var(--color-success); }
+.error-text { color: var(--color-error); font-size: 12px; text-align: center; }
 .exito-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-lg);
-  text-align: center;
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: var(--space-lg); text-align: center;
 }
-.check-icon {
-  width: 64px;
-  height: 64px;
-}
-
-/* ─── Sello Agencia ─── */
-.sello {
-  margin-top: auto;
-  padding-bottom: var(--space-md);
-  opacity: 0.4;
-}
+.check-icon { width: 64px; height: 64px; }
+.sello { margin-top: auto; padding-bottom: var(--space-md); opacity: 0.4; }
 .sello svg { width: 48px; height: 24px; }
