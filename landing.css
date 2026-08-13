@@ -59,15 +59,14 @@ body {
 .section-header p { font-size: 18px; color: var(--gray-600); line-height: 1.5; }
 .badge-label { display: inline-block; font-size: 14px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
 
-.hero { padding: 80px 120px 64px; display: flex; flex-direction: column; gap: 48px; }
-.hero-content { max-width: 640px; }
-.hero-badge { display: inline-flex; padding: 6px 14px; background: var(--green-light); border: 1px solid var(--green); border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 24px; }
-.hero h1 { font-size: 52px; font-weight: 800; color: var(--gray-900); line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 20px; }
-.hero .subtitle { font-size: 18px; color: var(--gray-600); line-height: 1.6; margin-bottom: 32px; }
-.hero-actions { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-.hero-stat { display: flex; flex-direction: column; gap: 4px; }
-.hero-stat .number { font-size: 24px; font-weight: 700; color: var(--accent); }
-.hero-stat .label { font-size: 13px; color: var(--gray-500); }
+.hero { 
+  padding: 80px 120px 64px; 
+  display: flex; 
+  flex-direction: row; /* Esto pone los elementos uno al lado del otro */
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 64px; 
+}
 
 .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; }
 .step-card { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 24px; }
