@@ -2,14 +2,7 @@
   "rewrites": [
     {
       "source": "/resto/demo",
-      "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/resto/demo",
-      "permanent": false
+      "destination": "/app.html"
     }
   ]
 }
