@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/resto/demo",
+      "destination": "/index.html"
+    }
+  ]
+}
