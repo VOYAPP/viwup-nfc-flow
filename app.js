@@ -11,6 +11,20 @@ if (!CONFIG) {
   // Si no existe, cargamos la demo por defecto o mostramos error
   CONFIG = CLIENTES["demo"]; 
 }
+
+// --- NUEVO BLOQUE: Inyección de fondo dinámico y tema oscuro ---
+if (CONFIG.bgUrl) {
+  document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('${CONFIG.bgUrl}')`;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundAttachment = 'fixed';
+}
+
+if (CONFIG.theme === 'dark') {
+  document.body.classList.add('dark-theme');
+}
+// ---------------------------------------------------------------
+
 var selectedGarzon = null;
 var selectedRating = 0;
 var selectedMotivos = [];
