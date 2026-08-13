@@ -1,3 +1,16 @@
+// 1. Leer la URL (ej: viwup.cl/resto/lucianosbbq)
+var pathArray = window.location.pathname.split('/');
+// Extraer la última parte de la URL (ej: "lucianosbbq")
+var urlId = pathArray[pathArray.length - 1]; 
+
+// 2. Buscar ese ID en nuestra base de datos (config.js)
+var CONFIG = CLIENTES[urlId];
+
+// 3. Sistema de seguridad por si escriben mal la URL
+if (!CONFIG) {
+  // Si no existe, cargamos la demo por defecto o mostramos error
+  CONFIG = CLIENTES["demo"]; 
+}
 var selectedGarzon = null;
 var selectedRating = 0;
 var selectedMotivos = [];
