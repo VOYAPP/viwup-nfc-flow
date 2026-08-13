@@ -18,7 +18,7 @@ var CLIENTES = {
     bgUrl: '/img/bg-lucianos.webp', // La foto de fondo
     theme: 'dark', // Le dice al sistema que use texto blanco
     garzones: ['Carlos', 'Ana', 'Luis', 'Sofía'],
-    motivos: ['Carne fría', 'Demora', 'Servicio', 'Limpieza'],
+    motivos: ['Servicio', 'Cocina', 'Barra'],
     googleMapsUrl: 'https://www.google.com/maps/place/...' 
   }
   // Para agregar el cliente 3, solo pones una coma arriba y pegas otro bloque
