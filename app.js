@@ -155,6 +155,7 @@ function handleSOSSubmit() {
     motivos: selectedMotivos.join(', '),
     comentario: comentario,
     estado: 'enviado'
+    correoDestino: CONFIG.correoAlerta
   }).then(function() {
     ctaBtn.textContent = '\u2713 Enviado';
     ctaBtn.classList.remove('loading');
