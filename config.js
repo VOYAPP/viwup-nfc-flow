@@ -7,7 +7,7 @@ var CLIENTES = {
     logoUrl: null,
     garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
     motivos: ['Servicio', 'Cocina', 'Barra'],
-    googleMapsUrl: 'https://www.google.com/maps'
+    googleMapsUrl: 'https://www.google.com/maps',
     correoAlerta: 'admin.viwup@gmail.cl' // Tu correo para recibir las pruebas
   },
   "lucianosbbq": {
@@ -20,7 +20,7 @@ var CLIENTES = {
     theme: 'dark', // Le dice al sistema que use texto blanco
     garzones: ['Carlos', 'Ana', 'Luis', 'Sofía'],
     motivos: ['Servicio', 'Cocina', 'Barra'],
-    googleMapsUrl: 'https://www.google.com/maps/place/...'
+    googleMapsUrl: 'https://www.google.com/maps/place/...',
     correoAlerta: 'admin.viwup@gmail.cl' // Tu correo para recibir las pruebas
   }
   // Para agregar el cliente 3, solo pones una coma arriba y pegas otro bloque
