@@ -8,7 +8,7 @@ var CLIENTES = {
     garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
     motivos: ['Servicio', 'Cocina', 'Barra'],
     googleMapsUrl: 'https://www.google.com/maps',
-    whatsappAlerta: '+56965970407'' // Telefono para recibir las pruebas
+    whatsappAlerta: '+56965970407' // Telefono para recibir las pruebas
   },
   "lucianosbbq": {
     idLocal: 'REST_LUCIANOS_01',
@@ -21,7 +21,7 @@ var CLIENTES = {
     garzones: ['Carlos', 'Ana', 'Luis', 'Sofía'],
     motivos: ['Servicio', 'Cocina', 'Barra'],
     googleMapsUrl: 'https://www.google.com/maps/place/...',
-    correoAlerta: 'admin.viwup@gmail.cl' // Tu correo para recibir las pruebas
+    whatsappAlerta: '+56965970407' // Telefono para recibir las alertas
   }
   // Para agregar el cliente 3, solo pones una coma arriba y pegas otro bloque
 };
