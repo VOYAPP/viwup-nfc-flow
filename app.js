@@ -155,7 +155,7 @@ function handleSOSSubmit() {
     motivos: selectedMotivos.join(', '),
     comentario: comentario,
     estado: 'enviado',
-    correoDestino: CONFIG.correoAlerta
+    telefonoAdministrador: CONFIG.whatsappAlerta // <-- ¡AQUÍ ESTÁ EL CAMBIO!
   }).then(function() {
     ctaBtn.textContent = '\u2713 Enviado';
     ctaBtn.classList.remove('loading');
