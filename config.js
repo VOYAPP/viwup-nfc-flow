@@ -8,7 +8,7 @@ var CLIENTES = {
     garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
     motivos: ['Servicio', 'Cocina', 'Barra'],
     googleMapsUrl: 'https://www.google.com/maps',
-    correoAlerta: 'admin.viwup@gmail.cl' // Tu correo para recibir las pruebas
+    whatsappAlerta: '+56965970407'' // Telefono para recibir las pruebas
   },
   "lucianosbbq": {
     idLocal: 'REST_LUCIANOS_01',
