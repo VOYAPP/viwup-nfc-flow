@@ -5,7 +5,7 @@ var CLIENTES = {
     webhookUrl: 'https://hook.us2.make.com/2f2amy2uq88ptk4fksltadyxn485xeov',
     primaryColor: '#1B7A6E',
     logoUrl: null,
-    garzones: ['Andrés', 'Camila', 'Diego', 'Valentina'],
+    garzones: ['Andrés', 'Camila', 'Diego', 'Valentina','Catalina','Hector'],
     motivos: ['Servicio', 'Cocina', 'Barra'],
     googleMapsUrl: 'https://www.google.com/maps',
     whatsappAlerta: '+56965970407', // Telefono para recibir las pruebas
