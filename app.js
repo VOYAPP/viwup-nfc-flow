@@ -1,10 +1,11 @@
 // ==========================================
 // 1. CONEXIÓN A SUPABASE
 // ==========================================
-// ¡IMPORTANTE! Reemplaza esto con los datos de tu panel (Project Settings -> API)
 const supabaseUrl = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MDA1OTgsImV4cCI6MjEwMzA3NjU5OH0.BvGcxpDWYn1uOSScG2GHLEOAcTZWW336FRE0JsWwsRc';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// SOLUCIÓN: Cambiamos el nombre de la variable para que no choque con la del HTML
+const clienteSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // El webhook maestro de Make para TODAS las alertas de todos los locales
 const MASTER_WEBHOOK_URL = 'https://hook.us2.make.com/2f2amy2uq88ptk4fksltadyxn485xeov';
@@ -19,7 +20,7 @@ var selectedRating = 0;
 var selectedMotivos = [];
 var waitingForGoogleMaps = false;
 
-// Motivos por defecto (Luego puedes agregarlos a Supabase si quieres personalizarlos por local)
+// Motivos por defecto
 const motivosDefault = ['Servicio', 'Cocina', 'Barra'];
 
 // ==========================================
@@ -32,21 +33,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!urlId || urlId === 'app.html') urlId = 'demo'; // Fallback de seguridad
 
     try {
-        // 2. Buscar el local en la base de datos
-        const { data: localData, error: localError } = await supabase
+        // 2. Buscar el local en la base de datos usando "clienteSupabase"
+        const { data: localData, error: localError } = await clienteSupabase
             .from('locales')
             .select('*')
             .eq('slug', urlId)
             .single();
 
         if (localError || !localData) {
-            document.body.innerHTML = "<h1 class='heading-lg' style='margin-top:50px;'>Local no encontrado en el sistema</h1>";
+            document.body.innerHTML = "<h1 class='heading-lg' style='margin-top:50px; text-align:center;'>Local no encontrado en el sistema.<br>Revisa que el RLS esté desactivado.</h1>";
+            console.error("Error local:", localError);
             return;
         }
         localActual = localData;
 
-        // 3. Buscar los garzones activos de este local
-        const { data: garzonesData, error: garzonesError } = await supabase
+        // 3. Buscar los garzones activos de este local usando "clienteSupabase"
+        const { data: garzonesData, error: garzonesError } = await clienteSupabase
             .from('garzones')
             .select('*')
             .eq('local_id', localActual.id)
@@ -54,6 +56,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         if (!garzonesError && garzonesData) {
             garzonesActuales = garzonesData;
+        } else {
+            console.error("Error garzones:", garzonesError);
         }
 
         // 4. Aplicar diseño y dibujar los botones
@@ -61,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderChipsGarzon('chips-garzon-inicio');
 
     } catch (error) {
-        console.error("Error conectando con Supabase:", error);
+        console.error("Error crítico conectando con Supabase:", error);
     }
 });
 
@@ -116,7 +120,7 @@ function renderChipsGarzon(containerId) {
     var container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
-    // Ahora leemos la base de datos, no el config estático
+    
     for (var i = 0; i < garzonesActuales.length; i++) {
         (function(garzon) {
             container.appendChild(createChip(garzon.nombre, function() { selectGarzon(garzon.nombre); }));
@@ -203,15 +207,15 @@ function handleSOSSubmit() {
 
     sendToWebhook({
         fecha: new Date().toISOString(),
-        idLocal: localActual.id, // ID extraído de Supabase
-        local: localActual.nombre, // Nombre extraído de Supabase
+        idLocal: localActual.id,
+        local: localActual.nombre,
         garzon: selectedGarzon || '',
         rating: selectedRating,
         tipo: 'SOS',
         motivos: selectedMotivos.join(', '),
         comentario: comentario,
         estado: 'enviado',
-        telefonoAdministrador: localActual.telefono_admin // Telefono extraído de Supabase
+        telefonoAdministrador: localActual.telefono_admin
     }).then(function() {
         ctaBtn.textContent = '\u2713 Enviado';
         ctaBtn.classList.remove('loading');
@@ -239,7 +243,6 @@ function handleSEORedirect() {
     }).catch(function() {});
     waitingForGoogleMaps = true;
     
-    // Asumimos que tienes 'google_maps_url' en la base de datos. Si está vacía, manda a la raíz de Google Maps.
     var mapaUrl = localActual.google_maps_url || 'https://www.google.com/maps'; 
     window.open(mapaUrl, '_blank');
 }
