@@ -2,8 +2,8 @@
 // 1. CONEXIÓN A SUPABASE
 // ==========================================
 // ¡IMPORTANTE! Reemplaza esto con los datos de tu panel (Project Settings -> API)
-const supabaseUrl = 'TU_URL_DE_SUPABASE';
-const supabaseKey = 'TU_CLAVE_ANONIMA_PUBLICA';
+const supabaseUrl = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MDA1OTgsImV4cCI6MjEwMzA3NjU5OH0.BvGcxpDWYn1uOSScG2GHLEOAcTZWW336FRE0JsWwsRc';
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // El webhook maestro de Make para TODAS las alertas de todos los locales
