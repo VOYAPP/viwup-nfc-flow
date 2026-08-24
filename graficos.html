@@ -368,6 +368,30 @@
       barsContainer.innerHTML = htmlBars;
       labelsContainer.innerHTML = htmlLabels;
     }
+    <script>
+    // Toggle UI Gráficos corregido para escuchar correctamente los botones
+    document.querySelectorAll('.chart-toggle').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.chart-toggle').forEach(b => {
+          b.classList.remove('bg-[#0F172A]', 'text-white');
+          b.classList.add('text-[#64748B]', 'hover:text-[#0F172A]');
+        });
+        
+        e.target.classList.add('bg-[#0F172A]', 'text-white');
+        e.target.classList.remove('text-[#64748B]', 'hover:text-[#0F172A]');
+        
+        if(e.target.id === 'btn-actividad') {
+          document.getElementById('chartDiaria').classList.remove('hidden');
+          document.getElementById('chartHorarios').classList.add('hidden');
+          document.getElementById('chartSubtitle').textContent = 'Resumen de escaneos y alertas SOS del mes actual.';
+        } else {
+          document.getElementById('chartDiaria').classList.add('hidden');
+          document.getElementById('chartHorarios').classList.remove('hidden');
+          document.getElementById('chartSubtitle').textContent = 'Concentración de alertas por hora operativa.';
+        }
+      });
+    });
+  </script>
   </script>
 </body>
 </html>
