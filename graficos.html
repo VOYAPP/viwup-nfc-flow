@@ -3,273 +3,264 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ViwUp — Gráficos</title>
+  <title>ViwUp — Gráficos / Analítica</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     * { font-family: 'Inter', sans-serif; }
+    .line-dash { stroke-dasharray: 6 4; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    /* Transición suave para el gráfico de anillo */
     circle { transition: stroke-dasharray 1s ease-out, stroke-dashoffset 1s ease-out; }
   </style>
 </head>
-<body class="min-h-screen bg-[#F8FAFC]">
+<body class="bg-[#F8FAFC] min-h-screen">
 
-  <!-- ═══ TOP NAV ═══ -->
-  <nav class="bg-white w-full border-b border-slate-100">
-    <div class="flex items-center justify-between px-4 md:px-12 h-14 md:h-[76px]">
-      <div class="flex items-center gap-6 md:gap-8">
+  <!-- ========== TOP NAV (white) ========== -->
+  <nav class="bg-white border-b border-slate-100 sticky top-0 z-50">
+    <div class="max-w-[1400px] mx-auto flex items-center justify-between h-14 md:h-[76px] px-4 md:px-10">
+      <!-- Logo -->
+      <div class="flex items-center gap-6">
         <img src="img/logo.svg" alt="ViwUp Logo" class="h-12 w-auto" />
-        <div class="hidden md:flex items-center gap-5">
-          <a href="dashboard.html" class="text-[#94A3B8] text-sm font-medium hover:text-slate-700 transition-colors">Dashboard</a>
-          <a href="evaluaciones.html" class="text-[#94A3B8] text-sm font-medium hover:text-slate-700 transition-colors">Evaluaciones</a>
-          <a href="graficos.html" class="text-[#3B82F6] text-sm font-semibold border-b-2 border-[#3B82F6] pb-1">Gráficos</a>
+        <!-- Desktop nav links -->
+        <div class="hidden md:flex items-center gap-6 text-sm font-medium">
+          <a href="dashboard.html" class="text-[#94A3B8] hover:text-[#0F172A] transition-colors">Dashboard</a>
+          <a href="evaluaciones.html" class="text-[#94A3B8] hover:text-[#0F172A] transition-colors">Evaluaciones</a>
+          <a href="graficos.html" class="text-[#3B82F6] font-semibold border-b-2 border-[#3B82F6] pb-1">Gráficos</a>
         </div>
       </div>
-      <div class="hidden md:flex items-center gap-4">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-slate-200"></div>
-          <span id="ui-nombre-local-desktop" class="text-[#0F172A] text-2xl font-bold">Cargando...</span>
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ECFDF5] text-[#065F46] text-xs font-semibold">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>En vivo
-          </span>
-        </div>
-        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-[#374151] text-xs hover:bg-slate-50">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <!-- Restaurant name -->
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">R</div>
+        <span id="ui-nombre-local-desktop" class="text-sm md:text-base font-bold text-[#0F172A]">Cargando...</span>
+        <span class="hidden md:inline-flex text-xs font-semibold text-[#065F46] bg-[#ECFDF5] rounded-full px-2 py-0.5">● En vivo</span>
+      </div>
+      <!-- Right actions -->
+      <div class="hidden md:flex items-center gap-4 text-sm text-[#475569]">
+        <button class="flex items-center gap-1 hover:text-[#0F172A]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           Este mes
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-[#374151] text-xs hover:bg-slate-50">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <button class="flex items-center gap-1 hover:text-[#0F172A]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
           Exportar Reporte
         </button>
       </div>
-      <div class="flex md:hidden items-center gap-3">
-        <button class="text-[#374151] text-xs flex items-center gap-1">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          Exportar
-        </button>
-        <button id="hamburger-btn">
-          <svg class="w-6 h-6 text-[#0F172A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-      </div>
-    </div>
-    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-100 px-4 py-3 space-y-2 bg-white">
-      <a href="dashboard.html" class="block text-[#94A3B8] text-sm py-1">Dashboard</a>
-      <a href="evaluaciones.html" class="block text-[#94A3B8] text-sm py-1">Evaluaciones</a>
-      <a href="graficos.html" class="block text-[#3B82F6] text-sm font-semibold py-1">Gráficos</a>
     </div>
   </nav>
 
-  <!-- Mobile Restaurant Header -->
-  <div class="md:hidden flex items-center gap-2 px-4 py-3 bg-white border-b border-slate-100">
-    <div class="w-8 h-8 rounded-full bg-slate-200"></div>
-    <span id="ui-nombre-local-mobile" class="text-sm font-bold text-[#0F172A]">Cargando...</span>
-    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#065F46] text-xs font-semibold">
-      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>En vivo
-    </span>
+  <!-- Mobile sub-header -->
+  <div class="md:hidden bg-white border-b border-slate-100">
+    <div class="flex items-center justify-between px-4 py-2">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500">R</div>
+        <span id="ui-nombre-local-mobile" class="text-sm font-bold text-[#0F172A]">Cargando...</span>
+        <span class="text-[10px] font-semibold text-[#065F46] bg-[#ECFDF5] rounded-full px-1.5 py-0.5">● En vivo</span>
+      </div>
+    </div>
+    <!-- Mobile nav tabs -->
+    <div class="flex border-t border-slate-100 text-xs font-medium text-center">
+      <a href="dashboard.html" class="flex-1 py-2.5 text-[#94A3B8]">Dashboard</a>
+      <a href="evaluaciones.html" class="flex-1 py-2.5 text-[#94A3B8]">Evaluaciones</a>
+      <a href="graficos.html" class="flex-1 py-2.5 text-[#3B82F6] font-semibold border-b-2 border-[#3B82F6]">Gráficos</a>
+    </div>
   </div>
 
-  <!-- ═══ MAIN CONTENT ═══ -->
-  <main class="px-4 md:px-12 py-6 space-y-6 max-w-[1440px] mx-auto">
+  <!-- Mobile export button -->
+  <div class="md:hidden flex justify-end px-4 py-3">
+    <button class="flex items-center gap-1 text-xs text-[#475569] bg-white rounded-lg px-3 py-1.5 shadow-sm">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Exportar Reporte
+    </button>
+  </div>
 
-    <!-- ═══ CARD 1: Line Chart — Actividad de Escaneos ═══ -->
-    <div class="bg-white rounded-2xl p-4 md:p-6 shadow-[0_4px_12px_rgba(15,23,42,0.03)]">
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="max-w-[1400px] mx-auto px-4 md:px-10 pb-10 space-y-4 md:space-y-6 mt-2 md:mt-6">
+
+    <!-- ===== PRIMARY CHART CARD ===== -->
+    <div class="bg-white rounded-2xl shadow-[0_4px_12px_rgba(15,23,42,0.03)] p-4 md:p-6">
+      <!-- Header -->
       <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
         <div>
-          <h2 class="text-lg font-semibold text-[#0F172A]">Actividad de Escaneos por Día</h2>
-          <p class="text-xs text-[#64748B] mt-0.5">Resumen de escaneos y alertas SOS del mes actual.</p>
+          <h2 class="text-base md:text-lg font-bold text-[#0F172A]">Actividad de Escaneos por Día</h2>
+          <p class="text-xs text-[#64748B] mt-0.5" id="chartSubtitle">Resumen de escaneos y alertas SOS del mes actual.</p>
         </div>
-        <div class="flex items-center gap-1">
-          <button id="btn-actividad" class="chart-toggle px-3 py-1 rounded-md text-xs font-medium bg-[#0F172A] text-white">Actividad Diaria</button>
-          <button id="btn-horarios" class="chart-toggle px-3 py-1 rounded-md text-xs font-medium text-[#64748B] border border-slate-200 hover:bg-slate-50">Horarios Críticos</button>
-        </div>
-      </div>
-      <div class="flex items-center gap-4 mb-4">
-        <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-[#0D9488]"></span>
-          <span class="text-xs font-semibold text-[#0F172A]">Escaneos totales</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-[#EA580C]"></span>
-          <span class="text-xs font-semibold text-[#0F172A]">Alertas SOS</span>
+        <!-- Toggle -->
+        <div class="bg-[#F1F5F9] rounded-lg p-1 flex text-xs font-medium self-start">
+          <button id="btnActDiaria" onclick="showChart('diaria')" class="px-3 py-1.5 rounded-md bg-[#0F172A] text-white transition-all">Actividad Diaria</button>
+          <button id="btnHorCriticos" onclick="showChart('horarios')" class="px-3 py-1.5 rounded-md text-[#64748B] transition-all">Horarios Críticos</button>
         </div>
       </div>
 
-      <!-- Chart Area -->
-      <div class="relative w-full overflow-x-auto scrollbar-hide pb-2">
-        <!-- Este div fuerza el ancho de 800px para que el scroll móvil sea perfecto -->
+      <!-- Legend -->
+      <div class="flex items-center gap-5 mb-4 text-xs text-[#0F172A]">
+        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#0D9488]"></span>Escaneos totales</span>
+        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#EA580C]"></span>Alertas SOS</span>
+      </div>
+
+      <!-- ===== CHART: Actividad Diaria (Line chart) ===== -->
+      <div id="chartDiaria" class="relative w-full overflow-x-auto scrollbar-hide pb-2">
         <div class="w-[800px] lg:w-full">
-          <svg id="line-chart" viewBox="0 0 900 220" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="40" y1="20" x2="880" y2="20" stroke="#F1F5F9" stroke-width="1"/>
-            <line x1="40" y1="60" x2="880" y2="60" stroke="#F1F5F9" stroke-width="1"/>
-            <line x1="40" y1="100" x2="880" y2="100" stroke="#F1F5F9" stroke-width="1"/>
-            <line x1="40" y1="140" x2="880" y2="140" stroke="#F1F5F9" stroke-width="1"/>
-            <line x1="40" y1="180" x2="880" y2="180" stroke="#F1F5F9" stroke-width="1"/>
-            <path d="M60,130 L120,110 L180,120 L240,80 L300,100 L360,95 L420,90 L480,120 L540,100 L600,110 L660,115 L720,50 L780,40 L840,55 L840,180 L60,180 Z" fill="#0D9488" fill-opacity="0.08"/>
-            <polyline points="60,130 120,110 180,120 240,80 300,100 360,95 420,90 480,120 540,100 600,110 660,115 720,50 780,40 840,55" stroke="#0D9488" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="60,165 120,160 180,162 240,155 300,158 360,160 420,162 480,158 540,160 600,155 660,158 720,150 780,148 840,155" stroke="#EA580C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 3"/>
-            <circle cx="240" cy="80" r="4" fill="#0D9488"/>
-            <circle cx="720" cy="50" r="4" fill="#0D9488"/>
-            <circle cx="780" cy="40" r="4" fill="#0D9488"/>
-            <text x="60" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Lun 01</text>
-            <text x="120" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mar 02</text>
-            <text x="180" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mié 03</text>
-            <text x="240" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Jue 04</text>
-            <text x="300" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Vie 05</text>
-            <text x="360" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Sáb 06</text>
-            <text x="420" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Dom 07</text>
-            <text x="480" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Lun 08</text>
-            <text x="540" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mar 09</text>
-            <text x="600" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mié 10</text>
-            <text x="660" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Jue 11</text>
-            <text x="720" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Vie 12</text>
-            <text x="780" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Sáb 13</text>
-            <text x="840" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Dom 14</text>
+          <svg viewBox="0 0 1296 215" class="w-full h-auto" preserveAspectRatio="xMidYMid meet" fill="none">
+            <line x1="0" y1="0" x2="1296" y2="0" stroke="#E2E8F0" stroke-width="1"/>
+            <line x1="0" y1="48" x2="1296" y2="48" stroke="#E2E8F0" stroke-width="1"/>
+            <line x1="0" y1="95" x2="1296" y2="95" stroke="#E2E8F0" stroke-width="1"/>
+            <line x1="0" y1="143" x2="1296" y2="143" stroke="#E2E8F0" stroke-width="1"/>
+            <line x1="0" y1="190" x2="1296" y2="190" stroke="#E2E8F0" stroke-width="1"/>
+            <polygon points="50,110 150,117 250,121 350,88 450,48 550,22 650,37 750,113 850,118 950,106 1050,77 1150,37 1250,15 1250,190 50,190" fill="#0D9488" opacity="0.08"/>
+            <polyline points="50,110 150,117 250,121 350,88 450,48 550,22 650,37 750,113 850,118 950,106 1050,77 1150,37 1250,15" fill="none" stroke="#0D9488" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <polyline points="50,181 150,177 250,179 350,172 450,168 550,174 650,183 750,180 850,175 950,181 1050,170 1150,164 1250,177" fill="none" stroke="#EA580C" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" class="line-dash"/>
+            <circle cx="550" cy="22" r="5" fill="#0D9488"/>
+            <circle cx="1250" cy="15" r="5" fill="#0D9488"/>
+            <circle cx="1150" cy="164" r="5" fill="#EA580C"/>
           </svg>
+          <div class="flex justify-between text-[10px] md:text-[11px] text-[#64748B] mt-1 px-1">
+            <span>Lun 01</span><span>Mar 02</span><span>Mié 03</span><span>Jue 04</span>
+            <span>Vie 05</span><span>Sáb 06</span><span>Dom 07</span><span>Lun 08</span>
+            <span>Mar 09</span><span>Mié 10</span><span>Jue 11</span><span>Vie 12</span>
+            <span>Sáb 13</span><span>Dom 14</span>
+          </div>
         </div>
       </div>
-    </div> <!-- Cierre correcto de la Tarjeta 1 -->
 
-    <!-- ═══ BOTTOM ROW ═══ -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- ===== CHART: Horarios Críticos DINÁMICO (Basado en la BD) ===== -->
+      <div id="chartHorarios" class="hidden relative w-full overflow-x-auto scrollbar-hide pb-2">
+        <div class="min-w-[600px] lg:w-full flex flex-col mt-4">
+          <!-- Líneas de fondo y Eje Y -->
+          <div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-0 pb-6 pr-4">
+            <div class="border-t border-slate-100 w-full h-0"></div>
+            <div class="border-t border-slate-100 w-full h-0"></div>
+            <div class="border-t border-slate-100 w-full h-0"></div>
+            <div class="border-t border-slate-100 w-full h-0"></div>
+          </div>
+          <!-- Contenedor dinámico de Barras -->
+          <div id="dynamic-bars-container" class="relative z-10 flex items-end justify-between h-[150px] gap-2 px-4">
+             <!-- JS inyectará las barras aquí -->
+          </div>
+          <!-- Contenedor dinámico de Etiquetas X -->
+          <div id="dynamic-labels-container" class="relative z-10 flex justify-between mt-2 px-4 text-[10px] text-[#64748B]">
+             <!-- JS inyectará las horas aquí -->
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <!-- ═══ CARD 2: Donut — Distribución por Flujo ═══ -->
-      <div class="bg-white rounded-2xl p-6 shadow-[0_4px_12px_rgba(15,23,42,0.03)] flex flex-col items-center">
-        <h2 class="text-lg font-semibold text-[#0F172A] self-start">Distribución por Flujo</h2>
-        <!-- Donut Chart Dinámico -->
-        <div class="relative my-6">
-          <svg width="160" height="160" viewBox="0 0 160 160">
-            <!-- Circunferencia base -->
+    <!-- ===== BOTTOM ROW: Donut + Stacked Bars ===== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+
+      <!-- Donut Chart: Distribución por Flujo -->
+      <div class="bg-white rounded-2xl shadow-[0_4px_12px_rgba(15,23,42,0.03)] p-4 md:p-6 flex flex-col items-center">
+        <h3 class="text-base font-bold text-[#0F172A] mb-4 self-start">Distribución por Flujo</h3>
+        <div class="relative w-[140px] h-[140px] md:w-[160px] md:h-[160px] my-4">
+          <svg viewBox="0 0 160 160" class="w-full h-full">
             <circle cx="80" cy="80" r="65" fill="none" stroke="#F1F5F9" stroke-width="20" stroke-linecap="round"/>
-            <!-- Anillo SEO -->
-            <circle id="donut-seo" cx="80" cy="80" r="65" fill="none" stroke="#10B981" stroke-width="20"
-              stroke-dasharray="0 408.4"
-              stroke-dashoffset="0"
-              transform="rotate(-90 80 80)"
-              stroke-linecap="round"/>
-            <!-- Anillo SOS -->
-            <circle id="donut-sos" cx="80" cy="80" r="65" fill="none" stroke="#EA580C" stroke-width="20"
-              stroke-dasharray="0 408.4"
-              stroke-dashoffset="0"
-              transform="rotate(-90 80 80)"
-              stroke-linecap="round"/>
-            <!-- Center text -->
-            <text id="donut-center-text" x="80" y="74" text-anchor="middle" fill="#0F172A" font-size="24" font-weight="700" font-family="Inter">100%</text>
-            <text x="80" y="92" text-anchor="middle" fill="#64748B" font-size="11" font-weight="400" font-family="Inter">Flujos Totales</text>
+            <circle id="donut-seo" cx="80" cy="80" r="65" fill="none" stroke="#10B981" stroke-width="20" stroke-dasharray="0 408.4" stroke-dashoffset="0" transform="rotate(-90 80 80)" stroke-linecap="round"/>
+            <circle id="donut-sos" cx="80" cy="80" r="65" fill="none" stroke="#EA580C" stroke-width="20" stroke-dasharray="0 408.4" stroke-dashoffset="0" transform="rotate(-90 80 80)" stroke-linecap="round"/>
+            <text id="donut-center-text" x="80" y="74" text-anchor="middle" fill="#0F172A" font-size="24" font-weight="700">100%</text>
+            <text x="80" y="92" text-anchor="middle" fill="#64748B" font-size="11">Flujos Totales</text>
           </svg>
         </div>
-        <!-- Legend Dinámica -->
-        <div class="flex items-center gap-6">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-sm bg-[#10B981]"></span>
-            <span class="text-[13px] font-semibold text-[#0F172A]">SEO (4-5 ★)</span>
-            <span id="legend-seo-text" class="text-[13px] font-bold text-[#10B981]">--%</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-sm bg-[#EA580C]"></span>
-            <span class="text-[13px] font-semibold text-[#0F172A]">SOS (1-3 ★)</span>
-            <span id="legend-sos-text" class="text-[13px] font-bold text-[#EA580C]">--%</span>
-          </div>
+        <div class="flex items-center gap-6 mt-2">
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-[#10B981]"></span><span class="text-[13px] font-semibold text-[#0F172A]">SEO (4-5 ★)</span><span id="legend-seo-text" class="text-[13px] font-bold text-[#10B981]">--%</span></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-[#EA580C]"></span><span class="text-[13px] font-semibold text-[#0F172A]">SOS (1-3 ★)</span><span id="legend-sos-text" class="text-[13px] font-bold text-[#EA580C]">--%</span></div>
         </div>
       </div>
 
-      <!-- ═══ CARD 3: Stacked Bars — Evolución de Focos SOS ═══ -->
-      <div class="bg-white rounded-2xl p-6 shadow-[0_4px_12px_rgba(15,23,42,0.03)]">
-        <h2 class="text-lg font-semibold text-[#0F172A]">Evolución de Focos SOS</h2>
+      <!-- Stacked Bar Chart: Evolución de Focos SOS -->
+      <div class="bg-white rounded-2xl shadow-[0_4px_12px_rgba(15,23,42,0.03)] p-4 md:p-6">
+        <h3 class="text-base font-bold text-[#0F172A]">Evolución de Focos SOS</h3>
         <p class="text-xs text-[#64748B] mt-0.5 mb-4">Distribución semanal de alertas por área</p>
-        
+
         <div class="flex gap-2">
-          <div class="flex flex-col justify-between text-right pr-1 shrink-0" style="height: 200px;">
-            <span class="text-[11px] text-[#64748B]">20</span>
-            <span class="text-[11px] text-[#64748B]">15</span>
-            <span class="text-[11px] text-[#64748B]">10</span>
-            <span class="text-[11px] text-[#64748B]">5</span>
-            <span class="text-[11px] text-[#64748B]">0</span>
+          <div class="flex flex-col justify-between text-[10px] text-[#64748B] h-[140px] pr-1 shrink-0">
+            <span>20</span><span>15</span><span>10</span><span>5</span><span>0</span>
           </div>
-          
-          <div class="flex-1 flex items-end justify-around gap-2" style="height: 200px;">
-            <div class="flex flex-col items-center gap-1 flex-1">
-              <div class="w-full max-w-[48px] flex flex-col rounded-t-md overflow-hidden">
-                <div class="bg-[#EA580C]" style="height:70px"></div>
-                <div class="bg-[#3B82F6]" style="height:50px"></div>
-                <div class="bg-[#F59E0B]" style="height:30px"></div>
-                <div class="bg-[#8B5CF6]" style="height:20px"></div>
-                <div class="bg-[#10B981]" style="height:10px"></div>
-              </div>
-              <span class="text-[11px] text-[#64748B] font-medium mt-1">Sem 1</span>
+          <div class="flex-1 flex items-end justify-around h-[140px] gap-2">
+            <div class="flex-1 flex flex-col justify-end h-full">
+              <div class="bg-[#EA580C] rounded-t" style="height:28%"></div>
+              <div class="bg-[#3B82F6]" style="height:14%"></div>
+              <div class="bg-[#F59E0B]" style="height:10%"></div>
+              <div class="bg-[#8B5CF6]" style="height:5%"></div>
+              <div class="bg-[#10B981]" style="height:3%"></div>
             </div>
-            <div class="flex flex-col items-center gap-1 flex-1">
-              <div class="w-full max-w-[48px] flex flex-col rounded-t-md overflow-hidden">
-                <div class="bg-[#EA580C]" style="height:50px"></div>
-                <div class="bg-[#3B82F6]" style="height:60px"></div>
-                <div class="bg-[#F59E0B]" style="height:40px"></div>
-                <div class="bg-[#8B5CF6]" style="height:10px"></div>
-                <div class="bg-[#10B981]" style="height:20px"></div>
-              </div>
-              <span class="text-[11px] text-[#64748B] font-medium mt-1">Sem 2</span>
+            <div class="flex-1 flex flex-col justify-end h-full">
+              <div class="bg-[#EA580C] rounded-t" style="height:22%"></div>
+              <div class="bg-[#3B82F6]" style="height:18%"></div>
+              <div class="bg-[#F59E0B]" style="height:14%"></div>
+              <div class="bg-[#8B5CF6]" style="height:8%"></div>
+              <div class="bg-[#10B981]" style="height:13%"></div>
             </div>
-            <div class="flex flex-col items-center gap-1 flex-1">
-              <div class="w-full max-w-[48px] flex flex-col rounded-t-md overflow-hidden">
-                <div class="bg-[#EA580C]" style="height:80px"></div>
-                <div class="bg-[#3B82F6]" style="height:40px"></div>
-                <div class="bg-[#F59E0B]" style="height:20px"></div>
-                <div class="bg-[#8B5CF6]" style="height:30px"></div>
-                <div class="bg-[#10B981]" style="height:10px"></div>
-              </div>
-              <span class="text-[11px] text-[#64748B] font-medium mt-1">Sem 3</span>
+            <div class="flex-1 flex flex-col justify-end h-full">
+              <div class="bg-[#EA580C] rounded-t" style="height:18%"></div>
+              <div class="bg-[#3B82F6]" style="height:15%"></div>
+              <div class="bg-[#F59E0B]" style="height:12%"></div>
+              <div class="bg-[#8B5CF6]" style="height:20%"></div>
+              <div class="bg-[#10B981]" style="height:20%"></div>
             </div>
-            <div class="flex flex-col items-center gap-1 flex-1">
-              <div class="w-full max-w-[48px] flex flex-col rounded-t-md overflow-hidden">
-                <div class="bg-[#EA580C]" style="height:40px"></div>
-                <div class="bg-[#3B82F6]" style="height:30px"></div>
-                <div class="bg-[#F59E0B]" style="height:20px"></div>
-                <div class="bg-[#8B5CF6]" style="height:10px"></div>
-                <div class="bg-[#10B981]" style="height:20px"></div>
-              </div>
-              <span class="text-[11px] text-[#64748B] font-medium mt-1">Sem 4</span>
+            <div class="flex-1 flex flex-col justify-end h-full">
+              <div class="bg-[#EA580C] rounded-t" style="height:15%"></div>
+              <div class="bg-[#3B82F6]" style="height:20%"></div>
+              <div class="bg-[#F59E0B]" style="height:10%"></div>
+              <div class="bg-[#8B5CF6]" style="height:18%"></div>
+              <div class="bg-[#10B981]" style="height:27%"></div>
             </div>
           </div>
         </div>
-        
-        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4">
-          <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#EA580C]"></span><span class="text-[10px] font-semibold text-[#0F172A]">Cocina</span></div>
-          <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#3B82F6]"></span><span class="text-[10px] font-semibold text-[#0F172A]">Atención</span></div>
-          <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#F59E0B]"></span><span class="text-[10px] font-semibold text-[#0F172A]">Tiempos</span></div>
-          <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#8B5CF6]"></span><span class="text-[10px] font-semibold text-[#0F172A]">Barra</span></div>
-          <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#10B981]"></span><span class="text-[10px] font-semibold text-[#0F172A]">Limpieza</span></div>
+
+        <div class="flex justify-around text-[10px] text-[#64748B] mt-2 ml-6">
+          <span>Sem 1</span><span>Sem 2</span><span>Sem 3</span><span>Sem 4</span>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3 text-[10px] text-[#0F172A]">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#EA580C]"></span>Cocina</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#3B82F6]"></span>Atención</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#F59E0B]"></span>Tiempos</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#8B5CF6]"></span>Barra</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#10B981]"></span>Limpieza</span>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- ═══ JAVASCRIPT & LÓGICA SUPABASE ═══ -->
+  <!-- ========== JAVASCRIPT & SUPABASE ========== -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Menú Hamburguesa
-    document.getElementById('hamburger-btn').addEventListener('click', () => {
+    function showChart(view) {
+      const diaria   = document.getElementById('chartDiaria');
+      const horarios = document.getElementById('chartHorarios');
+      const btnD     = document.getElementById('btnActDiaria');
+      const btnH     = document.getElementById('btnHorCriticos');
+      const subtitle = document.getElementById('chartSubtitle');
+
+      if (view === 'diaria') {
+        diaria.classList.remove('hidden');
+        horarios.classList.add('hidden');
+        btnD.classList.add('bg-[#0F172A]', 'text-white');
+        btnD.classList.remove('text-[#64748B]');
+        btnH.classList.remove('bg-[#0F172A]', 'text-white');
+        btnH.classList.add('text-[#64748B]');
+        subtitle.textContent = 'Resumen de escaneos y alertas SOS del mes actual.';
+      } else {
+        diaria.classList.add('hidden');
+        horarios.classList.remove('hidden');
+        btnH.classList.add('bg-[#0F172A]', 'text-white');
+        btnH.classList.remove('text-[#64748B]');
+        btnD.classList.remove('bg-[#0F172A]', 'text-white');
+        btnD.classList.add('text-[#64748B]');
+        subtitle.textContent = 'Concentración de alertas por hora operativa.';
+      }
+    }
+
+    document.getElementById('hamburger-btn')?.addEventListener('click', () => {
       document.getElementById('mobile-menu').classList.toggle('hidden');
     });
 
-    // Chart Toggles
-    document.querySelectorAll('.chart-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.chart-toggle').forEach(b => {
-          b.classList.remove('bg-[#0F172A]', 'text-white');
-          b.classList.add('text-[#64748B]', 'border', 'border-slate-200');
-        });
-        btn.classList.add('bg-[#0F172A]', 'text-white');
-        btn.classList.remove('text-[#64748B]', 'border', 'border-slate-200');
-      });
-    });
-
-    // 1. Inicializar Supabase (URL corregida)
+    // Supabase
     const SUPABASE_URL = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzUwMDU5OCwiZXhwIjoyMTAzMDc2NTk4fQ.stqb7z974XONthpmqO2lUKhvDX3fv6ANPPyedZxdZo0';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 2. Escuchar la sesión de Magic Link
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         cargarDatosDelLocal(session.user.id);
@@ -278,48 +269,105 @@
       }
     });
 
-    // 3. Carga Dinámica de Datos
     async function cargarDatosDelLocal(userId) {
       try {
-        const { data: local } = await supabase.from('locales').select('id, nombre').eq('admin_id', userId).single();
+        // Consultamos hora_apertura y hora_cierre de la BD
+        const { data: local } = await supabase
+          .from('locales')
+          .select('id, nombre, hora_apertura, hora_cierre')
+          .eq('admin_id', userId)
+          .single();
+
         if (local) {
-          // Actualizar Nombres
           document.getElementById('ui-nombre-local-desktop').innerText = local.nombre;
           document.getElementById('ui-nombre-local-mobile').innerText = local.nombre;
 
-          // Extraer Evaluaciones para actualizar Donut Chart
           const { data: evals } = await supabase.from('evaluaciones').select('*').eq('local_id', local.id);
           
           if (evals && evals.length > 0) {
-            // Calcular flujos
-            const seoCount = evals.filter(e => e.flujo === 'SEO' || e.calificacion >= 4).length;
-            const sosCount = evals.filter(e => e.flujo === 'SOS' || e.calificacion <= 3).length;
-            const total = seoCount + sosCount;
-
-            const seoPct = total > 0 ? Math.round((seoCount / total) * 100) : 0;
-            const sosPct = total > 0 ? 100 - seoPct : 0;
-
-            // Renderizar SVG dinámicamente (Circunferencia = 2 * PI * r(65) = ~408.4)
-            const circ = 408.4;
-            const seoDash = (seoPct / 100) * circ;
-            const sosDash = (sosPct / 100) * circ;
-
-            // Inyectar matemáticas al DOM visual
-            document.getElementById('donut-seo').setAttribute('stroke-dasharray', `${seoDash} ${circ}`);
-            document.getElementById('donut-sos').setAttribute('stroke-dasharray', `${sosDash} ${circ}`);
-            document.getElementById('donut-sos').setAttribute('stroke-dashoffset', `-${seoDash}`);
-
-            // Actualizar etiquetas
-            document.getElementById('donut-center-text').textContent = "100%";
-            document.getElementById('legend-seo-text').textContent = `${seoPct}%`;
-            document.getElementById('legend-sos-text').textContent = `${sosPct}%`;
+            actualizarDonutChart(evals);
+            // Si la base de datos no tiene valores configurados, por defecto toma de 12 a 23
+            renderizarHorariosCriticos(evals, local.hora_apertura ?? 12, local.hora_cierre ?? 23);
           }
         }
       } catch (err) {
-        console.error("Error cargando los datos:", err);
+        console.error("Error:", err);
       }
     }
-  </script>
 
+    function actualizarDonutChart(evals) {
+      const seoCount = evals.filter(e => e.flujo === 'SEO' || e.calificacion >= 4).length;
+      const sosCount = evals.filter(e => e.flujo === 'SOS' || e.calificacion <= 3).length;
+      const total = seoCount + sosCount;
+      const seoPct = total > 0 ? Math.round((seoCount / total) * 100) : 0;
+      const sosPct = total > 0 ? 100 - seoPct : 0;
+      const circ = 408.4;
+      const seoDash = (seoPct / 100) * circ;
+      const sosDash = (sosPct / 100) * circ;
+      
+      document.getElementById('donut-seo').setAttribute('stroke-dasharray', `${seoDash} ${circ}`);
+      document.getElementById('donut-sos').setAttribute('stroke-dasharray', `${sosDash} ${circ}`);
+      document.getElementById('donut-sos').setAttribute('stroke-dashoffset', `-${seoDash}`);
+      document.getElementById('donut-center-text').textContent = "100%";
+      document.getElementById('legend-seo-text').textContent = `${seoPct}%`;
+      document.getElementById('legend-sos-text').textContent = `${sosPct}%`;
+    }
+
+    // Horarios Críticos Dinámicos basados en la Base de Datos
+    function renderizarHorariosCriticos(evals, apertura, cierre) {
+      const barsContainer = document.getElementById('dynamic-bars-container');
+      const labelsContainer = document.getElementById('dynamic-labels-container');
+      
+      const rangoHoras = [];
+      let h = apertura;
+      while(true) {
+        rangoHoras.push(h);
+        if (h === cierre) break;
+        h = (h + 1) % 24;
+      }
+
+      const horasObj = {};
+      evals.forEach(ev => {
+        const horaEval = new Date(ev.created_at || ev.fecha).getHours();
+        if (!horasObj[horaEval]) horasObj[horaEval] = { total: 0, sos: 0 };
+        horasObj[horaEval].total++;
+        if (ev.flujo === 'SOS' || ev.calificacion <= 3) horasObj[horaEval].sos++;
+      });
+
+      let maxValor = 1;
+      rangoHoras.forEach(hora => {
+        if (horasObj[hora] && horasObj[hora].total > maxValor) {
+          maxValor = horasObj[hora].total;
+        }
+      });
+
+      let htmlBars = '';
+      let htmlLabels = '';
+
+      rangoHoras.forEach(hora => {
+        const datos = horasObj[hora] || { total: 0, sos: 0 };
+        const alturaTotal = datos.total === 0 ? 0 : (datos.total / maxValor) * 100;
+        const alturaSOS = datos.sos === 0 ? 0 : (datos.sos / maxValor) * 100;
+        const textoHora = hora.toString().padStart(2, '0') + ':00';
+
+        htmlBars += `
+          <div class="flex items-end justify-center gap-1 flex-1 h-full relative group cursor-pointer">
+            <div class="absolute -top-10 hidden group-hover:block bg-[#0F172A] text-white text-[10px] py-1 px-2 rounded z-20 whitespace-nowrap shadow-lg">
+              ${textoHora} • Escaneos: ${datos.total} • SOS: ${datos.sos}
+            </div>
+            <div class="w-full max-w-[28px] bg-[#0D9488] rounded-t-sm transition-all duration-700 hover:bg-[#0f766d]" style="height: ${alturaTotal}%"></div>
+            <div class="w-full max-w-[28px] bg-[#EA580C] rounded-t-sm transition-all duration-700 hover:bg-[#c2410c]" style="height: ${alturaSOS}%"></div>
+          </div>
+        `;
+
+        htmlLabels += `
+          <div class="flex-1 text-center font-medium">${textoHora}</div>
+        `;
+      });
+
+      barsContainer.innerHTML = htmlBars;
+      labelsContainer.innerHTML = htmlLabels;
+    }
+  </script>
 </body>
 </html>
