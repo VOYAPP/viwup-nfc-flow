@@ -33,7 +33,7 @@
       <div class="hidden md:flex items-center gap-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-slate-200"></div>
-          <span class="text-[#0F172A] text-2xl font-bold">Restaurante Demo</span>
+          <span id="ui-nombre-local-desktop" class="text-[#0F172A] text-2xl font-bold">Cargando...</span>
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ECFDF5] text-[#065F46] text-xs font-semibold">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             En vivo
@@ -69,7 +69,7 @@
   <!-- ═══ RESTAURANT HEADER (mobile) ═══ -->
   <div class="md:hidden flex items-center gap-2 px-4 py-3 bg-white border-b border-slate-100">
     <div class="w-8 h-8 rounded-full bg-slate-200"></div>
-    <span class="text-sm font-bold text-[#0F172A]">Restaurante Demo</span>
+    <span id="ui-nombre-local-mobile" class="text-sm font-bold text-[#0F172A]">Cargando...</span>
     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#065F46] text-xs font-semibold">
       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
       En vivo
@@ -92,7 +92,7 @@
             </svg>
           </div>
         </div>
-        <p class="text-4xl font-extrabold text-[#0F172A]">4.8</p>
+        <p id="ui-promedio" class="text-4xl font-extrabold text-[#0F172A]">-</p>
         <p class="text-xs font-semibold text-[#10B981] mt-1">+0.3 vs mes anterior</p>
       </div>
 
@@ -357,7 +357,7 @@
 
   </main>
 
-  <!-- ═══ JAVASCRIPT ═══ -->
+  <!-- ═══ JAVASCRIPT ORIGINAL ═══ -->
   <script>
     // ── Hamburger Menu ──
     const hamburgerBtn = document.getElementById('hamburger-btn');
@@ -422,25 +422,67 @@
       });
     }
   </script>
-<!-- ═══ SUPABASE & MAGIC LINK LOGIC ═══ -->
+
+  <!-- ═══ SUPABASE & LOGICA DINÁMICA ═══ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 1. Inicializar Supabase (Reemplaza con tus credenciales)
+    // 1. Inicializar Supabase (Reemplaza con tus llaves públicas)
     const SUPABASE_URL = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzUwMDU5OCwiZXhwIjoyMTAzMDc2NTk4fQ.stqb7z974XONthpmqO2lUKhvDX3fv6ANPPyedZxdZo0';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 2. Escuchar el inicio de sesión por Magic Link
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        console.log('¡Sesión exitosa!', session.user);
-        // El usuario entró por el Magic Link. Aquí puedes hacer un fetch 
-        // a tu base de datos para cargar las alertas reales.
-      } else if (event === 'SIGNED_OUT') {
-        // Si no hay sesión, puedes redirigirlo o mostrar un error
-        console.log('No hay sesión activa.');
+    // 2. Escuchar la sesión del Magic Link
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        // El usuario está logueado. Extraemos su ID.
+        const userId = session.user.id;
+        cargarDatosDelLocal(userId);
+      } else {
+        // Si no hay sesión
+        // Opcional: document.body.innerHTML = "<h2 style='text-align:center; margin-top:20px; font-family:sans-serif;'>Acceso denegado. Solicite su enlace por WhatsApp.</h2>";
       }
     });
+
+    // 3. Función para traer la data real de Supabase
+    async function cargarDatosDelLocal(userId) {
+      try {
+        // A) Buscar a qué local pertenece este administrador
+        const { data: local, error: errorLocal } = await supabase
+          .from('locales') // Reemplaza con el nombre real de tu tabla de locales
+          .select('id, nombre')
+          .eq('admin_id', userId) 
+          .single();
+
+        if (local) {
+          // B) Inyectamos el nombre real en el HTML (Escritorio y Móvil)
+          const nombreDesktop = document.getElementById('ui-nombre-local-desktop');
+          const nombreMobile = document.getElementById('ui-nombre-local-mobile');
+          
+          if(nombreDesktop) nombreDesktop.innerText = local.nombre;
+          if(nombreMobile) nombreMobile.innerText = local.nombre;
+
+          // C) Buscamos las evaluaciones de ESE local en específico
+          const { data: evaluaciones, error: errorEval } = await supabase
+            .from('evaluaciones') // Reemplaza con tu tabla real de evaluaciones
+            .select('*')
+            .eq('local_id', local.id);
+
+          if (evaluaciones) {
+            // Calcular métricas dinámicas (Ejemplo: Promedio)
+            if(evaluaciones.length > 0) {
+              const suma = evaluaciones.reduce((acc, curr) => acc + curr.calificacion, 0);
+              const promedio = (suma / evaluaciones.length).toFixed(1);
+              
+              const elemPromedio = document.getElementById('ui-promedio');
+              if(elemPromedio) elemPromedio.innerText = promedio;
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error cargando los datos:", err);
+      }
+    }
   </script>
+
 </body>
 </html>
