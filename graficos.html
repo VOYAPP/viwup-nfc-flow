@@ -97,37 +97,40 @@
         </div>
       </div>
       <div class="relative w-full overflow-x-auto scrollbar-hide">
-        <!-- SVG Line Chart Estático -->
-        <svg id="line-chart" class="w-full min-w-[700px]" viewBox="0 0 900 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <line x1="40" y1="20" x2="880" y2="20" stroke="#F1F5F9" stroke-width="1"/>
-          <line x1="40" y1="60" x2="880" y2="60" stroke="#F1F5F9" stroke-width="1"/>
-          <line x1="40" y1="100" x2="880" y2="100" stroke="#F1F5F9" stroke-width="1"/>
-          <line x1="40" y1="140" x2="880" y2="140" stroke="#F1F5F9" stroke-width="1"/>
-          <line x1="40" y1="180" x2="880" y2="180" stroke="#F1F5F9" stroke-width="1"/>
-          <path d="M60,130 L120,110 L180,120 L240,80 L300,100 L360,95 L420,90 L480,120 L540,100 L600,110 L660,115 L720,50 L780,40 L840,55 L840,180 L60,180 Z" fill="#0D9488" fill-opacity="0.08"/>
-          <polyline points="60,130 120,110 180,120 240,80 300,100 360,95 420,90 480,120 540,100 600,110 660,115 720,50 780,40 840,55" stroke="#0D9488" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <polyline points="60,165 120,160 180,162 240,155 300,158 360,160 420,162 480,158 540,160 600,155 660,158 720,150 780,148 840,155" stroke="#EA580C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 3"/>
-          <circle cx="240" cy="80" r="4" fill="#0D9488"/>
-          <circle cx="720" cy="50" r="4" fill="#0D9488"/>
-          <circle cx="780" cy="40" r="4" fill="#0D9488"/>
-          <text x="60" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Lun 01</text>
-          <text x="120" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mar 02</text>
-          <text x="180" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mié 03</text>
-          <text x="240" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Jue 04</text>
-          <text x="300" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Vie 05</text>
-          <text x="360" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Sáb 06</text>
-          <text x="420" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Dom 07</text>
-          <text x="480" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Lun 08</text>
-          <text x="540" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mar 09</text>
-          <text x="600" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mié 10</text>
-          <text x="660" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Jue 11</text>
-          <text x="720" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Vie 12</text>
-          <text x="780" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Sáb 13</text>
-          <text x="840" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Dom 14</text>
-        </svg>
+        <!-- Chart Area -->
+      <div class="relative w-full overflow-x-auto scrollbar-hide pb-2">
+        <!-- Este div fuerza el ancho de 800px para que el scroll móvil sea perfecto -->
+        <div class="w-[800px] lg:w-full">
+          <svg id="line-chart" viewBox="0 0 900 220" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="40" y1="20" x2="880" y2="20" stroke="#F1F5F9" stroke-width="1"/>
+            <line x1="40" y1="60" x2="880" y2="60" stroke="#F1F5F9" stroke-width="1"/>
+            <line x1="40" y1="100" x2="880" y2="100" stroke="#F1F5F9" stroke-width="1"/>
+            <line x1="40" y1="140" x2="880" y2="140" stroke="#F1F5F9" stroke-width="1"/>
+            <line x1="40" y1="180" x2="880" y2="180" stroke="#F1F5F9" stroke-width="1"/>
+            <path d="M60,130 L120,110 L180,120 L240,80 L300,100 L360,95 L420,90 L480,120 L540,100 L600,110 L660,115 L720,50 L780,40 L840,55 L840,180 L60,180 Z" fill="#0D9488" fill-opacity="0.08"/>
+            <polyline points="60,130 120,110 180,120 240,80 300,100 360,95 420,90 480,120 540,100 600,110 660,115 720,50 780,40 840,55" stroke="#0D9488" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="60,165 120,160 180,162 240,155 300,158 360,160 420,162 480,158 540,160 600,155 660,158 720,150 780,148 840,155" stroke="#EA580C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 3"/>
+            <circle cx="240" cy="80" r="4" fill="#0D9488"/>
+            <circle cx="720" cy="50" r="4" fill="#0D9488"/>
+            <circle cx="780" cy="40" r="4" fill="#0D9488"/>
+            <text x="60" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Lun 01</text>
+            <text x="120" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mar 02</text>
+            <text x="180" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mié 03</text>
+            <text x="240" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Jue 04</text>
+            <text x="300" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Vie 05</text>
+            <text x="360" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Sáb 06</text>
+            <text x="420" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Dom 07</text>
+            <text x="480" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Lun 08</text>
+            <text x="540" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mar 09</text>
+            <text x="600" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Mié 10</text>
+            <text x="660" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Jue 11</text>
+            <text x="720" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Vie 12</text>
+            <text x="780" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Sáb 13</text>
+            <text x="840" y="200" fill="#64748B" font-size="9" text-anchor="middle" font-family="Inter">Dom 14</text>
+          </svg>
+        </div>
       </div>
-    </div>
-
+        
     <!-- ═══ BOTTOM ROW ═══ -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
