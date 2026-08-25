@@ -543,12 +543,18 @@
 
     async function cargarDatosDelLocal(tokenDashboard) {
       try {
-        const { data: local, error: localError } = await db.from('locales').select('id, nombre, hora_apertura, hora_cierre').eq('token_dashboard', tokenDashboard).single();
+        const { data: local, error: localError } = await db.from('locales').select('id, nombre, logo, hora_apertura, hora_cierre').eq('token_dashboard', tokenDashboard).single();
         if (localError) throw localError;
 
         if (local) {
           if(document.getElementById('ui-nombre-local-desktop')) document.getElementById('ui-nombre-local-desktop').innerText = local.nombre;
           if(document.getElementById('ui-nombre-local-mobile')) document.getElementById('ui-nombre-local-mobile').innerText = local.nombre;
+          if (local.logo) {
+            document.querySelectorAll('.rounded-full.bg-slate-200').forEach(container => {
+              container.innerHTML = `<img src="${local.logo}" alt="${local.nombre}" class="w-full h-full object-cover rounded-full">`;
+              container.classList.remove('bg-slate-200');
+            });
+          }
 
           // Guardamos las horas de apertura para los gráficos
           window.localApertura = local.hora_apertura ?? 12;
@@ -696,7 +702,7 @@
       dataList.forEach(e => { if(e.garzon) garzones[e.garzon] = (garzones[e.garzon] || 0) + 1; });
       const ranking = Object.entries(garzones).sort((a, b) => b[1] - a[1]).slice(0, 5);
       const rc = document.getElementById('ranking-container');
-      if(rc) rc.innerHTML = ranking.map((g, i) => `<div class="flex justify-between py-2.5 border-b border-slate-50"><div class="flex gap-3"><span class="text-sm text-[#94A3B8] w-4">${i+1}</span><span class="text-sm text-[#0F172A]">${g[0]}</span></div><span class="text-sm font-bold text-[#0F172A]">${g[1]} eval</span></div>`).join('');
+      if(rc) rc.innerHTML = ranking.map((g, i) => `<div class="flex justify-between py-2.5 border-b border-slate-50"><div class="flex gap-3"><span class="text-sm text-[#94A3B8] w-4">${i+1}</span><span class="text-sm text-[#0F172A]">${g[0]}</span></div><span class="text-sm font-bold text-[#0F172A]">${g[1]} Evaluaciones</span></div>`).join('');
 
       const focos = {};
       dataList.forEach(e => { if(e.estado === 'SOS' && e.motivo) focos[e.motivo] = (focos[e.motivo] || 0) + 1; });
