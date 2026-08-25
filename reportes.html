@@ -303,7 +303,7 @@
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
           <div>
-            <h2 class="text-base md:text-lg font-bold text-[#0F172A]">Actividad de Escaneos por Día</h2>
+            <h2 id="titulo-grafico-principal" class="text-base md:text-lg font-bold text-[#0F172A]">Actividad de Escaneos por Día</h2>
             <p class="text-xs text-[#64748B] mt-0.5" id="chartSubtitle">Resumen de escaneos y alertas SOS del mes actual.</p>
           </div>
           <!-- Toggle -->
@@ -320,42 +320,13 @@
         </div>
 
         <!-- ===== CHART: Actividad Diaria ===== -->
-        <div id="chartDiaria" class="relative w-full overflow-x-auto scrollbar-hide pb-2">
-          <div class="w-[800px] lg:w-full">
-            <svg viewBox="0 0 1296 215" class="w-full h-auto" preserveAspectRatio="xMidYMid meet" fill="none">
-              <line x1="0" y1="0" x2="1296" y2="0" stroke="#E2E8F0" stroke-width="1"/>
-              <line x1="0" y1="48" x2="1296" y2="48" stroke="#E2E8F0" stroke-width="1"/>
-              <line x1="0" y1="95" x2="1296" y2="95" stroke="#E2E8F0" stroke-width="1"/>
-              <line x1="0" y1="143" x2="1296" y2="143" stroke="#E2E8F0" stroke-width="1"/>
-              <line x1="0" y1="190" x2="1296" y2="190" stroke="#E2E8F0" stroke-width="1"/>
-              <polygon points="50,110 150,117 250,121 350,88 450,48 550,22 650,37 750,113 850,118 950,106 1050,77 1150,37 1250,15 1250,190 50,190" fill="#0D9488" opacity="0.08"/>
-              <polyline points="50,110 150,117 250,121 350,88 450,48 550,22 650,37 750,113 850,118 950,106 1050,77 1150,37 1250,15" fill="none" stroke="#0D9488" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-              <polyline points="50,181 150,177 250,179 350,172 450,168 550,174 650,183 750,180 850,175 950,181 1050,170 1150,164 1250,177" fill="none" stroke="#EA580C" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" class="line-dash"/>
-              <circle cx="550" cy="22" r="5" fill="#0D9488"/>
-              <circle cx="1250" cy="15" r="5" fill="#0D9488"/>
-              <circle cx="1150" cy="164" r="5" fill="#EA580C"/>
-            </svg>
-            <div class="flex justify-between text-[10px] md:text-[11px] text-[#64748B] mt-1 px-1">
-              <span>Lun 01</span><span>Mar 02</span><span>Mié 03</span><span>Jue 04</span>
-              <span>Vie 05</span><span>Sáb 06</span><span>Dom 07</span><span>Lun 08</span>
-              <span>Mar 09</span><span>Mié 10</span><span>Jue 11</span><span>Vie 12</span>
-              <span>Sáb 13</span><span>Dom 14</span>
-            </div>
-          </div>
+        <div id="chartDiaria" class="relative h-72 w-full mt-4">
+          <canvas id="canvas-actividad"></canvas>
         </div>
 
         <!-- ===== CHART: Horarios Críticos DINÁMICO ===== -->
-        <div id="chartHorarios" class="hidden relative w-full overflow-x-auto scrollbar-hide pb-2">
-          <div class="min-w-[600px] lg:w-full flex flex-col mt-4">
-            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-0 pb-6 pr-4">
-              <div class="border-t border-slate-100 w-full h-0"></div>
-              <div class="border-t border-slate-100 w-full h-0"></div>
-              <div class="border-t border-slate-100 w-full h-0"></div>
-              <div class="border-t border-slate-100 w-full h-0"></div>
-            </div>
-            <div id="dynamic-bars-container" class="relative z-10 flex items-end justify-between h-[150px] gap-2 px-4"></div>
-            <div id="dynamic-labels-container" class="relative z-10 flex justify-between mt-2 px-4 text-[10px] text-[#64748B]"></div>
-          </div>
+        <div id="chartHorarios" class="relative h-72 w-full mt-4 hidden">
+          <canvas id="canvas-horarios"></canvas>
         </div>
       </div>
 
@@ -384,36 +355,9 @@
         <div class="bg-white rounded-2xl shadow-[0_4px_12px_rgba(15,23,42,0.03)] p-4 md:p-6">
           <h3 class="text-base font-bold text-[#0F172A]">Evolución de Focos SOS</h3>
           <p class="text-xs text-[#64748B] mt-0.5 mb-4">Distribución semanal de alertas por área</p>
-          <div class="flex gap-2">
-            <div class="flex flex-col justify-between text-[10px] text-[#64748B] h-[140px] pr-1 shrink-0">
-              <span>20</span><span>15</span><span>10</span><span>5</span><span>0</span>
-            </div>
-            <div class="flex-1 flex items-end justify-around h-[140px] gap-2">
-              <div class="flex-1 flex flex-col justify-end h-full">
-                <div class="bg-[#EA580C] rounded-t" style="height:28%"></div><div class="bg-[#3B82F6]" style="height:14%"></div><div class="bg-[#F59E0B]" style="height:10%"></div><div class="bg-[#8B5CF6]" style="height:5%"></div><div class="bg-[#10B981]" style="height:3%"></div>
-              </div>
-              <div class="flex-1 flex flex-col justify-end h-full">
-                <div class="bg-[#EA580C] rounded-t" style="height:22%"></div><div class="bg-[#3B82F6]" style="height:18%"></div><div class="bg-[#F59E0B]" style="height:14%"></div><div class="bg-[#8B5CF6]" style="height:8%"></div><div class="bg-[#10B981]" style="height:13%"></div>
-              </div>
-              <div class="flex-1 flex flex-col justify-end h-full">
-                <div class="bg-[#EA580C] rounded-t" style="height:18%"></div><div class="bg-[#3B82F6]" style="height:15%"></div><div class="bg-[#F59E0B]" style="height:12%"></div><div class="bg-[#8B5CF6]" style="height:20%"></div><div class="bg-[#10B981]" style="height:20%"></div>
-              </div>
-              <div class="flex-1 flex flex-col justify-end h-full">
-                <div class="bg-[#EA580C] rounded-t" style="height:15%"></div><div class="bg-[#3B82F6]" style="height:20%"></div><div class="bg-[#F59E0B]" style="height:10%"></div><div class="bg-[#8B5CF6]" style="height:18%"></div><div class="bg-[#10B981]" style="height:27%"></div>
-              </div>
-            </div>
+          <div class="relative h-64 w-full mt-4">
+            <canvas id="canvas-focos"></canvas>
           </div>
-          <div class="flex justify-around text-[10px] text-[#64748B] mt-2 ml-6">
-            <span>Sem 1</span><span>Sem 2</span><span>Sem 3</span><span>Sem 4</span>
-          </div>
-          <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3 text-[10px] text-[#0F172A]">
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#EA580C]"></span>Cocina</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#3B82F6]"></span>Atención</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#F59E0B]"></span>Tiempos</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#8B5CF6]"></span>Barra</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-[#10B981]"></span>Limpieza</span>
-          </div>
-        </div>
       </div>
     </div> <!-- FIN SECCIÓN GRÁFICOS -->
   </main>
@@ -487,6 +431,7 @@
 
   <!-- ═══ SUPABASE Y MOTOR UNIFICADO ═══ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // 1. Inicializar Supabase y Variables Globales
     const SUPABASE_URL = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
@@ -496,6 +441,11 @@
     let masterData = [];         // Toda la data pura de BD
     let currentDateData = [];    // Data filtrada por Fecha (Global)
     let currentTableData = [];   // Data filtrada en la tabla Evaluaciones
+
+    // Variables para guardar las instancias de Chart.js
+    let chartActividad = null;
+    let chartHorarios = null;
+    let chartFocos = null;
 
     // Toggle para Gráficos
     document.querySelectorAll('.chart-toggle').forEach(btn => {
@@ -507,14 +457,19 @@
         e.target.classList.add('bg-[#0F172A]', 'text-white');
         e.target.classList.remove('text-[#64748B]', 'hover:text-[#0F172A]');
         
+        const titulo = document.getElementById('titulo-grafico-principal');
+        const subtitulo = document.getElementById('chartSubtitle');
+
         if(e.target.id === 'btn-actividad') {
           document.getElementById('chartDiaria').classList.remove('hidden');
           document.getElementById('chartHorarios').classList.add('hidden');
-          document.getElementById('chartSubtitle').textContent = 'Resumen de escaneos y alertas SOS del mes actual.';
+          if(titulo) titulo.textContent = 'Actividad de Escaneos por Día';
+          if(subtitulo) subtitulo.textContent = 'Resumen de escaneos y alertas SOS del periodo actual.';
         } else {
           document.getElementById('chartDiaria').classList.add('hidden');
           document.getElementById('chartHorarios').classList.remove('hidden');
-          document.getElementById('chartSubtitle').textContent = 'Concentración de alertas por hora operativa.';
+          if(titulo) titulo.textContent = 'Horarios Críticos';
+          if(subtitulo) subtitulo.textContent = 'Concentración de alertas por hora operativa.';
         }
       });
     });
@@ -636,6 +591,9 @@
       renderDashboardUI(currentDateData);
       actualizarDonutChart(currentDateData);
       renderizarHorariosCriticos(currentDateData, window.localApertura, window.localCierre);
+
+      // Detona los gráficos interactivos reales con Chart.js
+      renderizarGraficosReales(currentDateData, window.localApertura, window.localCierre);
       
       // 2. Refrescar Tabla (aplicando filtros secundarios encima)
       aplicarFiltrosTabla(currentDateData);
@@ -756,44 +714,109 @@
       if(document.getElementById('legend-sos-text')) document.getElementById('legend-sos-text').textContent = `${sosPct}%`;
     }
 
-    function renderizarHorariosCriticos(dataList, apertura, cierre) {
-      const barsContainer = document.getElementById('dynamic-bars-container');
-      const labelsContainer = document.getElementById('dynamic-labels-container');
-      if(!barsContainer || !labelsContainer) return;
+    function renderizarGraficosReales(dataList, apertura, cierre) {
+      // Destruir gráficos previos si existen (evita superposición al filtrar)
+      if(chartActividad) chartActividad.destroy();
+      if(chartHorarios) chartHorarios.destroy();
+      if(chartFocos) chartFocos.destroy();
 
-      const rangoHoras = [];
+      // --- 1. Procesamiento de Datos ---
+      const fechasMap = {};
+      const horasObj = {};
+      const focosSemana = { 'Sem 1': {}, 'Sem 2': {}, 'Sem 3': {}, 'Sem 4': {} };
+      const todosLosMotivos = new Set();
+
+      // Configurar Horas en base a apertura y cierre
       let h = apertura;
       while(true) {
-        rangoHoras.push(h);
+        horasObj[h] = { total: 0, sos: 0 };
         if (h === cierre) break;
         h = (h + 1) % 24;
       }
 
-      const horasObj = {};
+      // Llenar datos iterando la data filtrada actual
       dataList.forEach(ev => {
-        const fechaObj = new Date(ev.created_at);
-        const horaEval = fechaObj.getHours();
-        if (!horasObj[horaEval]) horasObj[horaEval] = { total: 0, sos: 0 };
-        horasObj[horaEval].total++;
-        if (ev.estado === 'SOS') horasObj[horaEval].sos++;
+        const d = new Date(ev.created_at);
+        
+        // Datos para Actividad Diaria
+        const fechaStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace(',', '');
+        if(!fechasMap[fechaStr]) fechasMap[fechaStr] = { total: 0, sos: 0 };
+        fechasMap[fechaStr].total++;
+        if(ev.estado === 'SOS') fechasMap[fechaStr].sos++;
+
+        // Datos para Horarios Críticos
+        const horaEval = d.getHours();
+        if(horasObj[horaEval]) {
+          horasObj[horaEval].total++;
+          if(ev.estado === 'SOS') horasObj[horaEval].sos++;
+        }
+
+        // Datos para Focos SOS Semanales (Agrupa los días del mes en 4 semanas)
+        if(ev.estado === 'SOS' && ev.motivo) {
+          todosLosMotivos.add(ev.motivo);
+          const semanaDelMes = Math.ceil(d.getDate() / 7);
+          const semKey = semanaDelMes > 4 ? 'Sem 4' : `Sem ${semanaDelMes}`;
+          if(!focosSemana[semKey][ev.motivo]) focosSemana[semKey][ev.motivo] = 0;
+          focosSemana[semKey][ev.motivo]++;
+        }
       });
 
-      let maxValor = 1;
-      rangoHoras.forEach(hora => { if (horasObj[hora] && horasObj[hora].total > maxValor) maxValor = horasObj[hora].total; });
+      // --- 2. Dibujar Gráfico: Actividad Diaria (Líneas) ---
+      const ctxAct = document.getElementById('canvas-actividad');
+      if(ctxAct) {
+        chartActividad = new Chart(ctxAct, {
+          type: 'line',
+          data: {
+            labels: Object.keys(fechasMap),
+            datasets: [
+              { label: 'Escaneos Totales', data: Object.values(fechasMap).map(v => v.total), borderColor: '#0D9488', backgroundColor: 'rgba(13, 148, 136, 0.1)', fill: true, tension: 0.4 },
+              { label: 'Alertas SOS', data: Object.values(fechasMap).map(v => v.sos), borderColor: '#EA580C', borderDash: [5, 5], tension: 0.4 }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, interaction: { mode: 'index', intersect: false } }
+        });
+      }
 
-      let htmlBars = '', htmlLabels = '';
-      rangoHoras.forEach(hora => {
-        const datos = horasObj[hora] || { total: 0, sos: 0 };
-        const alturaTotal = datos.total === 0 ? 0 : (datos.total / maxValor) * 100;
-        const alturaSOS = datos.sos === 0 ? 0 : (datos.sos / maxValor) * 100;
-        const textoHora = hora.toString().padStart(2, '0') + ':00';
+      // --- 3. Dibujar Gráfico: Horarios Críticos (Barras) ---
+      const ctxHor = document.getElementById('canvas-horarios');
+      if(ctxHor) {
+        chartHorarios = new Chart(ctxHor, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(horasObj).map(h => `${h.toString().padStart(2, '0')}:00`),
+            datasets: [
+              { label: 'Total Escaneos', data: Object.values(horasObj).map(v => v.total), backgroundColor: '#0D9488', borderRadius: 4 },
+              { label: 'Alertas SOS', data: Object.values(horasObj).map(v => v.sos), backgroundColor: '#EA580C', borderRadius: 4 }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, interaction: { mode: 'index', intersect: false } }
+        });
+      }
 
-        htmlBars += `<div class="flex items-end justify-center gap-1 flex-1 h-full relative group cursor-pointer"><div class="absolute -top-10 hidden group-hover:block bg-[#0F172A] text-white text-[10px] py-1 px-2 rounded z-20 whitespace-nowrap shadow-lg">${textoHora} • Total: ${datos.total} • SOS: ${datos.sos}</div><div class="w-full max-w-[28px] bg-[#0D9488] rounded-t-sm transition-all duration-700 hover:bg-[#0f766d]" style="height: ${alturaTotal}%"></div><div class="w-full max-w-[28px] bg-[#EA580C] rounded-t-sm transition-all duration-700 hover:bg-[#c2410c]" style="height: ${alturaSOS}%"></div></div>`;
-        htmlLabels += `<div class="flex-1 text-center font-medium">${textoHora}</div>`;
-      });
-      barsContainer.innerHTML = htmlBars; labelsContainer.innerHTML = htmlLabels;
+      // --- 4. Dibujar Gráfico: Evolución de Focos (Barras Apiladas) ---
+      const ctxFocos = document.getElementById('canvas-focos');
+      if(ctxFocos) {
+        const paletaColores = ['#EA580C', '#3B82F6', '#F59E0B', '#8B5CF6', '#10B981', '#EF4444'];
+        const datasetsFocos = Array.from(todosLosMotivos).map((motivo, index) => {
+          return {
+            label: motivo,
+            data: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'].map(sem => focosSemana[sem][motivo] || 0),
+            backgroundColor: paletaColores[index % paletaColores.length]
+          };
+        });
+
+        chartFocos = new Chart(ctxFocos, {
+          type: 'bar',
+          data: { labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'], datasets: datasetsFocos },
+          options: { 
+            responsive: true, maintainAspectRatio: false, 
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: { legend: { position: 'bottom' } },
+            interaction: { mode: 'index', intersect: false }
+          }
+        });
+      }
     }
-
     function formatearFecha(fechaStr) {
       if(!fechaStr) return "Reciente";
       const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
