@@ -1,8 +1,7 @@
 {
-  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/resto/demo",
+      "source": "/resto/:slug",
       "destination": "/app.html"
     }
   ]
