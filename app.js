@@ -103,7 +103,6 @@ function applyWhiteLabel() {
             
             // Forzamos a que no se recorte y tenga un pequeño margen
             img.style.objectFit = 'contain';
-            img.style.padding = '8px';
             
             logoEl.innerHTML = '';
             logoEl.appendChild(img);
