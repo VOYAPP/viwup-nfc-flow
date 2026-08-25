@@ -465,7 +465,7 @@
     // 1. Inicializar Supabase y Variables Globales
     const SUPABASE_URL = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzUwMDU5OCwiZXhwIjoyMTAzMDc2NTk4fQ.stqb7z974XONthpmqO2lUKhvDX3fv6ANPPyedZxdZo0';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let evaluacionesData = [];
 
     // Manejo de Filtros Móviles
@@ -532,7 +532,7 @@
     // 4. Buscar la data en Supabase (Local + Evaluaciones)
     async function cargarDatosDelLocal(tokenDashboard) {
       try {
-        const { data: local, error: localError } = await supabase.from('locales').select('id, nombre, hora_apertura, hora_cierre').eq('token_dashboard', tokenDashboard).single();
+        const { data: local, error: localError } = await db.from('locales').select('id, nombre, hora_apertura, hora_cierre').eq('token_dashboard', tokenDashboard).single();
 
         if (localError) throw localError;
 
@@ -540,7 +540,7 @@
           if(document.getElementById('ui-nombre-local-desktop')) document.getElementById('ui-nombre-local-desktop').innerText = local.nombre;
           if(document.getElementById('ui-nombre-local-mobile')) document.getElementById('ui-nombre-local-mobile').innerText = local.nombre;
 
-          const { data: evals, error: evalsError } = await supabase.from('evaluaciones').select('*').eq('local_id', local.id).order('created_at', { ascending: false });
+          const { data: evals, error: evalsError } = await db.from('evaluaciones').select('*').eq('local_id', local.id).order('created_at', { ascending: false });
           
           if (evalsError) throw evalsError;
 
