@@ -459,7 +459,7 @@
     }
   </script>
 
-  <!-- ═══ SUPABASE Y NAVEGACIÓN DINÁMICA ═══ -->
+  <!-- ═══ SUPABASE Y LÓGICA UNIFICADA ═══ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // 1. Inicializar Supabase y Variables Globales
@@ -496,18 +496,14 @@
 
     // 2. Lógica para cambiar de pestañas fluidamente
     window.cambiarSeccion = function(seccionId) {
-      // Ocultar todas las secciones
       document.querySelectorAll('.seccion-reporte').forEach(sec => sec.classList.add('hidden'));
-      // Mostrar la sección seleccionada
       document.getElementById(`seccion-${seccionId}`).classList.remove('hidden');
-  
-      // Resetear colores de todos los botones
+
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('text-[#3B82F6]', 'border-[#3B82F6]', 'font-semibold');
         btn.classList.add('text-[#94A3B8]', 'border-transparent', 'font-medium');
       });
-  
-      // Pintar de azul el botón activo
+
       const botonActivo = document.getElementById(`tab-${seccionId}`);
       if(botonActivo) {
         botonActivo.classList.remove('text-[#94A3B8]', 'border-transparent', 'font-medium');
@@ -536,14 +532,18 @@
     // 4. Buscar la data en Supabase (Local + Evaluaciones)
     async function cargarDatosDelLocal(tokenDashboard) {
       try {
-        const { data: local } = await supabase.from('locales').select('id, nombre, hora_apertura, hora_cierre').eq('token_dashboard', tokenDashboard).single();
+        const { data: local, error: localError } = await supabase.from('locales').select('id, nombre, hora_apertura, hora_cierre').eq('token_dashboard', tokenDashboard).single();
+
+        if (localError) throw localError;
 
         if (local) {
           if(document.getElementById('ui-nombre-local-desktop')) document.getElementById('ui-nombre-local-desktop').innerText = local.nombre;
           if(document.getElementById('ui-nombre-local-mobile')) document.getElementById('ui-nombre-local-mobile').innerText = local.nombre;
 
-          const { data: evals } = await supabase.from('evaluaciones').select('*').eq('local_id', local.id).order('created_at', { ascending: false });
+          const { data: evals, error: evalsError } = await supabase.from('evaluaciones').select('*').eq('local_id', local.id).order('created_at', { ascending: false });
           
+          if (evalsError) throw evalsError;
+
           if (evals && evals.length > 0) {
             evaluacionesData = evals.map(e => ({
               fecha: formatearFecha(e.created_at || e.fecha),
@@ -555,26 +555,78 @@
               created_at: e.created_at || e.fecha
             }));
 
-            // Dashboard KPI
-            const suma = evaluacionesData.reduce((acc, curr) => acc + curr.calificacion, 0);
-            const promedio = (suma / evaluacionesData.length).toFixed(1);
-            if(document.getElementById('ui-promedio')) document.getElementById('ui-promedio').innerText = promedio;
-
-            // Renderizar Todo
-            renderEvaluacionesUI();
+            // Renderizar Todo el Panel
             renderDashboardUI();
+            renderEvaluacionesUI();
             updateDetail(0);
             actualizarDonutChart(evals);
             renderizarHorariosCriticos(evals, local.hora_apertura ?? 12, local.hora_cierre ?? 23);
           } else {
+            // Si hay local, pero está vacío de evaluaciones
             document.getElementById('table-body').innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones recientes.</p>';
-            document.getElementById('mobile-cards').innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones recientes.</p>';
+            if(document.getElementById('mobile-cards')) document.getElementById('mobile-cards').innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones recientes.</p>';
+            renderDashboardUI(); 
           }
         } else {
           document.getElementById('ui-nombre-local-desktop').innerText = "Local no encontrado";
         }
       } catch (err) {
-        console.error("Error cargando los datos:", err);
+        console.error("Error en base de datos:", err);
+        // Si Supabase tira un error (ej. columna no existe), lo mostramos para saber qué pasa
+        document.getElementById('ui-nombre-local-desktop').innerText = "Error BD"; 
+      }
+    }
+
+    // 5. Función para Renderizar el Dashboard (Matemática Real)
+    function renderDashboardUI() {
+      if (evaluacionesData.length === 0) {
+        if(document.getElementById('ui-promedio')) document.getElementById('ui-promedio').innerText = '0.0';
+        if(document.getElementById('ui-pct-promotores')) document.getElementById('ui-pct-promotores').innerText = '0%';
+        if(document.getElementById('ui-sos-count')) document.getElementById('ui-sos-count').innerText = '0';
+        if(document.getElementById('ranking-container')) document.getElementById('ranking-container').innerHTML = '<p class="text-sm text-slate-500">Sin datos de garzones.</p>';
+        if(document.getElementById('focos-container')) document.getElementById('focos-container').innerHTML = '<p class="text-sm text-slate-500">Sin alertas SOS registradas.</p>';
+        if(document.getElementById('carousel-sos')) document.getElementById('carousel-sos').innerHTML = '<p class="text-sm text-slate-500">Sin alertas recientes.</p>';
+        return;
+      }
+
+      const total = evaluacionesData.length;
+
+      // KPIs Principales
+      const promotores = evaluacionesData.filter(e => e.calificacion >= 4).length;
+      const sosCount = evaluacionesData.filter(e => e.calificacion <= 3).length;
+      const suma = evaluacionesData.reduce((acc, curr) => acc + curr.calificacion, 0);
+      const promedio = (suma / total).toFixed(1);
+
+      if(document.getElementById('ui-promedio')) document.getElementById('ui-promedio').innerText = promedio;
+      if(document.getElementById('ui-pct-promotores')) document.getElementById('ui-pct-promotores').innerText = Math.round((promotores/total)*100) + '%';
+      if(document.getElementById('ui-sos-count')) document.getElementById('ui-sos-count').innerText = sosCount;
+
+      // Ranking Garzones
+      const garzones = {};
+      evaluacionesData.forEach(e => { if(e.garzon) garzones[e.garzon] = (garzones[e.garzon] || 0) + 1; });
+      const ranking = Object.entries(garzones).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const rc = document.getElementById('ranking-container');
+      if(rc) rc.innerHTML = ranking.map((g, i) => `<div class="flex justify-between py-2.5 border-b border-slate-50"><div class="flex gap-3"><span class="text-sm text-[#94A3B8] w-4">${i+1}</span><span class="text-sm text-[#0F172A]">${g[0]}</span></div><span class="text-sm font-bold text-[#0F172A]">${g[1]} eval</span></div>`).join('');
+
+      // Focos SOS
+      const focos = {};
+      evaluacionesData.forEach(e => { if(e.estado === 'SOS' && e.motivo) focos[e.motivo] = (focos[e.motivo] || 0) + 1; });
+      const focosArr = Object.entries(focos).sort((a,b) => b[1] - a[1]);
+      const fc = document.getElementById('focos-container');
+      if (focosArr.length > 0) {
+        const maxFoco = focosArr[0][1];
+        if(fc) fc.innerHTML = focosArr.map(f => `<div class="flex items-center gap-3"><span class="text-sm font-semibold text-[#0F172A] w-20 shrink-0">${f[0]}</span><div class="flex-1 h-2 bg-[#FED7AA] rounded-full overflow-hidden"><div class="h-full rounded-full bg-[#EA580C]" style="width:${(f[1]/maxFoco)*100}%"></div></div><span class="text-sm font-bold text-[#0F172A] shrink-0">${f[1]}</span></div>`).join('');
+      } else {
+        if(fc) fc.innerHTML = '<p class="text-sm text-slate-500">Sin focos SOS</p>';
+      }
+
+      // Carousel SOS
+      const sosList = evaluacionesData.filter(e => e.estado === 'SOS').slice(0, 5);
+      const carousel = document.getElementById('carousel-sos');
+      if(sosList.length > 0) {
+        if(carousel) carousel.innerHTML = sosList.map(e => `<div class="snap-start shrink-0 w-[85%] md:w-[32%] bg-[#F8FAFC] rounded-xl p-4"><div class="flex items-center justify-between mb-3"><span class="text-[11px] text-[#94A3B8]">${e.fecha}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFEDD5] text-[#EA580C]">SOS</span></div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF7ED] text-[#EA580C] mb-3">[${e.motivo || 'General'}]</span><p class="text-[16px] leading-relaxed text-[#334155] mb-4 line-clamp-3">"${e.comentario}"</p><div class="flex items-center gap-2"><span class="text-[11px] text-[#64748B]">Atendido por:</span><span class="text-[11px] font-semibold text-[#475569] bg-slate-100 px-2 py-0.5 rounded">${e.garzon}</span></div></div>`).join('');
+      } else {
+        if(carousel) carousel.innerHTML = '<p class="text-sm text-slate-500 mt-2">No hay alertas SOS recientes.</p>';
       }
     }
 
@@ -589,17 +641,22 @@
       const seoDash = (seoPct / 100) * circ;
       const sosDash = (sosPct / 100) * circ;
       
-      document.getElementById('donut-seo').setAttribute('stroke-dasharray', `${seoDash} ${circ}`);
-      document.getElementById('donut-sos').setAttribute('stroke-dasharray', `${sosDash} ${circ}`);
-      document.getElementById('donut-sos').setAttribute('stroke-dashoffset', `-${seoDash}`);
-      document.getElementById('legend-seo-text').textContent = `${seoPct}%`;
-      document.getElementById('legend-sos-text').textContent = `${sosPct}%`;
+      const elSeo = document.getElementById('donut-seo');
+      const elSos = document.getElementById('donut-sos');
+      if(elSeo) elSeo.setAttribute('stroke-dasharray', `${seoDash} ${circ}`);
+      if(elSos) {
+        elSos.setAttribute('stroke-dasharray', `${sosDash} ${circ}`);
+        elSos.setAttribute('stroke-dashoffset', `-${seoDash}`);
+      }
+      if(document.getElementById('legend-seo-text')) document.getElementById('legend-seo-text').textContent = `${seoPct}%`;
+      if(document.getElementById('legend-sos-text')) document.getElementById('legend-sos-text').textContent = `${sosPct}%`;
     }
 
     function renderizarHorariosCriticos(evals, apertura, cierre) {
       const barsContainer = document.getElementById('dynamic-bars-container');
       const labelsContainer = document.getElementById('dynamic-labels-container');
-      
+      if(!barsContainer || !labelsContainer) return;
+
       const rangoHoras = [];
       let h = apertura;
       while(true) {
@@ -634,7 +691,7 @@
         htmlBars += `
           <div class="flex items-end justify-center gap-1 flex-1 h-full relative group cursor-pointer">
             <div class="absolute -top-10 hidden group-hover:block bg-[#0F172A] text-white text-[10px] py-1 px-2 rounded z-20 whitespace-nowrap shadow-lg">
-              ${textoHora} • Escaneos: ${datos.total} • SOS: ${datos.sos}
+              ${textoHora} • Total: ${datos.total} • SOS: ${datos.sos}
             </div>
             <div class="w-full max-w-[28px] bg-[#0D9488] rounded-t-sm transition-all duration-700 hover:bg-[#0f766d]" style="height: ${alturaTotal}%"></div>
             <div class="w-full max-w-[28px] bg-[#EA580C] rounded-t-sm transition-all duration-700 hover:bg-[#c2410c]" style="height: ${alturaSOS}%"></div>
@@ -647,7 +704,7 @@
       labelsContainer.innerHTML = htmlLabels;
     }
 
-    // --- FUNCIONES EVALUACIONES (Reutilizadas) ---
+    // --- FUNCIONES EVALUACIONES ---
     function formatearFecha(fechaStr) {
       if(!fechaStr) return "Reciente";
       const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
@@ -739,47 +796,15 @@
       document.querySelectorAll('.eval-card').forEach(card => {
         card.addEventListener('click', () => {
           updateDetail(parseInt(card.dataset.index));
-          overlay.classList.remove('hidden');
-          requestAnimationFrame(() => bottomSheet.classList.add('open'));
+          if(overlay) overlay.classList.remove('hidden');
+          if(bottomSheet) requestAnimationFrame(() => bottomSheet.classList.add('open'));
         });
       });
       function closeBottomSheet() {
-        bottomSheet.classList.remove('open');
-        setTimeout(() => overlay.classList.add('hidden'), 300);
+        if(bottomSheet) bottomSheet.classList.remove('open');
+        if(overlay) setTimeout(() => overlay.classList.add('hidden'), 300);
       }
       if(overlay) overlay.addEventListener('click', closeBottomSheet);
       if(bottomSheet && bottomSheet.querySelector('.w-10')) bottomSheet.querySelector('.w-10').parentElement.addEventListener('click', closeBottomSheet);
     }
-
-    function renderDashboardUI() {
-      if (evaluacionesData.length === 0) return;
-      const total = evaluacionesData.length;
-
-      // KPIs
-      const promotores = evaluacionesData.filter(e => e.calificacion >= 4).length;
-      const sosCount = evaluacionesData.filter(e => e.calificacion <= 3).length;
-  
-      if(document.getElementById('ui-pct-promotores')) document.getElementById('ui-pct-promotores').innerText = Math.round((promotores/total)*100) + '%';
-      if(document.getElementById('ui-sos-count')) document.getElementById('ui-sos-count').innerText = sosCount;
-
-      // Ranking Garzones
-      const garzones = {};
-      evaluacionesData.forEach(e => { if(e.garzon) garzones[e.garzon] = (garzones[e.garzon] || 0) + 1; });
-      const ranking = Object.entries(garzones).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      const rc = document.getElementById('ranking-container');
-      if(rc) rc.innerHTML = ranking.map((g, i) => `<div class="flex justify-between py-2.5 border-b border-slate-50"><div class="flex gap-3"><span class="text-sm text-[#94A3B8] w-4">${i+1}</span><span class="text-sm">${g[0]}</span></div><span class="text-sm font-bold">${g[1]} eval</span></div>`).join('');
-
-      // Focos SOS
-      const focos = {};
-      evaluacionesData.forEach(e => { if(e.estado === 'SOS' && e.motivo) focos[e.motivo] = (focos[e.motivo] || 0) + 1; });
-      const focosArr = Object.entries(focos).sort((a,b) => b[1] - a[1]);
-      const maxFoco = focosArr.length > 0 ? focosArr[0][1] : 1;
-      const fc = document.getElementById('focos-container');
-      if(fc) fc.innerHTML = focosArr.map(f => `<div class="flex items-center gap-3"><span class="text-sm font-semibold w-20">${f[0]}</span><div class="flex-1 h-2 bg-[#FED7AA] rounded-full"><div class="h-full rounded-full bg-[#EA580C]" style="width:${(f[1]/maxFoco)*100}%"></div></div><span class="text-sm font-bold">${f[1]}</span></div>`).join('') || '<p class="text-sm text-slate-500">Sin focos SOS</p>';
-
-      // Carousel SOS
-      const sosList = evaluacionesData.filter(e => e.estado === 'SOS').slice(0, 5);
-      const carousel = document.getElementById('carousel-sos');
-      if(carousel) carousel.innerHTML = sosList.map(e => `<div class="snap-start shrink-0 w-[85%] md:w-[32%] bg-[#F8FAFC] rounded-xl p-4"><div class="flex justify-between mb-2"><span class="text-[11px] text-[#94A3B8]">${e.fecha}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFEDD5] text-[#EA580C]">SOS</span></div><span class="text-[10px] font-bold text-[#EA580C]">[${e.motivo || 'General'}]</span><p class="text-[14px] mt-2 mb-3 line-clamp-3">"${e.comentario}"</p><p class="text-[11px] text-[#64748B]">Garzón: <span class="font-semibold">${e.garzon}</span></p></div>`).join('') || '<p class="text-sm text-slate-500">No hay alertas SOS recientes.</p>';
-   }
   </script>
