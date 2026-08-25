@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes - ViwUp</title>
+    <!-- Tus estilos CSS -->
+</head>
+<body>
+    <!-- Menú de Pestañas / Navegación interna -->
+    <nav class="nav-tabs">
+        <button onclick="cambiarSeccion('resumen')" class="tab-btn active">Dashboard</button>
+        <button onclick="cambiarSeccion('evaluaciones')" class="tab-btn">Evaluaciones</button>
+        <button onclick="cambiarSeccion('graficos')" class="tab-btn">Gráficos</button>
+    </nav>
+
+    <!-- SECCIÓN 1: Dashboard Resumido -->
+    <section id="seccion-resumen" class="seccion-reporte">
+        <h2>Resumen Ejecutivo</h2>
+        <!-- Aquí van tus tarjetas de métricas -->
+    </section>
+
+    <!-- SECCIÓN 2: Historial de Evaluaciones -->
+    <section id="seccion-evaluaciones" class="seccion-reporte" style="display: none;">
+        <h2>Historial de Evaluaciones</h2>
+        <!-- Aquí va la tabla de opiniones -->
+    </section>
+
+    <!-- SECCIÓN 3: Gráficos -->
+    <section id="seccion-graficos" class="seccion-reporte" style="display: none;">
+        <h2>Gráficos de Rendimiento</h2>
+        <!-- Aquí van tus contenedores de gráficos -->
+    </section>
+
+    <!-- Tu archivo JavaScript unificado -->
+    <script src="reportes.js"></script>
+</body>
+</html>
