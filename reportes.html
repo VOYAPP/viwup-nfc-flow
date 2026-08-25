@@ -487,10 +487,12 @@
   <!-- ═══ SUPABASE Y MOTOR UNIFICADO ═══ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 1. Inicializar Supabase y Variables Globales
+    // 1. Inicializar Supabase y Variables Globales de forma segura
     const SUPABASE_URL = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzUwMDU5OCwiZXhwIjoyMTAzMDc2NTk4fQ.stqb7z974XONthpmqO2lUKhvDX3fv6ANPPyedZxdZo0';
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Usamos window.supabase.createClient para garantizar que la librería ya cargó
+    const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
     
     let masterData = [];         // Toda la data pura de BD
     let currentDateData = [];    // Data filtrada por Fecha (Global)
