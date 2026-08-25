@@ -5,8 +5,8 @@
       "destination": "/app.html"
     },
     {
-      "source": "/:path*",
-      "destination": "/:path*.html"
+      "source": "/reportes/:token",
+      "destination": "/reportes.html"
     }
   ]
 }
