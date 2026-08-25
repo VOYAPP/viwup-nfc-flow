@@ -484,10 +484,9 @@
     }
   </script>
 
-  <!-- ═══ SUPABASE Y LÓGICA UNIFICADA ═══ -->
+  <!-- ═══ SUPABASE Y MOTOR UNIFICADO ═══ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    <script>
     // 1. Inicializar Supabase y Variables Globales
     const SUPABASE_URL = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzUwMDU5OCwiZXhwIjoyMTAzMDc2NTk4fQ.stqb7z974XONthpmqO2lUKhvDX3fv6ANPPyedZxdZo0';
@@ -576,10 +575,12 @@
             aplicarFiltroGlobal(); // Esto detona todo el render
           } else {
             renderDashboardUI([]);
+            renderEvaluacionesUI([]);
           }
         }
       } catch (err) {
         console.error("Error BD:", err);
+        if(document.getElementById('ui-nombre-local-desktop')) document.getElementById('ui-nombre-local-desktop').innerText = "Error BD";
       }
     }
 
@@ -593,7 +594,7 @@
 
     document.getElementById('global-date-filter')?.addEventListener('change', aplicarFiltroGlobal);
     document.querySelectorAll('#filtro-busqueda, #filtro-estrellas, #filtro-garzon, #filtro-estado').forEach(el => {
-      el?.addEventListener('input', () => aplicarFiltrosTabla(currentDateData));
+      if(el) el.addEventListener('input', () => aplicarFiltrosTabla(currentDateData));
     });
 
     function aplicarFiltroGlobal() {
@@ -625,21 +626,25 @@
     }
 
     function aplicarFiltrosTabla(baseData) {
-       const busqueda = document.getElementById('filtro-busqueda')?.value.toLowerCase() || '';
+       const busqueda = (document.getElementById('filtro-busqueda')?.value || '').toLowerCase();
        const estrellas = document.getElementById('filtro-estrellas')?.value || 'todas';
        const garzon = document.getElementById('filtro-garzon')?.value || 'todos';
        const estado = document.getElementById('filtro-estado')?.value || 'todas';
 
        currentTableData = baseData.filter(e => {
-           const matchBusqueda = e.comentario.toLowerCase().includes(busqueda) || (e.motivo && e.motivo.toLowerCase().includes(busqueda));
+           const comentarioStr = String(e.comentario || '').toLowerCase();
+           const motivoStr = String(e.motivo || '').toLowerCase();
+           
+           const matchBusqueda = comentarioStr.includes(busqueda) || motivoStr.includes(busqueda);
            const matchEstrellas = estrellas === 'todas' || e.calificacion.toString() === estrellas;
            const matchGarzon = garzon === 'todos' || e.garzon === garzon;
            const matchEstado = estado === 'todas' || e.estado === estado;
+           
            return matchBusqueda && matchEstrellas && matchGarzon && matchEstado;
        });
 
        renderEvaluacionesUI(currentTableData);
-       if(currentTableData.length > 0) updateDetail(0); // Mostrar detalle del primero de la lista
+       if(currentTableData.length > 0) updateDetail(0); 
     }
 
 
@@ -650,11 +655,10 @@
         return;
       }
       
-      // Armar cabeceras y contenido (Se usa \uFEFF para que Excel reconozca tildes en UTF-8)
       let csvContent = "\uFEFFFecha,Garzón,Calificación,Motivo,Estado,Comentario\n";
       
       currentTableData.forEach(e => {
-        let comentarioLimpio = e.comentario ? e.comentario.replace(/"/g, '""') : "";
+        let comentarioLimpio = e.comentario ? String(e.comentario).replace(/"/g, '""') : "";
         csvContent += `"${e.fecha}","${e.garzon}","${e.calificacion}","${e.motivo || ''}","${e.estado}","${comentarioLimpio}"\n`;
       });
       
@@ -669,7 +673,7 @@
     };
 
 
-    // --- RENDERS UI (Actualizados para leer la variable que entra) ---
+    // --- RENDERS UI ---
     function renderDashboardUI(dataList) {
       if (!dataList || dataList.length === 0) {
         ['ui-promedio', 'ui-pct-promotores', 'ui-sos-count'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerText = '0'; });
@@ -870,3 +874,5 @@
       if(bottomSheet && bottomSheet.querySelector('.w-10')) bottomSheet.querySelector('.w-10').parentElement.addEventListener('click', closeBS);
     }
   </script>
+</body>
+</html>
