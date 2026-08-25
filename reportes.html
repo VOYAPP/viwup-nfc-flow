@@ -523,14 +523,18 @@
           if (evals && evals.length > 0) {
             masterData = evals.map(e => {
               const estrellas = parseInt(e.rating || 0) || 0;
+              
+              // TRUCO DE ZONA HORARIA: Forzamos a que Javascript sepa que la hora viene en UTC
+              const fechaCorregida = e.created_at.includes('Z') ? e.created_at : e.created_at + 'Z';
+
               return {
-                fecha: formatearFecha(e.created_at),
+                fecha: formatearFecha(fechaCorregida),
                 garzon: e.garzon_nombre || "Sin nombre",
                 calificacion: estrellas,
                 motivo: e.motivos || null,
                 estado: e.tipo || (estrellas > 0 && estrellas <= 3 ? "SOS" : "SEO"),
                 comentario: e.comentario || "",
-                created_at: e.created_at
+                created_at: fechaCorregida
               };
             });
 
