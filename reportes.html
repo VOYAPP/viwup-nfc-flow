@@ -545,15 +545,20 @@
           if (evalsError) throw evalsError;
 
           if (evals && evals.length > 0) {
-            evaluacionesData = evals.map(e => ({
-              fecha: formatearFecha(e.created_at || e.fecha),
-              garzon: e.garzon || "Sin nombre",
-              calificacion: e.calificacion,
-              motivo: e.motivo || null,
-              estado: e.flujo || e.estado || (e.calificacion <= 3 ? "SOS" : "SEO"),
-              comentario: e.comentario || "",
-              created_at: e.created_at || e.fecha
-            }));
+            evaluacionesData = evals.map(e => {
+              // Extraer la calificación de forma segura para evitar el error NaN
+              const estrellas = parseInt(e.calificacion || e.Calificacion || e.estrellas || 0) || 0;
+              
+              return {
+                fecha: formatearFecha(e.created_at || e.fecha || e.Fecha),
+                garzon: e.garzon || e.Garzon || "Sin nombre",
+                calificacion: estrellas,
+                motivo: e.motivo || e.Motivo || null,
+                estado: e.flujo || e.estado || e.Estado || (estrellas > 0 && estrellas <= 3 ? "SOS" : "SEO"),
+                comentario: e.comentario || e.Comentario || "",
+                created_at: e.created_at || e.fecha || e.Fecha
+              };
+            });
 
             // Renderizar Todo el Panel
             renderDashboardUI();
