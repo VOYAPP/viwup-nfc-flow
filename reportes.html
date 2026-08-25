@@ -494,7 +494,16 @@
       const pathArray = window.location.pathname.split('/');
       let token = pathArray[pathArray.length - 1];
       if (!token || token.includes('.html')) { token = new URLSearchParams(window.location.search).get('token'); }
-      if (token && token !== 'reportes') cargarDatosDelLocal(token);
+      
+      if (token && token !== 'reportes') {
+        // Carga inicial
+        cargarDatosDelLocal(token);
+        
+        // Recarga silenciosa cada 60 segundos (60000 milisegundos)
+        setInterval(() => {
+          cargarDatosDelLocal(token);
+        }, 60000); 
+      }
     });
 
     async function cargarDatosDelLocal(tokenDashboard) {
