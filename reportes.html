@@ -546,17 +546,17 @@
 
           if (evals && evals.length > 0) {
             evaluacionesData = evals.map(e => {
-              // Extraer la calificación de forma segura para evitar el error NaN
-              const estrellas = parseInt(e.calificacion || e.Calificacion || e.estrellas || 0) || 0;
+              // Ahora leemos la calificación directamente de tu columna 'rating'
+              const estrellas = parseInt(e.rating || 0) || 0;
               
               return {
-                fecha: formatearFecha(e.created_at || e.fecha || e.Fecha),
-                garzon: e.garzon || e.Garzon || "Sin nombre",
+                fecha: formatearFecha(e.created_at),
+                garzon: e.garzon_nombre || "Sin nombre",
                 calificacion: estrellas,
-                motivo: e.motivo || e.Motivo || null,
-                estado: e.flujo || e.estado || e.Estado || (estrellas > 0 && estrellas <= 3 ? "SOS" : "SEO"),
-                comentario: e.comentario || e.Comentario || "",
-                created_at: e.created_at || e.fecha || e.Fecha
+                motivo: e.motivos || null,
+                estado: e.tipo || (estrellas > 0 && estrellas <= 3 ? "SOS" : "SEO"),
+                comentario: e.comentario || "",
+                created_at: e.created_at
               };
             });
 
