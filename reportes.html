@@ -495,21 +495,25 @@
     });
 
     // 2. Lógica para cambiar de pestañas fluidamente
-    function cambiarSeccion(seccionId) {
+    window.cambiarSeccion = function(seccionId) {
+      // Ocultar todas las secciones
       document.querySelectorAll('.seccion-reporte').forEach(sec => sec.classList.add('hidden'));
+      // Mostrar la sección seleccionada
       document.getElementById(`seccion-${seccionId}`).classList.remove('hidden');
-
+  
+      // Resetear colores de todos los botones
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('text-[#3B82F6]', 'border-[#3B82F6]', 'font-semibold');
         btn.classList.add('text-[#94A3B8]', 'border-transparent', 'font-medium');
       });
-
+  
+      // Pintar de azul el botón activo
       const botonActivo = document.getElementById(`tab-${seccionId}`);
       if(botonActivo) {
         botonActivo.classList.remove('text-[#94A3B8]', 'border-transparent', 'font-medium');
         botonActivo.classList.add('text-[#3B82F6]', 'border-[#3B82F6]', 'font-semibold');
       }
-    }
+    };
 
     // 3. Cargar Token de la URL e iniciar consulta
     document.addEventListener("DOMContentLoaded", () => {
@@ -558,6 +562,7 @@
 
             // Renderizar Todo
             renderEvaluacionesUI();
+            renderDashboardUI();
             updateDetail(0);
             actualizarDonutChart(evals);
             renderizarHorariosCriticos(evals, local.hora_apertura ?? 12, local.hora_cierre ?? 23);
@@ -745,4 +750,36 @@
       if(overlay) overlay.addEventListener('click', closeBottomSheet);
       if(bottomSheet && bottomSheet.querySelector('.w-10')) bottomSheet.querySelector('.w-10').parentElement.addEventListener('click', closeBottomSheet);
     }
+
+    function renderDashboardUI() {
+      if (evaluacionesData.length === 0) return;
+      const total = evaluacionesData.length;
+
+      // KPIs
+      const promotores = evaluacionesData.filter(e => e.calificacion >= 4).length;
+      const sosCount = evaluacionesData.filter(e => e.calificacion <= 3).length;
+  
+      if(document.getElementById('ui-pct-promotores')) document.getElementById('ui-pct-promotores').innerText = Math.round((promotores/total)*100) + '%';
+      if(document.getElementById('ui-sos-count')) document.getElementById('ui-sos-count').innerText = sosCount;
+
+      // Ranking Garzones
+      const garzones = {};
+      evaluacionesData.forEach(e => { if(e.garzon) garzones[e.garzon] = (garzones[e.garzon] || 0) + 1; });
+      const ranking = Object.entries(garzones).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const rc = document.getElementById('ranking-container');
+      if(rc) rc.innerHTML = ranking.map((g, i) => `<div class="flex justify-between py-2.5 border-b border-slate-50"><div class="flex gap-3"><span class="text-sm text-[#94A3B8] w-4">${i+1}</span><span class="text-sm">${g[0]}</span></div><span class="text-sm font-bold">${g[1]} eval</span></div>`).join('');
+
+      // Focos SOS
+      const focos = {};
+      evaluacionesData.forEach(e => { if(e.estado === 'SOS' && e.motivo) focos[e.motivo] = (focos[e.motivo] || 0) + 1; });
+      const focosArr = Object.entries(focos).sort((a,b) => b[1] - a[1]);
+      const maxFoco = focosArr.length > 0 ? focosArr[0][1] : 1;
+      const fc = document.getElementById('focos-container');
+      if(fc) fc.innerHTML = focosArr.map(f => `<div class="flex items-center gap-3"><span class="text-sm font-semibold w-20">${f[0]}</span><div class="flex-1 h-2 bg-[#FED7AA] rounded-full"><div class="h-full rounded-full bg-[#EA580C]" style="width:${(f[1]/maxFoco)*100}%"></div></div><span class="text-sm font-bold">${f[1]}</span></div>`).join('') || '<p class="text-sm text-slate-500">Sin focos SOS</p>';
+
+      // Carousel SOS
+      const sosList = evaluacionesData.filter(e => e.estado === 'SOS').slice(0, 5);
+      const carousel = document.getElementById('carousel-sos');
+      if(carousel) carousel.innerHTML = sosList.map(e => `<div class="snap-start shrink-0 w-[85%] md:w-[32%] bg-[#F8FAFC] rounded-xl p-4"><div class="flex justify-between mb-2"><span class="text-[11px] text-[#94A3B8]">${e.fecha}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFEDD5] text-[#EA580C]">SOS</span></div><span class="text-[10px] font-bold text-[#EA580C]">[${e.motivo || 'General'}]</span><p class="text-[14px] mt-2 mb-3 line-clamp-3">"${e.comentario}"</p><p class="text-[11px] text-[#64748B]">Garzón: <span class="font-semibold">${e.garzon}</span></p></div>`).join('') || '<p class="text-sm text-slate-500">No hay alertas SOS recientes.</p>';
+   }
   </script>
