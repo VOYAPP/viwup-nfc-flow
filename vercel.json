@@ -3,6 +3,10 @@
     {
       "source": "/resto/:slug",
       "destination": "/app.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/:path*.html"
     }
   ]
 }
