@@ -554,7 +554,7 @@
           window.localApertura = local.hora_apertura ?? 12;
           window.localCierre = local.hora_cierre ?? 23;
 
-          const { data: evals, error: evalsError } = await db.from('Evaluaciones').select('*').eq('local_id', local.id).order('created_at', { ascending: false });
+          const { data: evals, error: evalsError } = await db.from('evaluaciones').select('*').eq('local_id', local.id).order('created_at', { ascending: false });
           if (evalsError) throw evalsError;
 
           if (evals && evals.length > 0) {
