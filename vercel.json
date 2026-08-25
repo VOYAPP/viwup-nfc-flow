@@ -2,7 +2,7 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/resto/:slug",
+      "source": "/resto/:path*",
       "destination": "/app.html"
     }
   ]
