@@ -10,6 +10,8 @@
     * { font-family: 'Inter', sans-serif; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .bottom-sheet { transform: translateY(100%); transition: transform 0.3s ease-in-out; }
+    .bottom-sheet.open { transform: translateY(0); }
   </style>
 </head>
 <body class="min-h-screen bg-[#F8FAFC]">
@@ -332,9 +334,137 @@
     <!-- PESTAÑA 2: EVALUACIONES         -->
     <!-- =============================== -->
     <div id="seccion-evaluaciones" class="seccion-reporte hidden">
-      <div class="bg-white rounded-2xl p-6 shadow-[0_4px_12px_rgba(15,23,42,0.03)] min-h-[400px]">
-        <h2 class="text-2xl font-bold text-[#0F172A]">Historial de Evaluaciones</h2>
-        <p class="text-slate-500 mt-2">Aquí ensamblaremos la tabla y los filtros dinámicos.</p>
+      
+      <!-- ── FILTER BAR ── -->
+      <div class="hidden md:flex items-center gap-4 bg-white rounded-xl p-4 shadow-[0_4px_12px_rgba(15,23,42,0.03)] mb-4">
+        <div class="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-1.5 w-60">
+          <svg class="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" placeholder="Buscar opiniones..." class="text-[13px] text-[#94A3B8] outline-none bg-transparent w-full" />
+        </div>
+        <div class="flex items-center gap-1">
+          <button class="filter-tab active px-3 py-1 rounded-md text-[13px] font-semibold bg-[#F1F5F9] text-[#0F172A]" data-filter="todas">Todas</button>
+          <button class="filter-tab px-3 py-1 rounded-md text-[13px] font-medium text-[#64748B] hover:bg-slate-50" data-filter="sos">SOS (1-3⭐)</button>
+          <button class="filter-tab px-3 py-1 rounded-md text-[13px] font-medium text-[#64748B] hover:bg-slate-50" data-filter="seo">SEO (4-5⭐)</button>
+        </div>
+        <div class="flex items-center gap-1 text-[13px]">
+          <span class="text-[#64748B]">Filtrar por Garzón:</span>
+          <select class="font-semibold text-[#0F172A] bg-transparent outline-none cursor-pointer">
+            <option>Todos</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-1 text-[13px]">
+          <span class="text-[#64748B]">Estado:</span>
+          <select class="font-semibold text-[#0F172A] bg-transparent outline-none cursor-pointer">
+            <option>Todas</option><option>SOS</option><option>SEO</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Mobile Filters -->
+      <div class="md:hidden mb-4">
+        <div class="flex items-center gap-2">
+          <div class="flex-1 flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white">
+            <svg class="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Buscar opiniones..." class="text-sm text-[#94A3B8] outline-none bg-transparent w-full" />
+          </div>
+          <button id="filter-toggle" class="flex items-center gap-1 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-[#374151] font-medium">
+            Filtros
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+          </button>
+        </div>
+        <div id="mobile-filters" class="hidden mt-2 p-3 bg-white rounded-xl border border-slate-100 space-y-3">
+          <div class="flex items-center gap-1">
+            <button class="filter-tab-m active px-3 py-1 rounded-md text-xs font-semibold bg-[#F1F5F9] text-[#0F172A]">Todas</button>
+            <button class="filter-tab-m px-3 py-1 rounded-md text-xs font-medium text-[#64748B]">SOS (1-3⭐)</button>
+            <button class="filter-tab-m px-3 py-1 rounded-md text-xs font-medium text-[#64748B]">SEO (4-5⭐)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CONTENT SPLIT ── -->
+      <div class="flex gap-6">
+        <!-- LEFT: Table Panel -->
+        <div class="flex-1 min-w-0">
+          <!-- Desktop Table -->
+          <div class="hidden md:block bg-white rounded-2xl shadow-[0_4px_12px_rgba(15,23,42,0.03)] overflow-hidden">
+            <div class="grid grid-cols-[110px_130px_100px_1fr_80px] bg-[#F8FAFC] px-4 py-3 border-b border-slate-100">
+              <span class="text-xs font-bold text-[#64748B] uppercase">Fecha</span>
+              <span class="text-xs font-bold text-[#64748B] uppercase">Garzón</span>
+              <span class="text-xs font-bold text-[#64748B] uppercase">Calificación</span>
+              <span class="text-xs font-bold text-[#64748B] uppercase">Motivo / Detalle</span>
+              <span class="text-xs font-bold text-[#64748B] uppercase text-right">Estado</span>
+            </div>
+            <div id="table-body">
+              <p class="p-6 text-sm text-[#94A3B8] text-center">Cargando evaluaciones...</p>
+            </div>
+          </div>
+          <!-- Mobile Cards -->
+          <div class="md:hidden space-y-3" id="mobile-cards">
+            <p class="p-6 text-sm text-[#94A3B8] text-center">Cargando evaluaciones...</p>
+          </div>
+        </div>
+
+        <!-- RIGHT: Detail Panel (desktop) -->
+        <div class="hidden md:block w-[343px] shrink-0 sticky top-6 self-start">
+          <div id="detail-panel" class="bg-white rounded-2xl p-4 shadow-[0_4px_12px_rgba(15,23,42,0.03)] space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#3B82F6] uppercase tracking-wide">Detalle de Evaluación</span>
+              <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF7ED] text-[#EA580C]" id="detail-badge">-</span>
+            </div>
+            <div>
+              <p class="text-lg font-semibold text-[#0F172A]" id="detail-date">-</p>
+              <p class="text-xs text-[#64748B]" id="detail-garzon">-</p>
+            </div>
+            <hr class="border-slate-100" />
+            <div class="flex items-center gap-2">
+              <span class="text-[13px] text-[#64748B]">Calificación:</span>
+              <div class="flex gap-0.5" id="detail-stars"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[13px] font-semibold text-[#0F172A]">Motivo de Alerta:</span>
+              <span class="px-3 py-1 rounded-lg border border-[#FED7AA] bg-[#FFF7ED] text-[13px] font-bold text-[#EA580C]" id="detail-motivo">-</span>
+            </div>
+            <hr class="border-slate-100" />
+            <div class="bg-[#FFF7ED] rounded-xl p-3">
+              <p class="text-[11px] font-bold text-[#EA580C] uppercase mb-1">Comentario SOS</p>
+              <p class="text-[13px] text-[#431407] leading-relaxed" id="detail-comment">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> <!-- FIN SECCIÓN EVALUACIONES -->
+
+    <!-- =============================== -->
+    <!-- OVERLAYS PARA MÓVIL             -->
+    <!-- =============================== -->
+    <div id="bottom-sheet-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden"></div>
+    <div id="bottom-sheet" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-[0_-4px_24px_rgba(15,23,42,0.1)] bottom-sheet max-h-[70vh] overflow-y-auto">
+      <div class="flex justify-center py-2">
+        <div class="w-10 h-1 rounded-full bg-slate-300"></div>
+      </div>
+      <div class="px-4 pb-6 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-[#3B82F6] uppercase tracking-wide">Detalle de Evaluación</span>
+          <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FFF7ED] text-[#EA580C]" id="bs-badge">-</span>
+        </div>
+        <div>
+          <p class="text-lg font-semibold text-[#0F172A]" id="bs-date">-</p>
+          <p class="text-xs text-[#64748B]" id="bs-garzon">-</p>
+        </div>
+        <hr class="border-slate-100" />
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] text-[#64748B]">Calificación:</span>
+          <div class="flex gap-0.5" id="bs-stars"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] font-semibold text-[#0F172A]">Motivo de Alerta:</span>
+          <span class="px-3 py-1 rounded-lg border border-[#FED7AA] bg-[#FFF7ED] text-[13px] font-bold text-[#EA580C]" id="bs-motivo">-</span>
+        </div>
+        <hr class="border-slate-100" />
+        <div class="bg-[#FFF7ED] rounded-xl p-3">
+          <p class="text-[11px] font-bold text-[#EA580C] uppercase mb-1">Comentario SOS</p>
+          <p class="text-[13px] text-[#431407] leading-relaxed" id="bs-comment">-</p>
+        </div>
       </div>
     </div>
 
@@ -421,25 +551,26 @@
   <!-- ═══ SUPABASE Y NAVEGACIÓN DINÁMICA ═══ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 1. Inicializar Supabase
+    // 1. Inicializar Supabase y Variables Globales
     const SUPABASE_URL = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzUwMDU5OCwiZXhwIjoyMTAzMDc2NTk4fQ.stqb7z974XONthpmqO2lUKhvDX3fv6ANPPyedZxdZo0';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let evaluacionesData = [];
+
+    // Manejo de Filtros Móviles
+    const filterToggle = document.getElementById('filter-toggle');
+    if(filterToggle) filterToggle.addEventListener('click', () => document.getElementById('mobile-filters').classList.toggle('hidden'));
 
     // 2. Lógica para cambiar de pestañas fluidamente
     function cambiarSeccion(seccionId) {
-      // Ocultar todas las secciones
       document.querySelectorAll('.seccion-reporte').forEach(sec => sec.classList.add('hidden'));
-      // Mostrar la seleccionada
       document.getElementById(`seccion-${seccionId}`).classList.remove('hidden');
 
-      // Resetear estilos de los botones del menú Desktop
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('text-[#3B82F6]', 'border-[#3B82F6]', 'font-semibold');
         btn.classList.add('text-[#94A3B8]', 'border-transparent', 'font-medium');
       });
 
-      // Aplicar estilos activos al botón presionado
       const botonActivo = document.getElementById(`tab-${seccionId}`);
       if(botonActivo) {
         botonActivo.classList.remove('text-[#94A3B8]', 'border-transparent', 'font-medium');
@@ -449,11 +580,9 @@
 
     // 3. Cargar Token de la URL e iniciar consulta
     document.addEventListener("DOMContentLoaded", () => {
-      // Extraemos el token del formato viwup.cl/reportes/TOKEN
       const pathArray = window.location.pathname.split('/');
       let token = pathArray[pathArray.length - 1];
 
-      // Redundancia en caso de que lo lean con formato antiguo ?token=...
       if (!token || token.includes('.html')) {
           const urlParams = new URLSearchParams(window.location.search);
           token = urlParams.get('token');
@@ -463,35 +592,43 @@
         cargarDatosDelLocal(token);
       } else {
         document.getElementById('ui-nombre-local-desktop').innerText = "Acceso Inválido";
-        if(document.getElementById('ui-nombre-local-mobile')) {
-            document.getElementById('ui-nombre-local-mobile').innerText = "Inválido";
-        }
+        if(document.getElementById('ui-nombre-local-mobile')) document.getElementById('ui-nombre-local-mobile').innerText = "Inválido";
       }
     });
 
-    // 4. Buscar la data en Supabase
+    // 4. Buscar la data en Supabase (Local + Evaluaciones)
     async function cargarDatosDelLocal(tokenDashboard) {
       try {
-        // Busca el local usando el token de la URL
-        const { data: local, error: errorLocal } = await supabase
-          .from('locales') // Verifica que tu tabla se llame así
-          .select('id, nombre')
-          .eq('token_dashboard', tokenDashboard) 
-          .single();
+        const { data: local } = await supabase.from('locales').select('id, nombre').eq('token_dashboard', tokenDashboard).single();
 
         if (local) {
-          const nombreDesktop = document.getElementById('ui-nombre-local-desktop');
-          const nombreMobile = document.getElementById('ui-nombre-local-mobile');
+          if(document.getElementById('ui-nombre-local-desktop')) document.getElementById('ui-nombre-local-desktop').innerText = local.nombre;
+          if(document.getElementById('ui-nombre-local-mobile')) document.getElementById('ui-nombre-local-mobile').innerText = local.nombre;
+
+          // Buscar Evaluaciones del local
+          const { data: evals } = await supabase.from('evaluaciones').select('*').eq('local_id', local.id).order('created_at', { ascending: false });
           
-          if(nombreDesktop) nombreDesktop.innerText = local.nombre;
-          if(nombreMobile) nombreMobile.innerText = local.nombre;
+          if (evals && evals.length > 0) {
+            evaluacionesData = evals.map(e => ({
+              fecha: formatearFecha(e.created_at || e.fecha),
+              garzon: e.garzon || "Sin nombre",
+              calificacion: e.calificacion,
+              motivo: e.motivo || null,
+              estado: e.flujo || e.estado || (e.calificacion <= 3 ? "SOS" : "SEO"),
+              comentario: e.comentario || ""
+            }));
 
-          console.log("Local cargado correctamente:", local.nombre);
+            // Calcular Promedio para el Dashboard
+            const suma = evaluacionesData.reduce((acc, curr) => acc + curr.calificacion, 0);
+            const promedio = (suma / evaluacionesData.length).toFixed(1);
+            if(document.getElementById('ui-promedio')) document.getElementById('ui-promedio').innerText = promedio;
 
-          // ----------------------------------------------------
-          // AQUÍ CARGAREMOS EL PROMEDIO Y EVALUACIONES MÁS ADELANTE
-          // ----------------------------------------------------
-
+            renderEvaluacionesUI();
+            updateDetail(0);
+          } else {
+            document.getElementById('table-body').innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones recientes.</p>';
+            document.getElementById('mobile-cards').innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones recientes.</p>';
+          }
         } else {
           document.getElementById('ui-nombre-local-desktop').innerText = "Local no encontrado";
         }
@@ -499,7 +636,128 @@
         console.error("Error cargando los datos:", err);
       }
     }
-  </script>
 
-</body>
-</html>
+    // 5. Funciones Auxiliares de UI de Evaluaciones
+    function formatearFecha(fechaStr) {
+      if(!fechaStr) return "Reciente";
+      const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+      return new Date(fechaStr).toLocaleDateString('es-ES', options).replace(',', '');
+    }
+
+    function starSVG(filled, extraClass = '') {
+      return `<svg class="w-3.5 h-3.5 ${extraClass} ${filled ? 'text-amber-400' : 'text-gray-200'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>`;
+    }
+
+    function renderEvaluacionesUI() {
+      const tbody = document.getElementById('table-body');
+      const mcards = document.getElementById('mobile-cards');
+      if(!tbody || !mcards) return;
+      
+      tbody.innerHTML = '';
+      mcards.innerHTML = '';
+
+      evaluacionesData.forEach((ev, index) => {
+        const isSOS = ev.estado === 'SOS';
+        const badgeClass = isSOS ? 'bg-[#FFF7ED] text-[#EA580C]' : 'bg-[#ECFDF5] text-[#10B981]';
+        const badgeHTML = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${badgeClass}">${ev.estado}</span>`;
+        const starsHTML = Array.from({length: 5}, (_, i) => starSVG(i < ev.calificacion)).join('');
+        
+        let detalleHTMLDesktop = isSOS 
+          ? `<span class="text-[#EA580C] font-bold">[${ev.motivo}]</span> <span class="text-[#475569]">${ev.comentario}</span>`
+          : `<span class="text-[#94A3B8] italic">Derivado a Google</span>`;
+
+        // Fila Escritorio
+        const row = document.createElement('div');
+        row.className = `eval-row grid grid-cols-[110px_130px_100px_1fr_80px] px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer items-center`;
+        if (index === 0) row.classList.add('bg-blue-50/40');
+        row.dataset.index = index;
+        row.innerHTML = `
+          <span class="text-[13px] text-[#475569]">${ev.fecha}</span>
+          <span class="text-[13px] text-[#475569]">${ev.garzon}</span>
+          <div class="flex gap-0.5">${starsHTML}</div>
+          <span class="text-[13px] truncate pr-4">${detalleHTMLDesktop}</span>
+          <span class="text-right">${badgeHTML}</span>
+        `;
+        tbody.appendChild(row);
+
+        // Tarjeta Móvil
+        const card = document.createElement('div');
+        card.className = 'eval-card bg-white rounded-xl p-4 shadow-[0_4px_12px_rgba(15,23,42,0.03)] cursor-pointer';
+        card.dataset.index = index;
+        let cardContent = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-[#94A3B8]">${ev.fecha}</span>
+            ${badgeHTML}
+          </div>
+          <p class="text-sm font-semibold text-[#0F172A]">${ev.garzon}</p>
+        `;
+        if (isSOS) {
+          cardContent += `
+            <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF7ED] text-[#EA580C]">${ev.motivo}</span>
+            <div class="flex gap-0.5 mt-2">${starsHTML}</div>
+            <p class="text-[14px] leading-relaxed text-[#334155] mb-3 line-clamp-2 mt-2">"${ev.comentario}"</p>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-[#64748B]">Atendido por:</span>
+              <span class="text-[11px] font-semibold text-[#475569] bg-slate-100 px-2 py-0.5 rounded">${ev.garzon}</span>
+            </div>
+          `;
+        } else {
+          cardContent += `
+            <p class="text-xs text-[#94A3B8] italic mt-0.5">Derivado a Google</p>
+            <div class="flex gap-0.5 mt-2">${starsHTML}</div>
+          `;
+        }
+        card.innerHTML = cardContent;
+        mcards.appendChild(card);
+      });
+      attachClickEvents();
+    }
+
+    function updateDetail(index) {
+      const ev = evaluacionesData[index];
+      if (!ev) return;
+      const isSOS = ev.estado === "SOS";
+      const starsHTML = Array.from({length: 5}, (_, i) => starSVG(i < ev.calificacion, 'w-4 h-4')).join('');
+      const badgeClass = `px-2 py-0.5 rounded-md text-[11px] font-bold ${isSOS ? 'bg-[#FFF7ED] text-[#EA580C]' : 'bg-[#ECFDF5] text-[#10B981]'}`;
+
+      const ids = ['detail', 'bs'];
+      ids.forEach(prefix => {
+        if(!document.getElementById(`${prefix}-date`)) return;
+        document.getElementById(`${prefix}-date`).textContent = ev.fecha;
+        document.getElementById(`${prefix}-garzon`).textContent = `Atendido por ${ev.garzon}`;
+        document.getElementById(`${prefix}-badge`).textContent = ev.estado;
+        document.getElementById(`${prefix}-badge`).className = badgeClass;
+        document.getElementById(`${prefix}-stars`).innerHTML = starsHTML;
+        document.getElementById(`${prefix}-motivo`).textContent = ev.motivo || 'No aplica (SEO)';
+        document.getElementById(`${prefix}-comment`).textContent = ev.comentario || 'Derivado directamente a Google Maps.';
+      });
+    }
+
+    function attachClickEvents() {
+      document.querySelectorAll('.eval-row').forEach(row => {
+        row.addEventListener('click', () => {
+          document.querySelectorAll('.eval-row').forEach(r => r.classList.remove('bg-blue-50/40'));
+          row.classList.add('bg-blue-50/40');
+          updateDetail(parseInt(row.dataset.index));
+        });
+      });
+
+      const overlay = document.getElementById('bottom-sheet-overlay');
+      const bottomSheet = document.getElementById('bottom-sheet');
+
+      document.querySelectorAll('.eval-card').forEach(card => {
+        card.addEventListener('click', () => {
+          updateDetail(parseInt(card.dataset.index));
+          overlay.classList.remove('hidden');
+          requestAnimationFrame(() => bottomSheet.classList.add('open'));
+        });
+      });
+
+      function closeBottomSheet() {
+        bottomSheet.classList.remove('open');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
+      if(overlay) overlay.addEventListener('click', closeBottomSheet);
+      if(bottomSheet && bottomSheet.querySelector('.w-10')) bottomSheet.querySelector('.w-10').parentElement.addEventListener('click', closeBottomSheet);
+    }
+  </script>
