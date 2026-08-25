@@ -551,7 +551,8 @@
           if(document.getElementById('ui-nombre-local-mobile')) document.getElementById('ui-nombre-local-mobile').innerText = local.nombre;
           if (local.logo_url) {
             document.querySelectorAll('.rounded-full.bg-slate-200').forEach(container => {
-              container.innerHTML = `<img src="${local.logo_url}" alt="${local.nombre}" class="w-full h-full object-cover rounded-full">`;
+              // Cambiamos object-cover por object-contain y agregamos p-1
+              container.innerHTML = `<img src="${local.logo_url}" alt="${local.nombre}" class="w-full h-full object-contain p-1 rounded-full">`;
               container.classList.remove('bg-slate-200');
             });
           }
