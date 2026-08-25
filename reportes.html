@@ -764,16 +764,29 @@
       // --- 2. Dibujar Gráfico: Actividad Diaria (Líneas) ---
       const ctxAct = document.getElementById('canvas-actividad');
       if(ctxAct) {
+        // Invertimos las fechas para el gráfico (de más antiguo a más reciente)
+        const labelsFechas = Object.keys(fechasMap).reverse();
+        const totales = labelsFechas.map(f => fechasMap[f].total);
+        const sos = labelsFechas.map(f => fechasMap[f].sos);
+
         chartActividad = new Chart(ctxAct, {
           type: 'line',
           data: {
-            labels: Object.keys(fechasMap),
+            labels: labelsFechas,
             datasets: [
-              { label: 'Escaneos Totales', data: Object.values(fechasMap).map(v => v.total), borderColor: '#0D9488', backgroundColor: 'rgba(13, 148, 136, 0.1)', fill: true, tension: 0.4 },
-              { label: 'Alertas SOS', data: Object.values(fechasMap).map(v => v.sos), borderColor: '#EA580C', borderDash: [5, 5], tension: 0.4 }
+              { label: 'Escaneos Totales', data: totales, borderColor: '#0D9488', backgroundColor: 'rgba(13, 148, 136, 0.1)', fill: true, tension: 0.4 },
+              { label: 'Alertas SOS', data: sos, borderColor: '#EA580C', borderDash: [5, 5], tension: 0.4 }
             ]
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, interaction: { mode: 'index', intersect: false } }
+          options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { position: 'top' } }, 
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+              y: { beginAtZero: true } // Fuerza a que la base sea siempre 0
+            }
+          }
         });
       }
 
@@ -789,10 +802,17 @@
               { label: 'Alertas SOS', data: Object.values(horasObj).map(v => v.sos), backgroundColor: '#EA580C', borderRadius: 4 }
             ]
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, interaction: { mode: 'index', intersect: false } }
+          options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { position: 'top' } }, 
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+              y: { beginAtZero: true } // Fuerza a que la base sea siempre 0
+            }
+          }
         });
       }
-
       // --- 4. Dibujar Gráfico: Evolución de Focos (Barras Apiladas) ---
       const ctxFocos = document.getElementById('canvas-focos');
       if(ctxFocos) {
