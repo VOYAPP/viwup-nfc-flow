@@ -21,7 +21,7 @@ var selectedMotivos = [];
 var waitingForGoogleMaps = false;
 
 // Motivos por defecto
-const motivosDefault = ['Servicio', 'Cocina', 'Barra'];
+const motivosDefault = ['Servicio', 'Cocina', 'Barra','Espera','Limpieza'];
 
 // ==========================================
 // 3. INICIALIZACIÓN DINÁMICA
