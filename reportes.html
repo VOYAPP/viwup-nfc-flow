@@ -447,8 +447,8 @@
     let currentTableData = [];   // Data filtrada en la tabla Evaluaciones
     
     // --- NUEVAS VARIABLES PARA PAGINACIÓN ---
-    let currentPage = 1;
-    const itemsPerPage = 10;
+    let paginaActual = 1;
+    const itemsPorPagina = 10;
 
     // Variables para guardar las instancias de Chart.js
     let chartActividad = null;
@@ -638,7 +638,7 @@
            return matchBusqueda && matchEstrellas && matchGarzon && matchEstado;
        });
 
-       currentPage = 1; // REINICIAR A PÁGINA 1 AL FILTRAR
+       paginaActual = 1; // REINICIAR A PÁGINA 1 AL FILTRAR
        renderEvaluacionesUI(currentTableData);
        if(currentTableData.length > 0) updateDetail(0); 
     }
@@ -882,9 +882,9 @@
         return;
       }
 
-      // --- LÓGICA DE PAGINACIÓN ---
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
+      // --- LÓGICA DE PAGINACIÓN ACTUALIZADA ---
+      const startIndex = (paginaActual - 1) * itemsPorPagina;
+      const endIndex = startIndex + itemsPorPagina;
       const paginatedData = dataList.slice(startIndex, endIndex);
 
       paginatedData.forEach((ev, index) => {
@@ -900,7 +900,7 @@
         // Fila Desktop
         const row = document.createElement('div');
         row.className = `eval-row grid grid-cols-[110px_130px_100px_1fr_80px] px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer items-center`;
-        if (index === 0 && currentPage === 1) row.classList.add('bg-blue-50/40');
+        if (index === 0 && paginaActual === 1) row.classList.add('bg-blue-50/40');
         row.dataset.index = absoluteIndex;
         row.innerHTML = `<span class="text-[13px] text-[#475569]">${ev.fecha}</span><span class="text-[13px] text-[#475569]">${ev.garzon}</span><div class="flex gap-0.5">${starsHTML}</div><span class="text-[13px] truncate pr-4">${detalleHTMLDesktop}</span><span class="text-right">${badgeHTML}</span>`;
         tbody.appendChild(row);
@@ -921,8 +921,31 @@
       
       attachClickEvents();
       renderPagination(dataList.length);
-    };
+    }
 
+    function renderPagination(totalItems) {
+      const container = document.getElementById('pagination-container');
+      if (!container) return;
+      const totalPages = Math.ceil(totalItems / itemsPorPagina);
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+      let html = `<button onclick="changePage(${paginaActual - 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${paginaActual === 1 ? 'disabled' : ''}>&lt;</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === paginaActual ? 'bg-[#0F172A] text-white border-[#0F172A]' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200';
+        html += `<button onclick="changePage(${i})" class="px-3 py-1 rounded-lg border ${activeClass} transition-all font-medium text-sm">${i}</button>`;
+      }
+      html += `<button onclick="changePage(${paginaActual + 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${paginaActual === totalPages ? 'disabled' : ''}>&gt;</button>`;
+      container.innerHTML = html;
+    }
+
+    window.changePage = function(newPage) {
+      const totalPages = Math.ceil(currentTableData.length / itemsPorPagina);
+      if (newPage < 1 || newPage > totalPages) return;
+      paginaActual = newPage;
+      renderEvaluacionesUI(currentTableData);
+    };
     // --- FUNCIONES NUEVAS: DIBUJAR BOTONES Y CAMBIAR PÁGINA ---
     function renderPagination(totalItems) {
       const container = document.getElementById('pagination-container');
