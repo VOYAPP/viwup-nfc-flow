@@ -873,7 +873,10 @@
       const tbody = document.getElementById('table-body');
       const mcards = document.getElementById('mobile-cards');
       if(!tbody || !mcards) return;
-      tbody.innerHTML = ''; mcards.innerHTML = '';
+      
+      // Limpieza estricta antes de dibujar
+      tbody.innerHTML = ''; 
+      mcards.innerHTML = '';
 
       if(dataList.length === 0) {
         tbody.innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones que coincidan con los filtros.</p>';
@@ -882,9 +885,13 @@
         return;
       }
 
-      // --- LÓGICA DE PAGINACIÓN ACTUALIZADA ---
-      const startIndex = (paginaActual - 1) * itemsPorPagina;
-      const endIndex = startIndex + itemsPorPagina;
+      // --- LÓGICA DE PAGINACIÓN BLINDADA ---
+      const limiteItems = 10;
+      const paginaSegura = parseInt(paginaActual) || 1; // Fuerza a que sea un número real
+      const startIndex = (paginaSegura - 1) * limiteItems;
+      const endIndex = startIndex + limiteItems;
+      
+      // Cortamos exactamente los datos que corresponden a esta página
       const paginatedData = dataList.slice(startIndex, endIndex);
 
       paginatedData.forEach((ev, index) => {
@@ -900,7 +907,7 @@
         // Fila Desktop
         const row = document.createElement('div');
         row.className = `eval-row grid grid-cols-[110px_130px_100px_1fr_80px] px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer items-center`;
-        if (index === 0 && paginaActual === 1) row.classList.add('bg-blue-50/40');
+        if (index === 0 && paginaSegura === 1) row.classList.add('bg-blue-50/40');
         row.dataset.index = absoluteIndex;
         row.innerHTML = `<span class="text-[13px] text-[#475569]">${ev.fecha}</span><span class="text-[13px] text-[#475569]">${ev.garzon}</span><div class="flex gap-0.5">${starsHTML}</div><span class="text-[13px] truncate pr-4">${detalleHTMLDesktop}</span><span class="text-right">${badgeHTML}</span>`;
         tbody.appendChild(row);
@@ -923,6 +930,43 @@
       renderPagination(dataList.length);
     }
 
+    function renderPagination(totalItems) {
+      const container = document.getElementById('pagination-container');
+      if (!container) return;
+      
+      const limiteItems = 10;
+      const totalPages = Math.ceil(totalItems / limiteItems);
+      const paginaSegura = parseInt(paginaActual) || 1;
+      
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      let html = `<button onclick="changePage(${paginaSegura - 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${paginaSegura === 1 ? 'disabled' : ''}>&lt;</button>`;
+      
+      for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === paginaSegura ? 'bg-[#0F172A] text-white border-[#0F172A]' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200';
+        html += `<button onclick="changePage(${i})" class="px-3 py-1 rounded-lg border ${activeClass} transition-all font-medium text-sm">${i}</button>`;
+      }
+      
+      html += `<button onclick="changePage(${paginaSegura + 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${paginaSegura === totalPages ? 'disabled' : ''}>&gt;</button>`;
+      
+      container.innerHTML = html;
+    }
+
+    window.changePage = function(newPage) {
+      const limiteItems = 10;
+      const totalPages = Math.ceil(currentTableData.length / limiteItems);
+      
+      if (newPage < 1 || newPage > totalPages) return;
+      
+      // Actualizamos la variable global
+      paginaActual = parseInt(newPage);
+      
+      // Forzamos el redibujado con la nueva página
+      renderEvaluacionesUI(currentTableData);
+    };
     function renderPagination(totalItems) {
       const container = document.getElementById('pagination-container');
       if (!container) return;
