@@ -321,6 +321,7 @@
         <div class="flex items-center gap-5 mb-4 text-xs text-[#0F172A]">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#0D9488]"></span>Escaneos totales</span>
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#EA580C]"></span>Alertas SOS</span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#10B981]"></span>Derivados SEO</span>
         </div>
 
         <!-- ===== CHART: Actividad Diaria ===== -->
@@ -737,43 +738,53 @@
     }
 
     function renderizarGraficosReales(dataList, apertura, cierre) {
-      // Destruir gráficos previos si existen (evita superposición al filtrar)
       if(chartActividad) chartActividad.destroy();
       if(chartHorarios) chartHorarios.destroy();
       if(chartFocos) chartFocos.destroy();
 
       // --- 1. Procesamiento de Datos ---
       const fechasMap = {};
-      const horasObj = {};
       const focosSemana = { 'Sem 1': {}, 'Sem 2': {}, 'Sem 3': {}, 'Sem 4': {} };
       const todosLosMotivos = new Set();
 
-      // Configurar Horas en base a apertura y cierre
-      let h = apertura;
+      const horasOrdenadas = [];
+      let ap = parseInt(apertura); if (isNaN(ap)) ap = 12;
+      let ci = parseInt(cierre); if (isNaN(ci)) ci = 23;
+      
+      let hTemp = ap;
       while(true) {
-        horasObj[h] = { total: 0, sos: 0 };
-        if (h === cierre) break;
-        h = (h + 1) % 24;
+        horasOrdenadas.push(hTemp);
+        if (hTemp === ci) break;
+        hTemp = (hTemp + 1) % 24;
       }
 
-      // Llenar datos iterando la data filtrada actual
+      const horasObj = {};
+      // Añadimos el contador "seo" a la inicialización
+      horasOrdenadas.forEach(h => { horasObj[h] = { total: 0, sos: 0, seo: 0 }; });
+
       dataList.forEach(ev => {
         const d = new Date(ev.created_at);
         
         // Datos para Actividad Diaria
         const fechaStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace(',', '');
-        if(!fechasMap[fechaStr]) fechasMap[fechaStr] = { total: 0, sos: 0 };
+        if(!fechasMap[fechaStr]) fechasMap[fechaStr] = { total: 0, sos: 0, seo: 0 };
         fechasMap[fechaStr].total++;
         if(ev.estado === 'SOS') fechasMap[fechaStr].sos++;
+        if(ev.estado === 'SEO') fechasMap[fechaStr].seo++; // Sumamos SEO
 
         // Datos para Horarios Críticos
         const horaEval = d.getHours();
-        if(horasObj[horaEval]) {
-          horasObj[horaEval].total++;
-          if(ev.estado === 'SOS') horasObj[horaEval].sos++;
+        if (horasObj[horaEval] === undefined) {
+           horasObj[horaEval] = { total: 0, sos: 0, seo: 0 };
+           horasOrdenadas.push(horaEval); 
+           horasOrdenadas.sort((a,b) => a - b);
         }
+        
+        horasObj[horaEval].total++;
+        if(ev.estado === 'SOS') horasObj[horaEval].sos++;
+        if(ev.estado === 'SEO') horasObj[horaEval].seo++; // Sumamos SEO
 
-        // Datos para Focos SOS Semanales (Agrupa los días del mes en 4 semanas)
+        // Datos para Focos SOS Semanales
         if(ev.estado === 'SOS' && ev.motivo) {
           todosLosMotivos.add(ev.motivo);
           const semanaDelMes = Math.ceil(d.getDate() / 7);
@@ -786,10 +797,10 @@
       // --- 2. Dibujar Gráfico: Actividad Diaria (Líneas) ---
       const ctxAct = document.getElementById('canvas-actividad');
       if(ctxAct) {
-        // Invertimos las fechas para el gráfico (de más antiguo a más reciente)
         const labelsFechas = Object.keys(fechasMap).reverse();
         const totales = labelsFechas.map(f => fechasMap[f].total);
         const sos = labelsFechas.map(f => fechasMap[f].sos);
+        const seo = labelsFechas.map(f => fechasMap[f].seo); // Extraemos SEO
 
         chartActividad = new Chart(ctxAct, {
           type: 'line',
@@ -797,18 +808,11 @@
             labels: labelsFechas,
             datasets: [
               { label: 'Escaneos Totales', data: totales, borderColor: '#0D9488', backgroundColor: 'rgba(13, 148, 136, 0.1)', fill: true, tension: 0.4 },
+              { label: 'Derivados SEO', data: seo, borderColor: '#10B981', borderDash: [5, 5], tension: 0.4 }, // Línea verde SEO
               { label: 'Alertas SOS', data: sos, borderColor: '#EA580C', borderDash: [5, 5], tension: 0.4 }
             ]
           },
-          options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { position: 'top' } }, 
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-              y: { beginAtZero: true } // Fuerza a que la base sea siempre 0
-            }
-          }
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, interaction: { mode: 'index', intersect: false }, scales: { y: { beginAtZero: true } } }
         });
       }
 
@@ -818,23 +822,17 @@
         chartHorarios = new Chart(ctxHor, {
           type: 'bar',
           data: {
-            labels: Object.keys(horasObj).map(h => `${h.toString().padStart(2, '0')}:00`),
+            labels: horasOrdenadas.map(h => `${h.toString().padStart(2, '0')}:00`),
             datasets: [
-              { label: 'Total Escaneos', data: Object.values(horasObj).map(v => v.total), backgroundColor: '#0D9488', borderRadius: 4 },
-              { label: 'Alertas SOS', data: Object.values(horasObj).map(v => v.sos), backgroundColor: '#EA580C', borderRadius: 4 }
+              { label: 'Total Escaneos', data: horasOrdenadas.map(h => horasObj[h].total), backgroundColor: '#0D9488', borderRadius: 4 },
+              { label: 'Derivados SEO', data: horasOrdenadas.map(h => horasObj[h].seo), backgroundColor: '#10B981', borderRadius: 4 }, // Barra verde SEO
+              { label: 'Alertas SOS', data: horasOrdenadas.map(h => horasObj[h].sos), backgroundColor: '#EA580C', borderRadius: 4 }
             ]
           },
-          options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { position: 'top' } }, 
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-              y: { beginAtZero: true } // Fuerza a que la base sea siempre 0
-            }
-          }
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, interaction: { mode: 'index', intersect: false }, scales: { y: { beginAtZero: true } } }
         });
       }
+
       // --- 4. Dibujar Gráfico: Evolución de Focos (Barras Apiladas) ---
       const ctxFocos = document.getElementById('canvas-focos');
       if(ctxFocos) {
@@ -859,6 +857,7 @@
         });
       }
     }
+    
     function formatearFecha(fechaStr) {
       if(!fechaStr) return "Reciente";
       const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
