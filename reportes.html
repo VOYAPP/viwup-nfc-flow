@@ -321,7 +321,7 @@
         <div class="flex items-center gap-5 mb-4 text-xs text-[#0F172A]">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#0D9488]"></span>Escaneos totales</span>
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#EA580C]"></span>Alertas SOS</span>
-          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#10B981]"></span>Derivados SEO</span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#3B82F6]"></span>Derivados SEO</span>
         </div>
 
         <!-- ===== CHART: Actividad Diaria ===== -->
@@ -808,7 +808,7 @@
             labels: labelsFechas,
             datasets: [
               { label: 'Escaneos Totales', data: totales, borderColor: '#0D9488', backgroundColor: 'rgba(13, 148, 136, 0.1)', fill: true, tension: 0.4 },
-              { label: 'Derivados SEO', data: seo, borderColor: '#10B981', borderDash: [5, 5], tension: 0.4 }, // Línea verde SEO
+              { label: 'Derivados SEO', data: seo, borderColor: '#3B82F6', borderDash: [5, 5], tension: 0.4 },
               { label: 'Alertas SOS', data: sos, borderColor: '#EA580C', borderDash: [5, 5], tension: 0.4 }
             ]
           },
@@ -825,7 +825,7 @@
             labels: horasOrdenadas.map(h => `${h.toString().padStart(2, '0')}:00`),
             datasets: [
               { label: 'Total Escaneos', data: horasOrdenadas.map(h => horasObj[h].total), backgroundColor: '#0D9488', borderRadius: 4 },
-              { label: 'Derivados SEO', data: horasOrdenadas.map(h => horasObj[h].seo), backgroundColor: '#10B981', borderRadius: 4 }, // Barra verde SEO
+              { label: 'Derivados SEO', data: horasOrdenadas.map(h => horasObj[h].seo), backgroundColor: '#3B82F6', borderRadius: 4 },
               { label: 'Alertas SOS', data: horasOrdenadas.map(h => horasObj[h].sos), backgroundColor: '#EA580C', borderRadius: 4 }
             ]
           },
