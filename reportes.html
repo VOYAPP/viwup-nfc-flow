@@ -926,26 +926,36 @@
     function renderPagination(totalItems) {
       const container = document.getElementById('pagination-container');
       if (!container) return;
+      
+      // CORRECCIÓN: Usamos itemsPorPagina (en español)
       const totalPages = Math.ceil(totalItems / itemsPorPagina);
+      
       if (totalPages <= 1) {
         container.innerHTML = '';
         return;
       }
+      
       let html = `<button onclick="changePage(${paginaActual - 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${paginaActual === 1 ? 'disabled' : ''}>&lt;</button>`;
+      
       for (let i = 1; i <= totalPages; i++) {
         const activeClass = i === paginaActual ? 'bg-[#0F172A] text-white border-[#0F172A]' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200';
         html += `<button onclick="changePage(${i})" class="px-3 py-1 rounded-lg border ${activeClass} transition-all font-medium text-sm">${i}</button>`;
       }
+      
       html += `<button onclick="changePage(${paginaActual + 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${paginaActual === totalPages ? 'disabled' : ''}>&gt;</button>`;
+      
       container.innerHTML = html;
     }
 
     window.changePage = function(newPage) {
+      // CORRECCIÓN: Usamos itemsPorPagina (en español)
       const totalPages = Math.ceil(currentTableData.length / itemsPorPagina);
       if (newPage < 1 || newPage > totalPages) return;
+      
       paginaActual = newPage;
       renderEvaluacionesUI(currentTableData);
     };
+    
     // --- FUNCIONES NUEVAS: DIBUJAR BOTONES Y CAMBIAR PÁGINA ---
     function renderPagination(totalItems) {
       const container = document.getElementById('pagination-container');
