@@ -926,8 +926,6 @@
     function renderPagination(totalItems) {
       const container = document.getElementById('pagination-container');
       if (!container) return;
-      
-      // CORRECCIÓN: Usamos itemsPorPagina (en español)
       const totalPages = Math.ceil(totalItems / itemsPorPagina);
       
       if (totalPages <= 1) {
@@ -947,6 +945,13 @@
       container.innerHTML = html;
     }
 
+    window.changePage = function(newPage) {
+      const totalPages = Math.ceil(currentTableData.length / itemsPorPagina);
+      if (newPage < 1 || newPage > totalPages) return;
+      
+      paginaActual = newPage;
+      renderEvaluacionesUI(currentTableData);
+    };
     window.changePage = function(newPage) {
       // CORRECCIÓN: Usamos itemsPorPagina (en español)
       const totalPages = Math.ceil(currentTableData.length / itemsPorPagina);
