@@ -965,7 +965,7 @@
     function renderPagination(totalItems) {
       const container = document.getElementById('pagination-container');
       if (!container) return;
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const totalPages = Math.ceil(totalItems / itemsPorPagina);
       if (totalPages <= 1) {
         container.innerHTML = '';
         return;
@@ -980,7 +980,7 @@
     }
 
     window.changePage = function(newPage) {
-      const totalPages = Math.ceil(currentTableData.length / itemsPerPage);
+      const totalPages = Math.ceil(currentTableData.length / itemsPorPagina);
       if (newPage < 1 || newPage > totalPages) return;
       currentPage = newPage;
       renderEvaluacionesUI(currentTableData);
