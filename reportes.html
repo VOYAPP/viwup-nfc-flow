@@ -67,9 +67,9 @@
 
     <!-- Mobile Dropdown (Convertidos a Pestañas) -->
     <div id="mobile-menu" class="hidden md:hidden border-t border-slate-100 px-4 py-3 space-y-2 bg-white">
-      <button onclick="cambiarSeccion('dashboard'); mobileMenu.classList.add('hidden')" class="block w-full text-left text-[#3B82F6] text-sm font-semibold py-1">Dashboard</button>
-      <button onclick="cambiarSeccion('evaluaciones'); mobileMenu.classList.add('hidden')" class="block w-full text-left text-[#94A3B8] text-sm py-1">Evaluaciones</button>
-      <button onclick="cambiarSeccion('graficos'); mobileMenu.classList.add('hidden')" class="block w-full text-left text-[#94A3B8] text-sm py-1">Gráficos</button>
+      <button id="mob-tab-dashboard" onclick="cambiarSeccion('dashboard'); mobileMenu.classList.add('hidden')" class="mob-tab-btn block w-full text-left text-[#3B82F6] font-semibold text-sm py-1">Dashboard</button>
+      <button id="mob-tab-evaluaciones" onclick="cambiarSeccion('evaluaciones'); mobileMenu.classList.add('hidden')" class="mob-tab-btn block w-full text-left text-[#94A3B8] font-medium text-sm py-1">Evaluaciones</button>
+      <button id="mob-tab-graficos" onclick="cambiarSeccion('graficos'); mobileMenu.classList.add('hidden')" class="mob-tab-btn block w-full text-left text-[#94A3B8] font-medium text-sm py-1">Gráficos</button>
     </div>
   </nav>
 
@@ -502,9 +502,11 @@
 
     // Cambiar Pestañas
     window.cambiarSeccion = function(seccionId) {
+      // Ocultar todas las secciones y mostrar la elegida
       document.querySelectorAll('.seccion-reporte').forEach(sec => sec.classList.add('hidden'));
       document.getElementById(`seccion-${seccionId}`).classList.remove('hidden');
 
+      // Actualizar botones de ESCRITORIO
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('text-[#3B82F6]', 'border-[#3B82F6]', 'font-semibold');
         btn.classList.add('text-[#94A3B8]', 'border-transparent', 'font-medium');
@@ -513,6 +515,17 @@
       if(botonActivo) {
         botonActivo.classList.remove('text-[#94A3B8]', 'border-transparent', 'font-medium');
         botonActivo.classList.add('text-[#3B82F6]', 'border-[#3B82F6]', 'font-semibold');
+      }
+
+      // Actualizar botones de MÓVIL (¡Nuevo!)
+      document.querySelectorAll('.mob-tab-btn').forEach(btn => {
+        btn.classList.remove('text-[#3B82F6]', 'font-semibold');
+        btn.classList.add('text-[#94A3B8]', 'font-medium');
+      });
+      const mobBotonActivo = document.getElementById(`mob-tab-${seccionId}`);
+      if(mobBotonActivo) {
+        mobBotonActivo.classList.remove('text-[#94A3B8]', 'font-medium');
+        mobBotonActivo.classList.add('text-[#3B82F6]', 'font-semibold');
       }
     };
 
