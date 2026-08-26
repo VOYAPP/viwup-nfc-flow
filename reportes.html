@@ -226,6 +226,10 @@
           <div class="md:hidden space-y-3" id="mobile-cards">
             <p class="p-6 text-sm text-[#94A3B8] text-center">Cargando evaluaciones...</p>
           </div>
+          
+          <!-- Contenedor para la paginación -->
+          <div id="pagination-container" class="flex justify-center items-center gap-2 mt-6 mb-4"></div>
+
         </div>
 
         <!-- RIGHT: Detail Panel (desktop) -->
@@ -441,6 +445,10 @@
     let masterData = [];         // Toda la data pura de BD
     let currentDateData = [];    // Data filtrada por Fecha (Global)
     let currentTableData = [];   // Data filtrada en la tabla Evaluaciones
+    
+    // --- NUEVAS VARIABLES PARA PAGINACIÓN ---
+    let currentPage = 1;
+    const itemsPerPage = 10;
 
     // Variables para guardar las instancias de Chart.js
     let chartActividad = null;
@@ -630,6 +638,7 @@
            return matchBusqueda && matchEstrellas && matchGarzon && matchEstado;
        });
 
+       currentPage = 1; // REINICIAR A PÁGINA 1 AL FILTRAR
        renderEvaluacionesUI(currentTableData);
        if(currentTableData.length > 0) updateDetail(0); 
     }
@@ -869,10 +878,16 @@
       if(dataList.length === 0) {
         tbody.innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones que coincidan con los filtros.</p>';
         mcards.innerHTML = '<p class="p-4 text-sm text-slate-500 text-center">No hay evaluaciones.</p>';
+        if(document.getElementById('pagination-container')) document.getElementById('pagination-container').innerHTML = '';
         return;
       }
 
-      dataList.forEach((ev, index) => {
+      // --- LÓGICA DE PAGINACIÓN ---
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedData = dataList.slice(startIndex, endIndex);
+
+      paginatedData.forEach((ev, index) => {
         const isSOS = ev.estado === 'SOS';
         const badgeClass = isSOS ? 'bg-[#FFF7ED] text-[#EA580C]' : 'bg-[#ECFDF5] text-[#10B981]';
         const badgeHTML = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${badgeClass}">${ev.estado}</span>`;
@@ -880,16 +895,20 @@
         
         let detalleHTMLDesktop = isSOS ? `<span class="text-[#EA580C] font-bold">[${ev.motivo}]</span> <span class="text-[#475569]">${ev.comentario}</span>` : `<span class="text-[#94A3B8] italic">Derivado a Google</span>`;
 
+        const absoluteIndex = startIndex + index;
+
+        // Fila Desktop
         const row = document.createElement('div');
         row.className = `eval-row grid grid-cols-[110px_130px_100px_1fr_80px] px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer items-center`;
-        if (index === 0) row.classList.add('bg-blue-50/40');
-        row.dataset.index = index;
+        if (index === 0 && currentPage === 1) row.classList.add('bg-blue-50/40');
+        row.dataset.index = absoluteIndex;
         row.innerHTML = `<span class="text-[13px] text-[#475569]">${ev.fecha}</span><span class="text-[13px] text-[#475569]">${ev.garzon}</span><div class="flex gap-0.5">${starsHTML}</div><span class="text-[13px] truncate pr-4">${detalleHTMLDesktop}</span><span class="text-right">${badgeHTML}</span>`;
         tbody.appendChild(row);
 
+        // Tarjeta Móvil
         const card = document.createElement('div');
         card.className = 'eval-card bg-white rounded-xl p-4 shadow-sm cursor-pointer';
-        card.dataset.index = index;
+        card.dataset.index = absoluteIndex;
         let cardContent = `<div class="flex items-center justify-between mb-2"><span class="text-xs text-[#94A3B8]">${ev.fecha}</span>${badgeHTML}</div><p class="text-sm font-semibold text-[#0F172A]">${ev.garzon}</p>`;
         if (isSOS) {
           cardContent += `<span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF7ED] text-[#EA580C]">${ev.motivo}</span><div class="flex gap-0.5 mt-2">${starsHTML}</div><p class="text-[14px] leading-relaxed text-[#334155] mb-3 line-clamp-2 mt-2">"${ev.comentario}"</p>`;
@@ -899,9 +918,36 @@
         card.innerHTML = cardContent;
         mcards.appendChild(card);
       });
+      
       attachClickEvents();
+      renderPagination(dataList.length);
     }
 
+    // --- FUNCIONES NUEVAS: DIBUJAR BOTONES Y CAMBIAR PÁGINA ---
+    function renderPagination(totalItems) {
+      const container = document.getElementById('pagination-container');
+      if (!container) return;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+      let html = `<button onclick="changePage(${currentPage - 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${currentPage === 1 ? 'disabled' : ''}>&lt;</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === currentPage ? 'bg-[#0F172A] text-white border-[#0F172A]' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200';
+        html += `<button onclick="changePage(${i})" class="px-3 py-1 rounded-lg border ${activeClass} transition-all font-medium text-sm">${i}</button>`;
+      }
+      html += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all font-medium text-sm" ${currentPage === totalPages ? 'disabled' : ''}>&gt;</button>`;
+      container.innerHTML = html;
+    }
+
+    window.changePage = function(newPage) {
+      const totalPages = Math.ceil(currentTableData.length / itemsPerPage);
+      if (newPage < 1 || newPage > totalPages) return;
+      currentPage = newPage;
+      renderEvaluacionesUI(currentTableData);
+    };
+    
     function updateDetail(index) {
       const ev = currentTableData[index];
       if (!ev) return;
