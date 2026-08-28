@@ -106,24 +106,27 @@
     </div>
     
     <!-- Fila 2: Panel de Calendarios (Oculto por defecto) -->
-    <div id="mob-custom-dates" class="hidden items-center gap-2 bg-slate-50 border-t border-slate-100 px-4 py-3 w-full box-border overflow-hidden">
+    <div id="mob-custom-dates" class="hidden flex-col gap-3 bg-slate-50 border-t border-slate-100 px-4 py-3 w-full box-border">
       
-      <!-- Contenedor Fecha 1 -->
-      <div class="relative flex-1 min-w-0">
-        <div class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+      <!-- Contenedor Fecha 1 (Desde / Exacta) -->
+      <div class="relative w-full">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <input type="date" id="mob-date-start" class="w-full min-w-0 bg-white border border-slate-300 text-[#0F172A] text-xs rounded-lg pl-8 pr-1 py-2 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm box-border">
+        <input type="date" id="mob-date-start" class="w-full appearance-none bg-white border border-slate-300 text-[#0F172A] text-[13px] rounded-lg pl-10 pr-3 py-2.5 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm box-border">
       </div>
       
-      <span id="mob-date-sep" class="hidden text-slate-400 text-[10px] font-extrabold uppercase tracking-widest shrink-0">A</span>
+      <!-- Separador visual (Solo visible en Rango) -->
+      <div id="mob-date-sep" class="hidden flex items-center justify-center -my-1.5 relative z-10 pointer-events-none">
+        <span class="bg-slate-50 px-2 text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">Hasta</span>
+      </div>
       
-      <!-- Contenedor Fecha 2 (Oculto) -->
-      <div id="mob-date-end-wrapper" class="hidden relative flex-1 min-w-0">
-        <div class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+      <!-- Contenedor Fecha 2 (Hasta - Solo visible en Rango) -->
+      <div id="mob-date-end-wrapper" class="hidden relative w-full">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <input type="date" id="mob-date-end" class="w-full min-w-0 bg-white border border-slate-300 text-[#0F172A] text-xs rounded-lg pl-8 pr-1 py-2 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm box-border">
+        <input type="date" id="mob-date-end" class="w-full appearance-none bg-white border border-slate-300 text-[#0F172A] text-[13px] rounded-lg pl-10 pr-3 py-2.5 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm box-border">
       </div>
       
     </div>
