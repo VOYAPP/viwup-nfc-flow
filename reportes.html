@@ -106,15 +106,14 @@
     </div>
     
     <!-- Fila 2: Panel de Calendarios (Oculto por defecto) -->
-    <!-- Al seleccionar una opción, se desplegará este panel gris con los calendarios al 100% de ancho -->
-    <div id="mob-custom-dates" class="hidden flex-col gap-2 bg-slate-50 border-t border-slate-100 px-4 py-3">
+    <div id="mob-custom-dates" class="hidden justify-center items-center gap-2 bg-slate-50 border-t border-slate-100 px-4 py-2.5">
       
-      <input type="date" id="mob-date-start" class="block w-full bg-white border border-slate-300 text-[#0F172A] text-sm rounded-lg px-3 py-2.5 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent outline-none shadow-sm">
+      <input type="date" id="mob-date-start" class="w-full max-w-[150px] bg-white border border-slate-300 text-[#0F172A] text-[13px] text-center rounded-lg px-2 py-2 min-h-[40px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm">
       
-      <!-- El separador cambia de un guión a la palabra "Hasta" para que sea más claro en celular -->
-      <span id="mob-date-sep" class="hidden text-center text-slate-400 text-[10px] font-extrabold uppercase tracking-widest my-0.5">Hasta</span>
+      <!-- Usamos un separador corto para que ambos calendarios quepan perfecto en pantallas pequeñas -->
+      <span id="mob-date-sep" class="hidden text-slate-400 text-[10px] font-extrabold uppercase tracking-widest shrink-0">A</span>
       
-      <input type="date" id="mob-date-end" class="hidden block w-full bg-white border border-slate-300 text-[#0F172A] text-sm rounded-lg px-3 py-2.5 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent outline-none shadow-sm">
+      <input type="date" id="mob-date-end" class="hidden w-full max-w-[150px] bg-white border border-slate-300 text-[#0F172A] text-[13px] text-center rounded-lg px-2 py-2 min-h-[40px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm">
       
     </div>
     
