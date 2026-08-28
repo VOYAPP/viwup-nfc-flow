@@ -108,11 +108,23 @@
     <!-- Fila 2: Panel de Calendarios (Oculto por defecto) -->
     <div id="mob-custom-dates" class="hidden items-center justify-between gap-3 bg-slate-50 border-t border-slate-100 px-4 py-3">
       
-      <input type="date" id="mob-date-start" class="flex-1 w-full bg-white border border-slate-300 text-[#0F172A] text-[13px] text-center rounded-lg px-2 py-2 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm">
+      <!-- Contenedor Fecha 1 -->
+      <div class="relative flex-1">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <input type="date" id="mob-date-start" class="w-full bg-white border border-slate-300 text-[#0F172A] text-[13px] rounded-lg pl-9 pr-2 py-2 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm">
+      </div>
       
       <span id="mob-date-sep" class="hidden text-slate-400 text-[10px] font-extrabold uppercase tracking-widest shrink-0">A</span>
       
-      <input type="date" id="mob-date-end" class="hidden flex-1 w-full bg-white border border-slate-300 text-[#0F172A] text-[13px] text-center rounded-lg px-2 py-2 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm">
+      <!-- Contenedor Fecha 2 (Oculto) -->
+      <div id="mob-date-end-wrapper" class="hidden relative flex-1">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <input type="date" id="mob-date-end" class="w-full bg-white border border-slate-300 text-[#0F172A] text-[13px] rounded-lg pl-9 pr-2 py-2 min-h-[44px] focus:ring-2 focus:ring-[#3B82F6] outline-none shadow-sm">
+      </div>
       
     </div>
     
@@ -655,11 +667,14 @@
     function manejarUIFechasCustom(periodo) {
       const showUI = (pref) => {
         document.getElementById(`${pref}-custom-dates`)?.classList.replace('hidden', 'flex');
+        
         if (periodo === 'rango') {
           document.getElementById(`${pref}-date-end`)?.classList.remove('hidden');
+          document.getElementById(`${pref}-date-end-wrapper`)?.classList.remove('hidden'); // Muestra la cajita con el icono
           document.getElementById(`${pref}-date-sep`)?.classList.remove('hidden');
         } else {
           document.getElementById(`${pref}-date-end`)?.classList.add('hidden');
+          document.getElementById(`${pref}-date-end-wrapper`)?.classList.add('hidden'); // Oculta la cajita con el icono
           document.getElementById(`${pref}-date-sep`)?.classList.add('hidden');
         }
       };
@@ -671,7 +686,6 @@
         document.getElementById('mob-custom-dates')?.classList.replace('flex', 'hidden');
       }
     }
-
     function aplicarFiltroGlobal(evento) {
       let periodo = 'historica';
       
