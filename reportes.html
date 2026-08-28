@@ -44,6 +44,13 @@
             En vivo
           </span>
         </div>
+
+        <!-- Contenedor Fechas Personalizadas (Oculto) -->
+        <div id="desk-custom-dates" class="hidden items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
+          <input type="date" id="desk-date-start" class="appearance-none bg-transparent text-[#374151] text-xs outline-none font-medium">
+          <span id="desk-date-sep" class="hidden text-slate-400 text-xs font-bold">-</span>
+          <input type="date" id="desk-date-end" class="hidden appearance-none bg-transparent text-[#374151] text-xs outline-none font-medium">
+        </div>
         
         <!-- Nuevo Filtro Global de Fechas -->
         <div class="relative">
@@ -52,6 +59,8 @@
             <option value="mes">Este mes</option>
             <option value="semana">Esta semana</option>
             <option value="hoy">Hoy</option>
+            <option value="exacta">Fecha exacta</option>
+            <option value="rango">Rango de fechas</option>
           </select>
           <svg class="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
@@ -94,10 +103,18 @@
         <option value="mes">Este mes</option>
         <option value="semana">Esta semana</option>
         <option value="hoy">Hoy</option>
+        <option value="exacta">Fecha exacta</option>
+        <option value="rango">Rango de fechas</option>
       </select>
       <svg class="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
     </div>
-    
+
+    <!-- Contenedor Fechas Personalizadas Mobile (Oculto) -->
+    <div id="mob-custom-dates" class="hidden px-4 pb-3 items-center gap-2">
+      <input type="date" id="mob-date-start" class="flex-1 appearance-none bg-slate-50 border border-slate-200 text-[#374151] text-[11px] rounded-lg px-2 py-1.5 outline-none font-medium">
+      <span id="mob-date-sep" class="hidden text-slate-400 text-xs font-bold">-</span>
+      <input type="date" id="mob-date-end" class="hidden flex-1 appearance-none bg-slate-50 border border-slate-200 text-[#374151] text-[11px] rounded-lg px-2 py-1.5 outline-none font-medium">
+    </div>
   </div>
   
   <!-- ═══ MAIN CONTENT ═══ -->
@@ -607,19 +624,51 @@
       garzonSelect.innerHTML = '<option value="todos">Todos</option>' + garzonesUnicos.map(g => `<option value="${g}">${g}</option>`).join('');
     }
 
-    // Escuchamos tanto el filtro de escritorio como el de móvil
+    // Escuchadores de Filtros Globales (Selects y Calendarios)
     document.getElementById('global-date-filter')?.addEventListener('change', aplicarFiltroGlobal);
     document.getElementById('global-date-filter-mobile')?.addEventListener('change', aplicarFiltroGlobal);
     
+    ['desk-date-start', 'desk-date-end', 'mob-date-start', 'mob-date-end'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', (e) => {
+        // Sincronizar el celular con el PC para que siempre muestren lo mismo
+        const isMob = id.startsWith('mob');
+        const counterpartId = isMob ? id.replace('mob-', 'desk-') : id.replace('desk-', 'mob-');
+        const counterpart = document.getElementById(counterpartId);
+        if (counterpart) counterpart.value = e.target.value;
+        aplicarFiltroGlobal(); 
+      });
+    });
+
     document.querySelectorAll('#filtro-busqueda, #filtro-estrellas, #filtro-garzon, #filtro-estado').forEach(el => {
       if(el) el.addEventListener('input', () => aplicarFiltrosTabla(currentDateData));
     });
 
+    // Función para mostrar/ocultar los calendarios dinámicamente
+    function manejarUIFechasCustom(periodo) {
+      const showUI = (pref) => {
+        document.getElementById(`${pref}-custom-dates`)?.classList.replace('hidden', 'flex');
+        if (periodo === 'rango') {
+          document.getElementById(`${pref}-date-end`)?.classList.remove('hidden');
+          document.getElementById(`${pref}-date-sep`)?.classList.remove('hidden');
+        } else {
+          document.getElementById(`${pref}-date-end`)?.classList.add('hidden');
+          document.getElementById(`${pref}-date-sep`)?.classList.add('hidden');
+        }
+      };
+      
+      if (periodo === 'exacta' || periodo === 'rango') {
+        showUI('desk'); showUI('mob');
+      } else {
+        document.getElementById('desk-custom-dates')?.classList.replace('flex', 'hidden');
+        document.getElementById('mob-custom-dates')?.classList.replace('flex', 'hidden');
+      }
+    }
+
     function aplicarFiltroGlobal(evento) {
       let periodo = 'historica';
       
-      // Si el cambio viene de que el usuario tocó un selector, sincronizamos ambos visualmente
-      if (evento && evento.target) {
+      // Sincronizar Selects
+      if (evento && evento.target && evento.target.tagName === 'SELECT') {
         periodo = evento.target.value;
         const deskFilter = document.getElementById('global-date-filter');
         const mobFilter = document.getElementById('global-date-filter-mobile');
@@ -630,25 +679,34 @@
         periodo = document.getElementById('global-date-filter')?.value || 'historica';
       }
 
+      manejarUIFechasCustom(periodo);
       currentDateData = masterData;
       
       if (periodo !== 'historica') {
         const now = new Date();
+        const customStart = document.getElementById('desk-date-start')?.value;
+        const customEnd = document.getElementById('desk-date-end')?.value;
+
         currentDateData = masterData.filter(e => {
           const d = new Date(e.created_at);
+          
           if (periodo === 'hoy') {
-            return d.getDate() === now.getDate() && 
-                   d.getMonth() === now.getMonth() && 
-                   d.getFullYear() === now.getFullYear();
-                   
+            return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
           } else if(periodo === 'mes') {
-            return d.getMonth() === now.getMonth() && 
-                   d.getFullYear() === now.getFullYear();
-                   
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
           } else if(periodo === 'semana') {
-            const diffTime = Math.abs(now - d);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            const diffDays = Math.ceil(Math.abs(now - d) / (1000 * 60 * 60 * 24)); 
             return diffDays <= 7;
+          } else if (periodo === 'exacta') {
+            if (!customStart) return true; // Mostrar todo hasta que seleccione una fecha
+            const [y, m, day] = customStart.split('-');
+            return d.getFullYear() === parseInt(y) && d.getMonth() === (parseInt(m)-1) && d.getDate() === parseInt(day);
+          } else if (periodo === 'rango') {
+            if (!customStart || !customEnd) return true; // Mostrar todo hasta que complete el rango
+            const filterStart = new Date(`${customStart}T00:00:00`).getTime();
+            const filterEnd = new Date(`${customEnd}T23:59:59`).getTime();
+            const evalTime = d.getTime();
+            return evalTime >= filterStart && evalTime <= filterEnd;
           }
           return true;
         });
