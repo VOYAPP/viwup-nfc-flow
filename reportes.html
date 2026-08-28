@@ -625,6 +625,13 @@
       garzonSelect.innerHTML = '<option value="todos">Todos</option>' + garzonesUnicos.map(g => `<option value="${g}">${g}</option>`).join('');
     }
 
+    // NUEVO: Establecer "Hoy" como fecha por defecto en los calendarios vacíos
+    const fechaHoy = new Date().toISOString().split('T')[0];
+    ['desk-date-start', 'desk-date-end', 'mob-date-start', 'mob-date-end'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input) input.value = fechaHoy;
+    });
+
     // Escuchadores de Filtros Globales (Selects y Calendarios)
     document.getElementById('global-date-filter')?.addEventListener('change', aplicarFiltroGlobal);
     document.getElementById('global-date-filter-mobile')?.addEventListener('change', aplicarFiltroGlobal);
