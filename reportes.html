@@ -812,9 +812,13 @@
       const suma = dataList.reduce((acc, curr) => acc + curr.calificacion, 0);
       
       if(document.getElementById('ui-promedio')) document.getElementById('ui-promedio').innerText = (suma / total).toFixed(1);
-      if(document.getElementById('ui-pct-promotores')) document.getElementById('ui-pct-promotores').innerText = Math.round((promotores/total)*100) + '%';
+      
+      // CAMBIO APLICADO AQUÍ: Inyectamos la cantidad absoluta (promotores) en lugar del porcentaje
+      if(document.getElementById('ui-pct-promotores')) document.getElementById('ui-pct-promotores').innerText = promotores;
+      
       if(document.getElementById('ui-sos-count')) document.getElementById('ui-sos-count').innerText = sosCount;
 
+      // Todo lo demás se mantiene exactamente igual para no romper tus rankings y focos
       const garzones = {};
       dataList.forEach(e => { if(e.garzon) garzones[e.garzon] = (garzones[e.garzon] || 0) + 1; });
       const ranking = Object.entries(garzones).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -840,7 +844,7 @@
         if(carousel) carousel.innerHTML = '<p class="text-sm text-slate-500 mt-2">No hay alertas SOS recientes.</p>';
       }
     }
-
+    
     function actualizarDonutChart(dataList) {
       if(!dataList) return;
       const seoCount = dataList.filter(e => e.estado === 'SEO').length;
