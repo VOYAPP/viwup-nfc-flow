@@ -826,7 +826,17 @@
       if(rc) rc.innerHTML = ranking.map((g, i) => `<div class="flex justify-between py-2.5 border-b border-slate-50"><div class="flex gap-3"><span class="text-sm text-[#94A3B8] w-4">${i+1}</span><span class="text-sm text-[#0F172A]">${g[0]}</span></div><span class="text-sm font-bold text-[#0F172A]">${g[1]} evaluaciones</span></div>`).join('');
 
       const focos = {};
-      dataList.forEach(e => { if(e.estado === 'SOS' && e.motivo) focos[e.motivo] = (focos[e.motivo] || 0) + 1; });
+      dataList.forEach(e => { 
+        if(e.estado === 'SOS' && e.motivo) {
+          // Separamos por coma y limpiamos espacios
+          e.motivo.split(',').forEach(m => {
+            const motivoLimpio = m.trim();
+            if(motivoLimpio) {
+              focos[motivoLimpio] = (focos[motivoLimpio] || 0) + 1;
+            }
+          });
+        } 
+      });
       const focosArr = Object.entries(focos).sort((a,b) => b[1] - a[1]);
       const fc = document.getElementById('focos-container');
       if (focosArr.length > 0) {
@@ -835,7 +845,7 @@
       } else {
         if(fc) fc.innerHTML = '<p class="text-sm text-slate-500">Sin focos SOS</p>';
       }
-
+      
       const sosList = dataList.filter(e => e.estado === 'SOS').slice(0, 5);
       const carousel = document.getElementById('carousel-sos');
       if(sosList.length > 0) {
@@ -914,13 +924,20 @@
         if(ev.estado === 'SOS') horasObj[horaEval].sos++;
         if(ev.estado === 'SEO') horasObj[horaEval].seo++; // Sumamos SEO
 
-        // Datos para Focos SOS Semanales
+        // Datos para Focos SOS Semanales (AQUÍ ESTÁ LA CORRECCIÓN)
         if(ev.estado === 'SOS' && ev.motivo) {
-          todosLosMotivos.add(ev.motivo);
           const semanaDelMes = Math.ceil(d.getDate() / 7);
           const semKey = semanaDelMes > 4 ? 'Sem 4' : `Sem ${semanaDelMes}`;
-          if(!focosSemana[semKey][ev.motivo]) focosSemana[semKey][ev.motivo] = 0;
-          focosSemana[semKey][ev.motivo]++;
+          
+          // Separamos los motivos combinados
+          ev.motivo.split(',').forEach(m => {
+            const motivoLimpio = m.trim();
+            if(motivoLimpio) {
+              todosLosMotivos.add(motivoLimpio); // Añade el motivo separado al Set
+              if(!focosSemana[semKey][motivoLimpio]) focosSemana[semKey][motivoLimpio] = 0;
+              focosSemana[semKey][motivoLimpio]++;
+            }
+          });
         }
       });
 
