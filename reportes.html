@@ -820,7 +820,13 @@
 
       // Todo lo demás se mantiene exactamente igual para no romper tus rankings y focos
       const garzones = {};
-      dataList.forEach(e => { if(e.garzon) garzones[e.garzon] = (garzones[e.garzon] || 0) + 1; });
+      dataList.forEach(e => { 
+        if(e.garzon) {
+          // Interceptamos "Sin nombre" y lo cambiamos visualmente a "No especificado"
+          const nombreGarzon = (e.garzon === 'Sin nombre' || e.garzon.trim() === '') ? 'No especificado' : e.garzon;
+          garzones[nombreGarzon] = (garzones[nombreGarzon] || 0) + 1;
+        } 
+      });
       const ranking = Object.entries(garzones).sort((a, b) => b[1] - a[1]).slice(0, 5);
       const rc = document.getElementById('ranking-container');
       if(rc) rc.innerHTML = ranking.map((g, i) => `<div class="flex justify-between py-2.5 border-b border-slate-50"><div class="flex gap-3"><span class="text-sm text-[#94A3B8] w-4">${i+1}</span><span class="text-sm text-[#0F172A]">${g[0]}</span></div><span class="text-sm font-bold text-[#0F172A]">${g[1]} evaluaciones</span></div>`).join('');
