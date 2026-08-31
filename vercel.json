@@ -1,11 +1,10 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/resto/:slug",
       "destination": "/app.html"
     },
+    
     {
       "source": "/reportes/:token",
       "destination": "/reportes.html"
