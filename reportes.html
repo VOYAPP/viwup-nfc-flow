@@ -581,10 +581,23 @@
 
     async function cargarDatosDelLocal(tokenDashboard) {
       try {
-        const { data: local, error: localError } = await db.from('locales').select('id, nombre, logo_url, hora_apertura, hora_cierre').eq('token_dashboard', tokenDashboard).single();
+        // 1. AGREGAMOS 'estado_activo' al .select() para que traiga ese dato
+        const { data: local, error: localError } = await db.from('locales').select('id, nombre, logo_url, hora_apertura, hora_cierre, estado_activo').eq('token_dashboard', tokenDashboard).single();
         if (localError) throw localError;
 
         if (local) {
+          // --- 2. INICIO DE LA NUEVA VALIDACIÓN DE PAGO ---
+          if (local.estado_activo === false) {
+              document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; padding:20px; text-align:center; background-color:#F8FAFC;">
+                  <h1 style="font-family:'Inter', sans-serif; font-size:24px; font-weight:700; color:#0F172A; margin-bottom:12px;">Acceso Suspendido</h1>
+                  <p style="font-family:'Inter', sans-serif; font-size:16px; color:#64748B; margin-bottom:24px;">El panel de reportes se encuentra temporalmente inactivo.</p>
+                  <a href="https://wa.me/569XXXXXXXX" style="background-color:#0D9488; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600;">Contactar Soporte</a>
+                </div>`;
+              return; // Detenemos la carga del Dashboard
+          }
+          // --- FIN DE LA NUEVA VALIDACIÓN ---
+
           if(document.getElementById('ui-nombre-local-desktop')) document.getElementById('ui-nombre-local-desktop').innerText = local.nombre;
           if(document.getElementById('ui-nombre-local-mobile')) document.getElementById('ui-nombre-local-mobile').innerText = local.nombre;
           if (local.logo_url) {
@@ -632,7 +645,7 @@
         if(document.getElementById('ui-nombre-local-desktop')) document.getElementById('ui-nombre-local-desktop').innerText = "Error BD";
       }
     }
-
+    
     // --- MOTOR DE FILTROS ---
     function poblarFiltroGarzon() {
       const garzonSelect = document.getElementById('filtro-garzon');
