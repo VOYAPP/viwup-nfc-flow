@@ -45,6 +45,18 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.error("Error local:", localError);
             return;
         }
+
+        // --- INICIO DEL CÓDIGO NUEVO A AGREGAR ---
+        if (localData.estado_activo === false) {
+            document.body.innerHTML = `
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; padding:20px; text-align:center; background-color:#F8FAFC;">
+                <h1 style="font-family:'Inter', sans-serif; font-size:24px; font-weight:700; color:#0F172A; margin-bottom:12px;">Servicio Pausado</h1>
+                <p style="font-family:'Inter', sans-serif; font-size:16px; color:#64748B;">El sistema de evaluaciones para este local se encuentra temporalmente inactivo.</p>
+              </div>`;
+            return; 
+        }
+        // --- FIN DEL CÓDIGO NUEVO ---
+
         localActual = localData;
 
         // 3. Buscar los garzones activos de este local usando "clienteSupabase"
