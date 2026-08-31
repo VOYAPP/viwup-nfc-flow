@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/precios",
+      "destination": "/precios.html"
+    },
+    {
+      "source": "/como-funciona",
+      "destination": "/como-funciona.html"
+    },
+    {
+      "source": "/contacto",
+      "destination": "/contacto.html"
+    },
+    {
+      "source": "/contratar",
+      "destination": "/contratar.html"
+    },
+    {
       "source": "/resto/:slug",
       "destination": "/app.html"
     },
