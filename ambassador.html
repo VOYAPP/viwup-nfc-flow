@@ -15,29 +15,53 @@
 </head>
 <body class="min-h-screen bg-[#F8FAFC]">
 
-    <!-- ═══ PANTALLA DE LOGIN ═══ -->
+    <!-- ═══ PANTALLA DE LOGIN / REGISTRO ═══ -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-[0_4px_24px_rgba(15,23,42,0.05)] border border-slate-100 w-full max-w-md">
+        <div class="bg-white p-8 rounded-2xl shadow-[0_4px_24px_rgba(15,23,42,0.05)] border border-slate-100 w-full max-w-md transition-all">
             <div class="text-center mb-8">
                 <img src="/img/logo.svg" alt="ViwUp" class="h-12 w-auto mx-auto mb-4" onerror="this.src='https://via.placeholder.com/100x40?text=ViwUp'" />
-                <h1 class="text-2xl font-bold text-[#0F172A]">Portal Ambassador</h1>
-                <p class="text-sm text-[#64748B] mt-1">Ingresa tus credenciales para acceder</p>
+                <h1 class="text-2xl font-bold text-[#0F172A]" id="login-title">Portal Ambassador</h1>
+                <p class="text-sm text-[#64748B] mt-1" id="login-subtitle">Ingresa tu correo para continuar</p>
             </div>
             
-            <form id="login-form" onsubmit="iniciarSesion(event)" class="space-y-5">
+            <!-- PASO 1: Ingresar Correo -->
+            <form id="step-email" onsubmit="verificarEmail(event)" class="space-y-5">
                 <div>
                     <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">Correo Electrónico</label>
                     <input type="email" id="login-email" required placeholder="tu@correo.com" class="w-full appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-sm font-medium rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all">
                 </div>
+                <button type="submit" class="w-full bg-[#0F172A] hover:bg-slate-800 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Continuar</button>
+            </form>
+
+            <!-- PASO 2A: Ingresar PIN Existente -->
+            <form id="step-enter-pin" onsubmit="iniciarSesion(event)" class="space-y-5 hidden">
+                <p class="text-[13px] text-center text-[#3B82F6] font-semibold mb-4" id="display-email-login"></p>
                 <div>
-                    <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">PIN de Seguridad</label>
+                    <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">Ingresa tu PIN de 4 dígitos</label>
                     <input type="password" id="login-pin" required maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" class="w-full appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-center tracking-[0.5em] text-xl font-bold rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all">
                 </div>
-                <button type="submit" class="w-full bg-[#0F172A] hover:bg-slate-800 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Ingresar al Panel</button>
+                <button type="submit" class="w-full bg-[#0F172A] hover:bg-slate-800 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Entrar al Panel</button>
+                <button type="button" onclick="volverAlCorreo()" class="w-full text-[13px] font-bold text-slate-400 hover:text-[#0F172A] py-2 transition-colors">Volver al inicio</button>
+            </form>
+
+            <!-- PASO 2B: Crear Nuevo PIN -->
+            <form id="step-create-pin" onsubmit="crearNuevoPin(event)" class="space-y-5 hidden">
+                <div class="bg-blue-50 text-blue-800 text-[13px] p-3 rounded-lg mb-4 text-center font-medium">
+                    ¡Bienvenido(a)! Como es tu primera vez, crea tu clave de acceso.
+                </div>
+                <div>
+                    <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">Crea tu PIN (4 números)</label>
+                    <input type="password" id="new-pin" required maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" class="w-full appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-center tracking-[0.5em] text-xl font-bold rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all mb-4">
+                    
+                    <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">Confirma tu PIN</label>
+                    <input type="password" id="confirm-pin" required maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" class="w-full appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-center tracking-[0.5em] text-xl font-bold rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all">
+                </div>
+                <button type="submit" class="w-full bg-[#10B981] hover:bg-emerald-600 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Guardar PIN y Entrar</button>
+                <button type="button" onclick="volverAlCorreo()" class="w-full text-[13px] font-bold text-slate-400 hover:text-[#0F172A] py-2 transition-colors">Volver al inicio</button>
             </form>
         </div>
     </div>
-
+    
     <!-- ═══ APP PRINCIPAL (Oculta hasta el login) ═══ -->
     <div id="app-screen" style="display: none;">
         <!-- TOP NAV -->
