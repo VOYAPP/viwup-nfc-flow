@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Ambassador | ViwUp</title>
+    <!-- Usa tu misma hoja de estilos para mantener el diseño -->
+    <link rel="stylesheet" href="styles.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bienvenido(a), <span id="nombre-vendedor">Cargando...</span></h1>
+            <div class="kpis">
+                <div class="kpi-card">
+                    <h3>Locales Activos</h3>
+                    <p id="locales-activos">0</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Ganancia Mensual (MRR)</h3>
+                    <p id="mrr-total">$0 CLP</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="registro-demo">
+            <h2>Registrar Nuevo Local (Demo)</h2>
+            <form id="form-demo" onsubmit="registrarNuevaDemo(event)">
+                <input type="text" id="input-nombre-local" placeholder="Nombre del Local" required>
+                <input type="text" id="input-telefono" placeholder="Teléfono WhatsApp (+569...)" required>
+                <input type="text" id="input-slug" placeholder="URL amigable (ej: cafe-plaza)" required>
+                <button type="submit">Crear Demo</button>
+            </form>
+        </section>
+
+        <section class="lista-locales">
+            <h2>Mis Locales</h2>
+            <table border="1" width="100%">
+                <thead>
+                    <tr>
+                        <th>Local</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-locales">
+                    <!-- Los datos se inyectarán aquí desde JavaScript -->
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script src="ambassador.js"></script>
+</body>
+</html>
