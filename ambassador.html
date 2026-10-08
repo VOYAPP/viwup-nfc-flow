@@ -15,26 +15,50 @@
 </head>
 <body class="min-h-screen bg-[#F8FAFC]">
 
-    <!-- ═══ TOP NAV ═══ -->
-    <nav class="bg-white w-full border-b border-slate-100 sticky top-0 z-50">
-        <div class="flex items-center justify-between px-4 md:px-12 h-14 md:h-[76px]">
-            <!-- Logo + Título -->
-            <div class="flex items-center gap-4">
-                <img src="/img/logo.svg" alt="ViwUp" class="h-10 w-auto" onerror="this.src='https://via.placeholder.com/100x40?text=ViwUp'" />
-                <span class="hidden md:inline-block px-2 py-1 bg-[#F1F5F9] text-[#3B82F6] text-[11px] font-bold rounded uppercase tracking-wider">
-                    Portal Ambassador
-                </span>
+    <!-- ═══ PANTALLA DE LOGIN ═══ -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-[0_4px_24px_rgba(15,23,42,0.05)] border border-slate-100 w-full max-w-md">
+            <div class="text-center mb-8">
+                <img src="/img/logo.svg" alt="ViwUp" class="h-12 w-auto mx-auto mb-4" onerror="this.src='https://via.placeholder.com/100x40?text=ViwUp'" />
+                <h1 class="text-2xl font-bold text-[#0F172A]">Portal Ambassador</h1>
+                <p class="text-sm text-[#64748B] mt-1">Ingresa tus credenciales para acceder</p>
             </div>
-            <!-- Usuario -->
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-[#0F172A] flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                    A
+            
+            <form id="login-form" onsubmit="iniciarSesion(event)" class="space-y-5">
+                <div>
+                    <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">Correo Electrónico</label>
+                    <input type="email" id="login-email" required placeholder="tu@correo.com" class="w-full appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-sm font-medium rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all">
                 </div>
-                <span id="nombre-vendedor" class="text-[#0F172A] text-sm font-bold">Cargando...</span>
-            </div>
+                <div>
+                    <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">PIN de Seguridad</label>
+                    <input type="password" id="login-pin" required maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" class="w-full appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-center tracking-[0.5em] text-xl font-bold rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all">
+                </div>
+                <button type="submit" class="w-full bg-[#0F172A] hover:bg-slate-800 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Ingresar al Panel</button>
+            </form>
         </div>
-    </nav>
+    </div>
 
+    <!-- ═══ APP PRINCIPAL (Oculta hasta el login) ═══ -->
+    <div id="app-screen" style="display: none;">
+        <!-- TOP NAV -->
+        <nav class="bg-white w-full border-b border-slate-100 sticky top-0 z-50">
+            <div class="flex items-center justify-between px-4 md:px-12 h-14 md:h-[76px]">
+                <div class="flex items-center gap-4">
+                    <img src="/img/logo.svg" alt="ViwUp" class="h-10 w-auto" onerror="this.src='https://via.placeholder.com/100x40?text=ViwUp'" />
+                    <span class="hidden md:inline-block px-2 py-1 bg-[#F1F5F9] text-[#3B82F6] text-[11px] font-bold rounded uppercase tracking-wider">Portal Ambassador</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2.5">
+                        <div id="inicial-vendedor" class="w-8 h-8 rounded-full bg-[#0F172A] flex items-center justify-center text-white text-sm font-bold shadow-sm">A</div>
+                        <span id="nombre-vendedor" class="text-[#0F172A] text-sm font-bold hidden md:block">Cargando...</span>
+                    </div>
+                    <!-- Botón de Cerrar Sesión -->
+                    <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                    <button onclick="cerrarSesion()" class="text-[13px] font-bold text-slate-400 hover:text-red-500 transition-colors">Salir</button>
+                </div>
+            </div>
+        </nav>
+        
     <!-- ═══ MAIN CONTENT ═══ -->
     <main class="px-4 md:px-12 py-8 max-w-[1200px] mx-auto space-y-8">
 
