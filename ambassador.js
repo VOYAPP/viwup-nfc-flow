@@ -197,11 +197,10 @@ function agregarInputGarzon() {
     const contenedor = document.getElementById('contenedor-garzones');
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'input-garzon';
+    // Clases CSS de Tailwind para que coincida con el input original
+    input.className = 'input-garzon appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-[13px] font-medium rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all';
     input.placeholder = `Nombre del Garzón ${contadorGarzones}`;
     input.required = true;
-    input.style.display = 'block';
-    input.style.marginBottom = '5px';
     contenedor.appendChild(input);
 }
 
