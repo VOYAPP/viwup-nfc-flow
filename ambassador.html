@@ -24,7 +24,15 @@
             </div>
         </header>
 
-        <section class="registro-demo">
+        <section class="acciones-rapidas">
+            <!-- Botón para mostrar/ocultar formulario -->
+            <button id="btn-toggle-demo" onclick="toggleFormularioDemo()" style="margin-bottom: 15px;">
+                + Ingresar Demo
+            </button>
+        </section>
+
+        <!-- El formulario inicia oculto (display: none) -->
+        <section class="registro-demo" id="seccion-demo" style="display: none;">
             <h2>Registrar Nuevo Local (Demo)</h2>
             <form id="form-demo" onsubmit="registrarNuevaDemo(event)">
                 <input type="text" id="input-nombre-local" placeholder="Nombre del Local" required>
@@ -33,10 +41,20 @@
                 <input type="url" id="input-google-maps" placeholder="Link de Google Maps (Requerido)" required>
                 <input type="url" id="input-logo" placeholder="URL del Logo (Opcional)">
                 <input type="url" id="input-bg" placeholder="URL Imagen de Fondo (Opcional)">
-                <button type="submit">Crear Demo</button>
+        
+                <!-- Sección dinámica de Garzones -->
+                <div style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
+                    <h3>Equipo de Garzones</h3>
+                    <div id="contenedor-garzones">
+                        <input type="text" class="input-garzon" placeholder="Nombre del Garzón 1" required style="display: block; margin-bottom: 5px;">
+                    </div>
+                    <button type="button" onclick="agregarInputGarzon()" style="font-size: 0.9em;">+ Agregar nuevo garzón</button>
+                </div>
+
+                <button type="submit" style="margin-top: 20px;">Crear Demo</button>
             </form>
         </section>
-
+        
         <section class="lista-locales">
             <h2>Mis Locales</h2>
             <table border="1" width="100%">
