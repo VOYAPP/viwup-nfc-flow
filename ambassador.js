@@ -13,46 +13,138 @@ window.onload = () => {
     }
 };
 
-// 3. Proceso de Login desde el Formulario
-async function iniciarSesion(event) {
+let emailTemporal = "";
+
+// 3. PASO 1: Verificar el Correo
+async function verificarEmail(event) {
     event.preventDefault();
-    
-    const email = document.getElementById('login-email').value.trim().toLowerCase();
-    const pin = document.getElementById('login-pin').value.trim();
+    const emailInput = document.getElementById('login-email').value.trim().toLowerCase();
     const btn = event.target.querySelector('button');
-    const textoOriginal = btn.textContent;
-    
-    btn.textContent = 'Verificando...';
+    btn.textContent = 'Buscando...';
     btn.disabled = true;
 
     try {
         const { data: ambassador, error } = await clienteSupabase
             .from('ambassadors')
             .select('*')
-            .eq('email', email)
-            .eq('pin', pin)
+            .eq('email', emailInput)
             .single();
 
         if (error || !ambassador) {
-            alert('Correo o PIN incorrectos. Intenta nuevamente.');
-            btn.textContent = textoOriginal;
+            alert('Este correo no está registrado. Contacta a soporte.');
+            btn.textContent = 'Continuar';
             btn.disabled = false;
             return;
         }
 
-        // Si es correcto, guardamos el token y entramos
-        localStorage.setItem('viwup_ambassador_session', ambassador.token_acceso);
-        ingresarAlPanel(ambassador);
+        emailTemporal = emailInput;
+        ambassadorActual = ambassador;
+        
+        // Ocultar vista de correo
+        document.getElementById('step-email').classList.add('hidden');
+
+        // LÓGICA DE DECISIÓN:
+        if (!ambassador.pin) {
+            // Es NUEVO: No tiene PIN
+            document.getElementById('login-title').textContent = 'Crear PIN';
+            document.getElementById('login-subtitle').textContent = 'Configura tu acceso de seguridad';
+            document.getElementById('step-create-pin').classList.remove('hidden');
+            document.getElementById('new-pin').focus();
+        } else {
+            // YA EXISTE: Tiene PIN
+            document.getElementById('login-title').textContent = 'Ingresar PIN';
+            document.getElementById('login-subtitle').textContent = 'Bienvenido de vuelta';
+            document.getElementById('display-email-login').textContent = emailTemporal;
+            document.getElementById('step-enter-pin').classList.remove('hidden');
+            document.getElementById('login-pin').focus();
+        }
 
     } catch (err) {
-        console.error("Error en login:", err);
-        alert('Hubo un error de conexión.');
-        btn.textContent = textoOriginal;
+        alert('Error de conexión.');
+    } finally {
+        btn.textContent = 'Continuar';
         btn.disabled = false;
     }
 }
 
-// 4. Validar Sesión Guardada (Auto-Login)
+// 4. PASO 2A: Validar PIN existente
+async function iniciarSesion(event) {
+    event.preventDefault();
+    const pinIngresado = document.getElementById('login-pin').value;
+    const btn = event.target.querySelector('button');
+    
+    btn.textContent = 'Verificando...';
+    btn.disabled = true;
+
+    // Chequeamos contra la BD para mayor seguridad
+    const { data: ambassadorValido } = await clienteSupabase
+        .from('ambassadors')
+        .select('*')
+        .eq('email', emailTemporal)
+        .eq('pin', pinIngresado)
+        .single();
+
+    if (ambassadorValido) {
+        localStorage.setItem('viwup_ambassador_session', ambassadorValido.token_acceso);
+        ingresarAlPanel(ambassadorValido);
+    } else {
+        alert('PIN incorrecto. Intenta nuevamente.');
+        btn.textContent = 'Entrar al Panel';
+        btn.disabled = false;
+    }
+}
+
+// 5. PASO 2B: Crear y Guardar el nuevo PIN
+async function crearNuevoPin(event) {
+    event.preventDefault();
+    const pin1 = document.getElementById('new-pin').value;
+    const pin2 = document.getElementById('confirm-pin').value;
+    const btn = event.target.querySelector('button');
+
+    if (pin1 !== pin2) {
+        alert('Los códigos no coinciden. Intenta de nuevo.');
+        return;
+    }
+
+    btn.textContent = 'Guardando...';
+    btn.disabled = true;
+
+    try {
+        // Guarda el nuevo PIN en Supabase
+        const { error } = await clienteSupabase
+            .from('ambassadors')
+            .update({ pin: pin1 })
+            .eq('email', emailTemporal);
+
+        if (error) throw error;
+
+        // Actualizamos localmente y entramos
+        ambassadorActual.pin = pin1;
+        localStorage.setItem('viwup_ambassador_session', ambassadorActual.token_acceso);
+        ingresarAlPanel(ambassadorActual);
+
+    } catch (err) {
+        alert('Hubo un problema guardando tu PIN. Verifica tu conexión.');
+        btn.textContent = 'Guardar PIN y Entrar';
+        btn.disabled = false;
+    }
+}
+
+// Función auxiliar para volver atrás
+function volverAlCorreo() {
+    document.getElementById('step-enter-pin').classList.add('hidden');
+    document.getElementById('step-create-pin').classList.add('hidden');
+    document.getElementById('step-email').classList.remove('hidden');
+    
+    document.getElementById('login-title').textContent = 'Portal Ambassador';
+    document.getElementById('login-subtitle').textContent = 'Ingresa tu correo para continuar';
+    
+    document.getElementById('login-pin').value = '';
+    document.getElementById('new-pin').value = '';
+    document.getElementById('confirm-pin').value = '';
+}
+
+// 6. Validar Sesión Guardada (Auto-Login)
 async function validarToken(token) {
     const { data: ambassador, error } = await clienteSupabase
         .from('ambassadors')
@@ -67,7 +159,7 @@ async function validarToken(token) {
     }
 }
 
-// 5. Función que muestra el Dashboard
+// 7. Función que muestra el Dashboard
 function ingresarAlPanel(ambassador) {
     ambassadorActual = ambassador;
     
@@ -83,13 +175,13 @@ function ingresarAlPanel(ambassador) {
     cargarLocales();
 }
 
-// 6. Cerrar Sesión
+// 8. Cerrar Sesión
 function cerrarSesion() {
     localStorage.removeItem('viwup_ambassador_session');
     location.reload(); // Recarga la página y vuelve a mostrar el login
 }
 
-// 7. Leer Locales y Calcular Ganancias
+// 9. Leer Locales y Calcular Ganancias
 async function cargarLocales() {
     const { data: locales, error } = await clienteSupabase
         .from('locales')
@@ -147,7 +239,7 @@ async function cargarLocales() {
     document.getElementById('mrr-total').innerHTML = `$${(activos * 10000).toLocaleString('es-CL')} <span class="text-lg text-slate-400 font-medium">CLP</span>`; 
 }
 
-// 8. Registrar Nueva Demo
+// 10. Registrar Nueva Demo
 async function registrarNuevaDemo(event) {
     event.preventDefault();
     
@@ -209,7 +301,7 @@ async function registrarNuevaDemo(event) {
     }
 }
 
-// 9. Botón: De Demo a Cliente de Pago
+// 11. Botón: De Demo a Cliente de Pago
 async function transformarACliente(localId) {
     if (!confirm("¿Confirmas que este local pagó y ahora es un cliente activo?")) return;
 
