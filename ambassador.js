@@ -49,34 +49,47 @@ async function cargarLocales() {
     locales.forEach(local => {
         if(local.estatus_comercial === 'activo') activos++;
         
-        // 1. Limpiar el teléfono para el link de WhatsApp (quitar espacios o caracteres raros)
+        // 1. Botón WhatsApp Estilizado (Icono verde)
         const numeroLimpio = local.telefono_admin.replace(/\D/g, '');
-        const btnWhatsApp = `<a href="https://wa.me/${numeroLimpio}" target="_blank" style="margin-left: 10px; text-decoration: none;">💬 WA</a>`;
+        const btnWhatsApp = `<a href="https://wa.me/${numeroLimpio}" target="_blank" class="inline-flex items-center justify-center bg-[#25D366] hover:bg-[#1DA851] text-white p-1.5 rounded-md transition-colors ml-3" title="Chat Admin">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        </a>`;
         
-        // 2. Lógica del botón de Upgrade
+        // 2. Lógica visual de Estados y Botones
+        let estadoBadge = '';
         let botonAccion = '';
+
         if (local.estatus_comercial === 'demo') {
+            estadoBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#F1F5F9] text-[#64748B]">DEMO</span>`;
             if (local.solicitud_upgrade) {
-                botonAccion = `<span style="color: orange;">⏳ Upgrade Solicitado</span>`;
+                botonAccion = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FFF7ED] text-[#EA580C]"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Upgrade Solicitado</span>`;
             } else {
-                botonAccion = `<button onclick="solicitarUpgrade('${local.id}')">Solicitar Upgrade</button>`;
+                botonAccion = `<button onclick="solicitarUpgrade('${local.id}')" class="px-3 py-1.5 bg-white border border-slate-200 text-[#0F172A] text-[12px] font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">Solicitar Upgrade</button>`;
             }
         } else {
-            botonAccion = `<span style="color: green;">Activo</span>`;
+            estadoBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#ECFDF5] text-[#10B981]">ACTIVO</span>`;
+            botonAccion = `<span class="text-[12px] font-bold text-[#10B981]">Generando Comisión</span>`;
         }
 
+        // 3. Fila de la tabla con Tailwind
         htmlTabla += `
-            <tr>
-                <td>${local.nombre} ${btnWhatsApp}</td>
-                <td>${local.estatus_comercial.toUpperCase()}</td>
-                <td>${botonAccion}</td>
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                    <div class="flex items-center">
+                        <span class="text-[14px] text-[#0F172A] font-semibold">${local.nombre}</span>
+                        ${btnWhatsApp}
+                    </div>
+                </td>
+                <td class="px-6 py-4">${estadoBadge}</td>
+                <td class="px-6 py-4 text-right">${botonAccion}</td>
             </tr>
         `;
     });
 
+    // Actualizar DOM
     document.getElementById('tabla-locales').innerHTML = htmlTabla;
     document.getElementById('locales-activos').textContent = activos;
-    document.getElementById('mrr-total').textContent = `$${(activos * 10000).toLocaleString('es-CL')} CLP`; 
+    document.getElementById('mrr-total').innerHTML = `$${(activos * 10000).toLocaleString('es-CL')} <span class="text-lg text-slate-400 font-medium">CLP</span>`; 
 }
 
 // 5. Registrar Nueva Demo
