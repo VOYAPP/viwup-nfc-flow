@@ -3,38 +3,93 @@ const supabaseUrl = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MDA1OTgsImV4cCI6MjEwMzA3NjU5OH0.BvGcxpDWYn1uOSScG2GHLEOAcTZWW336FRE0JsWwsRc';
 const clienteSupabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-// 2. Obtener Token de la URL
-const urlParams = new URLSearchParams(window.location.search);
-const tokenAcceso = urlParams.get('token');
 let ambassadorActual = null;
 
-// 3. Autenticar y Cargar Datos
-async function iniciarPanel() {
-    if (!tokenAcceso) {
-        document.body.innerHTML = '<h1>Acceso Denegado: Falta token de acceso.</h1>';
-        return;
+// 2. Comprobar sesión al cargar la página
+window.onload = () => {
+    const tokenGuardado = localStorage.getItem('viwup_ambassador_session');
+    if (tokenGuardado) {
+        validarToken(tokenGuardado);
     }
+};
 
-    // Buscar al vendedor
+// 3. Proceso de Login desde el Formulario
+async function iniciarSesion(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const pin = document.getElementById('login-pin').value.trim();
+    const btn = event.target.querySelector('button');
+    const textoOriginal = btn.textContent;
+    
+    btn.textContent = 'Verificando...';
+    btn.disabled = true;
+
+    try {
+        const { data: ambassador, error } = await clienteSupabase
+            .from('ambassadors')
+            .select('*')
+            .eq('email', email)
+            .eq('pin', pin)
+            .single();
+
+        if (error || !ambassador) {
+            alert('Correo o PIN incorrectos. Intenta nuevamente.');
+            btn.textContent = textoOriginal;
+            btn.disabled = false;
+            return;
+        }
+
+        // Si es correcto, guardamos el token y entramos
+        localStorage.setItem('viwup_ambassador_session', ambassador.token_acceso);
+        ingresarAlPanel(ambassador);
+
+    } catch (err) {
+        console.error("Error en login:", err);
+        alert('Hubo un error de conexión.');
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
+    }
+}
+
+// 4. Validar Sesión Guardada (Auto-Login)
+async function validarToken(token) {
     const { data: ambassador, error } = await clienteSupabase
         .from('ambassadors')
         .select('*')
-        .eq('token_acceso', tokenAcceso)
+        .eq('token_acceso', token)
         .single();
         
-    if (error || !ambassador) {
-        document.body.innerHTML = '<h1>Acceso Denegado: Token inválido.</h1>';
-        return;
+    if (ambassador) {
+        ingresarAlPanel(ambassador);
+    } else {
+        localStorage.removeItem('viwup_ambassador_session'); // Token inválido o borrado
     }
-    
+}
+
+// 5. Función que muestra el Dashboard
+function ingresarAlPanel(ambassador) {
     ambassadorActual = ambassador;
-    document.getElementById('nombre-vendedor').textContent = ambassador.nombre;
     
-    // Cargar la lista de locales
+    // Cambiar las vistas
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    
+    // Actualizar UI con datos del usuario
+    document.getElementById('nombre-vendedor').textContent = ambassador.nombre;
+    document.getElementById('inicial-vendedor').textContent = ambassador.nombre.charAt(0).toUpperCase();
+
+    // Cargar sus ventas
     cargarLocales();
 }
 
-// 4. Leer Locales y Calcular Ganancias
+// 6. Cerrar Sesión
+function cerrarSesion() {
+    localStorage.removeItem('viwup_ambassador_session');
+    location.reload(); // Recarga la página y vuelve a mostrar el login
+}
+
+// 7. Leer Locales y Calcular Ganancias
 async function cargarLocales() {
     const { data: locales, error } = await clienteSupabase
         .from('locales')
@@ -92,7 +147,7 @@ async function cargarLocales() {
     document.getElementById('mrr-total').innerHTML = `$${(activos * 10000).toLocaleString('es-CL')} <span class="text-lg text-slate-400 font-medium">CLP</span>`; 
 }
 
-// 5. Registrar Nueva Demo
+// 8. Registrar Nueva Demo
 async function registrarNuevaDemo(event) {
     event.preventDefault();
     
@@ -154,7 +209,7 @@ async function registrarNuevaDemo(event) {
     }
 }
 
-// 6. Botón: De Demo a Cliente de Pago
+// 9. Botón: De Demo a Cliente de Pago
 async function transformarACliente(localId) {
     if (!confirm("¿Confirmas que este local pagó y ahora es un cliente activo?")) return;
 
