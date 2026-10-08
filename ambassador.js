@@ -106,7 +106,7 @@ async function registrarNuevaDemo(event) {
                 google_maps_url: googleMapsUrl,
                 logo_url: logoUrl,
                 bg_imagen_url: bgUrl,
-                estado_activo: false,
+                estado_activo: true,
                 estatus_comercial: 'demo',
                 ambassador_id: ambassadorActual.id
             }])
