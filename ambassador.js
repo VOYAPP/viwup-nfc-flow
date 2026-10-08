@@ -41,25 +41,33 @@ async function cargarLocales() {
         .select('*')
         .eq('ambassador_id', ambassadorActual.id);
         
-    if (error) {
-        console.error("Error cargando locales:", error);
-        return;
-    }
+    if (error) return console.error("Error cargando locales:", error);
 
     let activos = 0;
     let htmlTabla = '';
 
     locales.forEach(local => {
-        // Calcular si está pagando o es demo
         if(local.estatus_comercial === 'activo') activos++;
         
-        let botonAccion = local.estatus_comercial === 'demo' 
-            ? `<button onclick="transformarACliente('${local.id}')">Convertir a Cliente</button>` 
-            : `<span style="color: green;">Activo (Generando Comisión)</span>`;
+        // 1. Limpiar el teléfono para el link de WhatsApp (quitar espacios o caracteres raros)
+        const numeroLimpio = local.telefono_admin.replace(/\D/g, '');
+        const btnWhatsApp = `<a href="https://wa.me/${numeroLimpio}" target="_blank" style="margin-left: 10px; text-decoration: none;">💬 WA</a>`;
+        
+        // 2. Lógica del botón de Upgrade
+        let botonAccion = '';
+        if (local.estatus_comercial === 'demo') {
+            if (local.solicitud_upgrade) {
+                botonAccion = `<span style="color: orange;">⏳ Upgrade Solicitado</span>`;
+            } else {
+                botonAccion = `<button onclick="solicitarUpgrade('${local.id}')">Solicitar Upgrade</button>`;
+            }
+        } else {
+            botonAccion = `<span style="color: green;">Activo</span>`;
+        }
 
         htmlTabla += `
             <tr>
-                <td>${local.nombre}</td>
+                <td>${local.nombre} ${btnWhatsApp}</td>
                 <td>${local.estatus_comercial.toUpperCase()}</td>
                 <td>${botonAccion}</td>
             </tr>
@@ -75,6 +83,7 @@ async function cargarLocales() {
 async function registrarNuevaDemo(event) {
     event.preventDefault();
     
+    // Capturar inputs básicos
     const nombreLocal = document.getElementById('input-nombre-local').value.trim();
     const adminTelefono = document.getElementById('input-telefono').value.trim();
     const slugLocal = document.getElementById('input-slug').value.trim().toLowerCase();
@@ -82,8 +91,13 @@ async function registrarNuevaDemo(event) {
     const logoUrl = document.getElementById('input-logo').value.trim() || null;
     const bgUrl = document.getElementById('input-bg').value.trim() || null;
     
+    // Capturar todos los garzones ingresados
+    const inputsGarzones = document.querySelectorAll('.input-garzon');
+    const listaGarzones = Array.from(inputsGarzones).map(input => input.value.trim()).filter(val => val !== "");
+
     try {
-        const { error } = await clienteSupabase
+        // 1. Insertar el local y pedirle a Supabase que nos devuelva el ID creado (.select())
+        const { data: localCreado, error: errorLocal } = await clienteSupabase
             .from('locales')
             .insert([{
                 nombre: nombreLocal,
@@ -95,13 +109,31 @@ async function registrarNuevaDemo(event) {
                 estado_activo: false,
                 estatus_comercial: 'demo',
                 ambassador_id: ambassadorActual.id
-            }]);
+            }])
+            .select();
 
-        if (error) throw error;
+        if (errorLocal) throw errorLocal;
+        
+        const nuevoLocalId = localCreado[0].id;
 
-        alert('¡Demo creada con éxito!');
+        // 2. Insertar los garzones asociados a ese nuevo local
+        if (listaGarzones.length > 0) {
+            const garzonesAInsertar = listaGarzones.map(nombre => ({
+                local_id: nuevoLocalId,
+                nombre: nombre
+            }));
+            
+            const { error: errorGarzones } = await clienteSupabase
+                .from('garzones')
+                .insert(garzonesAInsertar);
+                
+            if (errorGarzones) console.error("Error insertando garzones:", errorGarzones);
+        }
+
+        alert('¡Demo y garzones creados con éxito!');
         document.getElementById('form-demo').reset();
-        cargarLocales(); // Refrescar la tabla
+        toggleFormularioDemo(); // Ocultar el formulario de nuevo
+        cargarLocales();
 
     } catch (err) {
         alert("Hubo un error al registrar el local. Verifica que el enlace (slug) no exista ya.");
@@ -129,6 +161,56 @@ async function transformarACliente(localId) {
 
     } catch (err) {
         alert("Error al actualizar el estado.");
+    }
+}
+
+// --- NUEVAS FUNCIONES PARA LA INTERFAZ ---
+
+function toggleFormularioDemo() {
+    const form = document.getElementById('seccion-demo');
+    const btn = document.getElementById('btn-toggle-demo');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        btn.textContent = 'Ocultar Formulario';
+    } else {
+        form.style.display = 'none';
+        btn.textContent = '+ Ingresar Demo';
+    }
+}
+
+let contadorGarzones = 1;
+function agregarInputGarzon() {
+    contadorGarzones++;
+    const contenedor = document.getElementById('contenedor-garzones');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'input-garzon';
+    input.placeholder = `Nombre del Garzón ${contadorGarzones}`;
+    input.required = true;
+    input.style.display = 'block';
+    input.style.marginBottom = '5px';
+    contenedor.appendChild(input);
+}
+
+// --- NUEVA FUNCIÓN PARA SOLICITAR UPGRADE ---
+async function solicitarUpgrade(localId) {
+    if (!confirm("¿Confirmas que este local ya pagó y deseas solicitar su activación oficial?")) return;
+
+    try {
+        // En lugar de activarlo, cambiamos la bandera 'solicitud_upgrade' a true
+        const { error } = await clienteSupabase
+            .from('locales')
+            .update({ solicitud_upgrade: true })
+            .eq('id', localId);
+
+        if (error) throw error;
+
+        alert('Solicitud enviada al administrador. El local se activará pronto.');
+        cargarLocales(); // Refrescará la tabla y mostrará "⏳ Upgrade Solicitado"
+
+    } catch (err) {
+        alert("Error al enviar la solicitud.");
+        console.error(err);
     }
 }
 
