@@ -78,6 +78,9 @@ async function registrarNuevaDemo(event) {
     const nombreLocal = document.getElementById('input-nombre-local').value.trim();
     const adminTelefono = document.getElementById('input-telefono').value.trim();
     const slugLocal = document.getElementById('input-slug').value.trim().toLowerCase();
+    const googleMapsUrl = document.getElementById('input-google-maps').value.trim();
+    const logoUrl = document.getElementById('input-logo').value.trim() || null;
+    const bgUrl = document.getElementById('input-bg').value.trim() || null;
     
     try {
         const { error } = await clienteSupabase
@@ -86,6 +89,9 @@ async function registrarNuevaDemo(event) {
                 nombre: nombreLocal,
                 telefono_admin: adminTelefono,
                 slug: slugLocal,
+                google_maps_url: googleMapsUrl,
+                logo_url: logoUrl,
+                bg_imagen_url: bgUrl,
                 estado_activo: false,
                 estatus_comercial: 'demo',
                 ambassador_id: ambassadorActual.id
@@ -99,6 +105,7 @@ async function registrarNuevaDemo(event) {
 
     } catch (err) {
         alert("Hubo un error al registrar el local. Verifica que el enlace (slug) no exista ya.");
+        console.error(err);
     }
 }
 
