@@ -121,9 +121,7 @@ async function enviarCorreoRecuperacion() {
         // Enviar la alerta silenciosa a Make
         const makeWebhookUrl = 'https://hook.us2.make.com/9ggnync534fjio9bc09f99ujao3a3h5d'; 
         
-        // Solo ejecutamos el fetch si ya tienes un webhook real configurado
-        if(makeWebhookUrl !== 'https://hook.us2.make.com/9ggnync534fjio9bc09f99ujao3a3h5d') {
-            await fetch(makeWebhookUrl, {
+        await fetch(makeWebhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: emailTemporal })
