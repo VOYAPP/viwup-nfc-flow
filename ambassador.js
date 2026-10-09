@@ -119,14 +119,13 @@ async function enviarCorreoRecuperacion() {
 
     try {
         // Enviar la alerta silenciosa a Make
-        const makeWebhookUrl = 'https://hook.us2.make.com/9ggnync534fjio9bc09f99ujao3a3h5d'; 
-        
+        const makeWebhookUrl = 'https://hook.us1.make.com/TU_CODIGO_AQUI'; 
+
         await fetch(makeWebhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: emailTemporal })
-            });
-        }
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailTemporal })
+        });
 
         alert('¡Correo enviado! Revisa tu bandeja de entrada o la carpeta de SPAM.');
         volverAlLogin();
