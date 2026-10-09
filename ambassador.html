@@ -49,11 +49,13 @@
             </form>
 
             <!-- 3: Recuperar PIN -->
+            <!-- NUEVO PASO 3: Recuperar PIN (Mensaje Actualizado) -->
             <form id="step-recover-pin" class="space-y-5 hidden">
                 <div class="bg-blue-50 text-blue-800 text-[13px] p-4 rounded-lg mb-4 text-center font-medium leading-relaxed">
-                    Te enviaremos tu PIN de seguridad al correo <br><span id="recover-email-display" class="font-bold text-[#0F172A]"></span>
+                    Te enviaremos un <b>código de seguridad temporal</b> a tu correo <br><span id="recover-email-display" class="font-bold text-[#0F172A]"></span>.<br><br>
+                    Deberás revisar tu bandeja de entrada para utilizar ese código y <b>crear tu nuevo PIN</b>.
                 </div>
-                <button type="button" onclick="enviarCorreoRecuperacion()" class="w-full bg-[#3B82F6] hover:bg-blue-600 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Enviar correo de recuperación</button>
+                <button type="button" onclick="enviarCorreoRecuperacion()" class="w-full bg-[#3B82F6] hover:bg-blue-600 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Enviar código de recuperación</button>
                 <button type="button" onclick="volverAlLogin()" class="w-full text-[13px] font-bold text-slate-400 hover:text-[#0F172A] py-2 transition-colors">Volver atrás</button>
             </form>
             
