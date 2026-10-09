@@ -94,6 +94,53 @@ async function iniciarSesion(event) {
     }
 }
 
+// --- FUNCIONES PARA RECUPERAR PIN ---
+
+function mostrarRecuperarPin() {
+    document.getElementById('step-enter-pin').classList.add('hidden');
+    document.getElementById('login-title').textContent = 'Recuperar PIN';
+    document.getElementById('login-subtitle').textContent = 'Te ayudaremos a entrar de nuevo';
+    document.getElementById('recover-email-display').textContent = emailTemporal;
+    document.getElementById('step-recover-pin').classList.remove('hidden');
+}
+
+function volverAlLogin() {
+    document.getElementById('step-recover-pin').classList.add('hidden');
+    document.getElementById('login-title').textContent = 'Ingresar PIN';
+    document.getElementById('login-subtitle').textContent = 'Bienvenido de vuelta';
+    document.getElementById('step-enter-pin').classList.remove('hidden');
+}
+
+async function enviarCorreoRecuperacion() {
+    const btn = document.querySelector('#step-recover-pin button');
+    const textoOriginal = btn.textContent;
+    btn.textContent = 'Enviando correo...';
+    btn.disabled = true;
+
+    try {
+        // Enviar la alerta silenciosa a Make
+        const makeWebhookUrl = 'TU_WEBHOOK_DE_MAKE_AQUI'; 
+        
+        // Solo ejecutamos el fetch si ya tienes un webhook real configurado
+        if(makeWebhookUrl !== 'TU_WEBHOOK_DE_MAKE_AQUI') {
+            await fetch(makeWebhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailTemporal })
+            });
+        }
+
+        alert('¡Correo enviado! Revisa tu bandeja de entrada o la carpeta de SPAM.');
+        volverAlLogin();
+        
+    } catch (err) {
+        alert('Hubo un error al intentar enviar el correo. Verifica tu conexión.');
+    } finally {
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
+    }
+}
+
 // 5. PASO 2B: Crear y Guardar el nuevo PIN
 async function crearNuevoPin(event) {
     event.preventDefault();
