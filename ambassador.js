@@ -127,7 +127,7 @@ async function enviarCorreoRecuperacion() {
             body: JSON.stringify({ email: emailTemporal })
         });
 
-        alert('¡Correo enviado! Revisa tu bandeja de entrada o la carpeta de SPAM.');
+        alert('¡Código enviado! Revisa tu bandeja de entrada o la carpeta de SPAM. A continuación, te pediremos ese código para crear tu nuevo PIN.');
         volverAlLogin();
         
     } catch (err) {
