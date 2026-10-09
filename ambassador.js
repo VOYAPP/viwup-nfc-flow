@@ -119,7 +119,7 @@ async function enviarCorreoRecuperacion() {
 
     try {
         // Enviar la alerta silenciosa a Make
-        const makeWebhookUrl = 'TU_WEBHOOK_DE_MAKE_AQUI'; 
+        const makeWebhookUrl = 'https://hook.us2.make.com/4xpbwyq8qyxercvhkr6nu7973h37xtcd'; 
         
         // Solo ejecutamos el fetch si ya tienes un webhook real configurado
         if(makeWebhookUrl !== 'https://hook.us2.make.com/4xpbwyq8qyxercvhkr6nu7973h37xtcd') {
