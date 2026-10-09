@@ -122,7 +122,7 @@ async function enviarCorreoRecuperacion() {
         const makeWebhookUrl = 'TU_WEBHOOK_DE_MAKE_AQUI'; 
         
         // Solo ejecutamos el fetch si ya tienes un webhook real configurado
-        if(makeWebhookUrl !== 'TU_WEBHOOK_DE_MAKE_AQUI') {
+        if(makeWebhookUrl !== 'https://hook.us2.make.com/4xpbwyq8qyxercvhkr6nu7973h37xtcd') {
             await fetch(makeWebhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
