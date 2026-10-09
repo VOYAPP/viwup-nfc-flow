@@ -119,7 +119,7 @@ async function enviarCorreoRecuperacion() {
 
     try {
         // Enviar la alerta silenciosa a Make
-        const makeWebhookUrl = 'https://hook.us1.make.com/TU_CODIGO_AQUI'; 
+        const makeWebhookUrl = 'https://hook.us2.make.com/9ggnync534fjio9bc09f99ujao3a3h5d'; 
 
         await fetch(makeWebhookUrl, {
             method: 'POST',
