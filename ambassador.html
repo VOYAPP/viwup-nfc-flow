@@ -40,10 +40,23 @@
                     <label class="block text-[13px] font-bold text-[#0F172A] mb-1.5">Ingresa tu PIN de 4 dígitos</label>
                     <input type="password" id="login-pin" required maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" class="w-full appearance-none bg-[#F8FAFC] border border-slate-200 text-[#0F172A] text-center tracking-[0.5em] text-xl font-bold rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#3B82F6] outline-none transition-all">
                 </div>
+                
+                <!-- NUEVO BOTÓN: Olvidó su PIN -->
+                <button type="button" onclick="mostrarRecuperarPin()" class="w-full text-right text-[12px] font-bold text-[#3B82F6] hover:text-blue-700 transition-colors -mt-2">¿Olvidaste tu PIN?</button>
+
                 <button type="submit" class="w-full bg-[#0F172A] hover:bg-slate-800 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Entrar al Panel</button>
                 <button type="button" onclick="volverAlCorreo()" class="w-full text-[13px] font-bold text-slate-400 hover:text-[#0F172A] py-2 transition-colors">Volver al inicio</button>
             </form>
 
+            <!-- 3: Recuperar PIN -->
+            <form id="step-recover-pin" class="space-y-5 hidden">
+                <div class="bg-blue-50 text-blue-800 text-[13px] p-4 rounded-lg mb-4 text-center font-medium leading-relaxed">
+                    Te enviaremos tu PIN de seguridad al correo <br><span id="recover-email-display" class="font-bold text-[#0F172A]"></span>
+                </div>
+                <button type="button" onclick="enviarCorreoRecuperacion()" class="w-full bg-[#3B82F6] hover:bg-blue-600 text-white py-3.5 rounded-lg text-sm font-bold transition-colors shadow-sm mt-2">Enviar correo de recuperación</button>
+                <button type="button" onclick="volverAlLogin()" class="w-full text-[13px] font-bold text-slate-400 hover:text-[#0F172A] py-2 transition-colors">Volver atrás</button>
+            </form>
+            
             <!-- PASO 2B: Crear Nuevo PIN -->
             <form id="step-create-pin" onsubmit="crearNuevoPin(event)" class="space-y-5 hidden">
                 <div class="bg-blue-50 text-blue-800 text-[13px] p-3 rounded-lg mb-4 text-center font-medium">
