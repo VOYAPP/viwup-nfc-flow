@@ -1,6 +1,6 @@
 // 1. Inicializar Supabase (Reemplaza con tus claves)
-const supabaseUrl = 'TU_URL_SUPABASE';
-const supabaseKey = 'TU_ANON_KEY';
+const supabaseUrl = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MDA1OTgsImV4cCI6MjEwMzA3NjU5OH0.BvGcxpDWYn1uOSScG2GHLEOAcTZWW336FRE0JsWwsRc';
 const clienteSupabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // Al cargar la página
