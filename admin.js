@@ -15,12 +15,14 @@ window.onload = () => {
 function cambiarSeccion(seccion) {
     document.getElementById('vista-locales').classList.add('hidden');
     document.getElementById('vista-ambassadors').classList.add('hidden');
+    document.getElementById('vista-historial').classList.add('hidden');
     
     document.getElementById('btn-tab-locales').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition-colors";
-    document.getElementById('btn-tab-ambassadors').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition-colors";
+    document.getElementById('btn-tab-ambassadors').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition-colors mt-2";
+    document.getElementById('btn-tab-historial').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition-colors mt-2";
 
     document.getElementById(`vista-${seccion}`).classList.remove('hidden');
-    document.getElementById(`btn-tab-${seccion}`).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#3B82F6] text-white font-semibold transition-colors";
+    document.getElementById(`btn-tab-${seccion}`).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#3B82F6] text-white font-semibold transition-colors mt-2";
 }
 
 // --- MOTOR PRINCIPAL DE DATOS ---
@@ -48,6 +50,7 @@ async function cargarDatosAdmin() {
         filtrarLocales(); // Dibuja la tabla aplicando filtros actuales
 
         renderizarAmbassadors();
+        renderizarHistorial();
 
     } catch (err) {
         console.error("Error cargando datos:", err);
@@ -315,6 +318,8 @@ function renderizarAmbassadors() {
     tbody.innerHTML = html;
 }
 
+
+
 // 2. Crear (Invitar) un nuevo Ambassador a la base de datos
 async function invitarAmbassador(event) {
     event.preventDefault();
@@ -359,4 +364,70 @@ async function invitarAmbassador(event) {
         btn.disabled = false;
     }
 
+}
+
+// ==========================================
+//        FASE 3: AUDITORÍA E HISTORIAL
+// ==========================================
+
+function renderizarHistorial() {
+    const tbody = document.getElementById('admin-tabla-historial');
+    // Filtramos solo los locales que están activos (activaciones pasadas/aprobadas)
+    const localesActivos = todosLosLocales.filter(l => l.estatus_comercial === 'activo');
+
+    if (localesActivos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay historial de activaciones aún.</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    localesActivos.forEach(local => {
+        const vendedor = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Registro Directo / Admin' };
+        const fechaFormat = new Date(local.created_at).toLocaleDateString('es-CL');
+
+        html += `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                    <p class="text-[14px] font-bold text-[#0F172A]">${local.nombre}</p>
+                    <p class="text-[11px] text-slate-400">Desde: ${fechaFormat}</p>
+                </td>
+                <td class="px-6 py-4">
+                    <p class="text-[13px] font-medium text-slate-700">${vendedor.nombre}</p>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                        Pago Validado
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <p class="text-[14px] font-extrabold text-[#10B981]">+$10.000</p>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">CLP / Mes</p>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+function exportarHistorialCSV() {
+    const localesActivos = todosLosLocales.filter(l => l.estatus_comercial === 'activo');
+    if(localesActivos.length === 0) return alert("No hay pagos registrados para exportar.");
+    
+    let csvContent = "data:text/csv;charset=utf-8,Fecha,Local,Vendedor Responsable,Estado,Ingreso Mensual (CLP)\n";
+    
+    localesActivos.forEach(local => {
+        const v = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Admin' };
+        const fecha = new Date(local.created_at).toLocaleDateString('es-CL');
+        const row = `"${fecha}","${local.nombre}","${v.nombre}","Pago Validado","10000"`;
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Auditoria_Pagos_ViwUp_${new Date().toLocaleDateString('es-CL')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
