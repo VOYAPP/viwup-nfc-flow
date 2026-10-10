@@ -29,7 +29,7 @@ function cambiarSeccion(seccion) {
 async function cargarDatosAdmin() {
     try {
         // 1. Traer lista de Ambassadors (Para cruzar IDs con Nombres)
-        const { data: ambassadors } = await clienteSupabase.from('ambassadors').select('id, nombre, telefono, email');
+        const { data: ambassadors } = await clienteSupabase.from('ambassadors').select('id, nombre, telefono, email, frecuencia_pago');
         if (ambassadors) {
             ambassadors.forEach(amb => diccionarioAmbassadors[amb.id] = amb);
         }
@@ -156,16 +156,14 @@ function renderizarTabla(lista) {
         
         if (local.estatus_comercial === 'activo') {
             estadoUI = `<span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">ACTIVO</span>`;
+        } else if (local.estatus_comercial === 'baja') {
+            estadoUI = `<span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-red-50 text-red-600">DADO DE BAJA</span>`;
         } else if (local.solicitud_upgrade) {
             estadoUI = `<span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#FFF7ED] text-[#EA580C]">UPGRADE PENDIENTE</span>`;
         } else {
             estadoUI = `<span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#F1F5F9] text-[#64748B]">DEMO</span>`;
-            // Alerta si lleva más de 14 días en Demo
-            if (parseInt(antiguedad.replace(/\D/g, '')) > 14) {
-                alertaEstancado = `<p class="text-[10px] text-red-500 font-bold mt-1">⚠️ Demasiado tiempo</p>`;
-            }
         }
-
+        
         const btnMaps = local.google_maps_url ? `<a href="${local.google_maps_url}" target="_blank" class="text-blue-500 hover:underline text-[11px] font-medium block mt-1">Ver en Maps ↗</a>` : '';
 
         html += `
