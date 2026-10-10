@@ -528,28 +528,60 @@ async function registrarPago(event) {
     event.preventDefault();
     const btn = document.getElementById('btn-guardar-pago');
     btn.disabled = true;
-    btn.innerHTML = 'Guardando...';
+    btn.innerHTML = 'Subiendo comprobante...';
 
     const pAmbassador = document.getElementById('pago-ambassador').value;
     const pMes = document.getElementById('pago-mes').value;
     const pMonto = document.getElementById('pago-monto').value;
-    const pComprobante = document.getElementById('pago-comprobante').value;
+    const archivoInput = document.getElementById('pago-archivo');
+    const archivo = archivoInput.files[0];
+
+    if (!archivo) {
+        alert("Por favor selecciona un archivo de comprobante.");
+        btn.disabled = false;
+        btn.innerHTML = 'Guardar Pago';
+        return;
+    }
 
     try {
-        const { error } = await clienteSupabase.from('pagos_ambassadors').insert([{
-            ambassador_id: pAmbassador,
-            mes: pMes,
-            monto: pMonto,
-            comprobante_url: pComprobante
-        }]);
+        // 1. Crear un nombre único para el archivo basado en la fecha
+        const ext = archivo.name.split('.').pop();
+        const nombreArchivo = `${pAmbassador}_${pMes}_${Date.now()}.${ext}`;
 
-        if (error) throw error;
-        
-        alert("Pago registrado exitosamente.");
+        // 2. Subir el archivo al bucket "comprobantes"
+        const { data: uploadData, error: uploadError } = await clienteSupabase
+            .storage
+            .from('comprobantes')
+            .upload(nombreArchivo, archivo, { cacheControl: '3600', upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        // 3. Obtener la URL pública del archivo subido
+        const { data: publicUrlData } = clienteSupabase
+            .storage
+            .from('comprobantes')
+            .getPublicUrl(nombreArchivo);
+
+        const comprobanteUrl = publicUrlData.publicUrl;
+
+        // 4. Guardar el registro en la base de datos
+        const { error: dbError } = await clienteSupabase
+            .from('pagos_ambassadors')
+            .insert([{
+                ambassador_id: pAmbassador,
+                mes: pMes,
+                monto: pMonto,
+                comprobante_url: comprobanteUrl
+            }]);
+
+        if (dbError) throw dbError;
+
+        alert("¡Pago y comprobante guardados exitosamente!");
         document.getElementById('form-pago').reset();
-        cargarHistorialPagos(); // Recargar tabla de pagos
+        cargarHistorialPagos(); // Recargar la tabla
     } catch (err) {
-        alert("Error al registrar el pago. Revisa los permisos RLS en Supabase.");
+        console.error("Error al registrar pago:", err);
+        alert("Hubo un error al subir el comprobante o guardar el pago. Revisa la consola.");
     } finally {
         btn.disabled = false;
         btn.innerHTML = 'Guardar Pago';
