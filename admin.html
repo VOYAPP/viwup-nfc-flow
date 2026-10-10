@@ -243,8 +243,8 @@
                         <input type="number" id="pago-monto" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-[#64748B] mb-1">Link del Comprobante (Drive, etc)</label>
-                        <input type="url" id="pago-comprobante" required placeholder="https://..." class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Adjuntar Comprobante (PDF / Imagen)</label>
+                        <input type="file" id="pago-archivo" accept="image/*,application/pdf" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-2 py-1.5 text-xs outline-none file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300">
                     </div>
                     <div class="md:col-span-4 flex justify-end mt-2">
                         <button type="submit" id="btn-guardar-pago" class="bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold py-2 px-6 rounded-lg transition-colors">Guardar Pago</button>
