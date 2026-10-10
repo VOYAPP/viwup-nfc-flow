@@ -431,3 +431,77 @@ function exportarHistorialCSV() {
     link.click();
     document.body.removeChild(link);
 }
+
+// --- FUNCIONES DE PAGOS A VENDEDORES ---
+
+async function cargarHistorialPagos() {
+    try {
+        const { data: pagos, error } = await clienteSupabase
+            .from('pagos_ambassadors')
+            .select('*')
+            .order('mes', { ascending: false });
+
+        if (error) throw error;
+        renderizarTablaPagos(pagos);
+    } catch (err) {
+        console.error("Error cargando pagos:", err);
+    }
+}
+
+function renderizarTablaPagos(pagos) {
+    const tbody = document.getElementById('admin-tabla-pagos');
+    if (!pagos || pagos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay pagos registrados.</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    pagos.forEach(pago => {
+        const vendedor = diccionarioAmbassadors[pago.ambassador_id] || { nombre: 'Desconocido' };
+        html += `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-bold text-slate-700">${pago.mes}</td>
+                <td class="px-6 py-4 text-[13px] font-medium">${vendedor.nombre}</td>
+                <td class="px-6 py-4 text-right font-extrabold text-[#10B981]">$${pago.monto.toLocaleString('es-CL')} CLP</td>
+                <td class="px-6 py-4 text-center">
+                    <a href="${pago.comprobante_url}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                        Ver Comprobante ↗
+                    </a>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+async function registrarPago(event) {
+    event.preventDefault();
+    const btn = document.getElementById('btn-guardar-pago');
+    btn.disabled = true;
+    btn.innerHTML = 'Guardando...';
+
+    const pAmbassador = document.getElementById('pago-ambassador').value;
+    const pMes = document.getElementById('pago-mes').value;
+    const pMonto = document.getElementById('pago-monto').value;
+    const pComprobante = document.getElementById('pago-comprobante').value;
+
+    try {
+        const { error } = await clienteSupabase.from('pagos_ambassadors').insert([{
+            ambassador_id: pAmbassador,
+            mes: pMes,
+            monto: pMonto,
+            comprobante_url: pComprobante
+        }]);
+
+        if (error) throw error;
+        
+        alert("Pago registrado exitosamente.");
+        document.getElementById('form-pago').reset();
+        cargarHistorialPagos(); // Recargar tabla de pagos
+    } catch (err) {
+        alert("Error al registrar el pago. Revisa los permisos RLS en Supabase.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Guardar Pago';
+    }
+}
