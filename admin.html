@@ -113,14 +113,64 @@
         
         <!-- ── VISTA 2: AMBASSADORS (Oculta por defecto) ── -->
         <div id="vista-ambassadors" class="space-y-8 hidden">
-            <!-- Espacio reservado para la Fase 2 (Invitar y Listar Ambassadors) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center py-12">
-                <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <h3 class="text-lg font-bold text-[#0F172A]">Red de Ambassadors</h3>
-                <p class="text-slate-500 text-sm mt-1">Aquí construiremos la invitación de nuevos vendedores en el siguiente paso.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- COLUMNA IZQUIERDA: Invitar Nuevo Ambassador -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-24">
+                        <h2 class="text-lg font-bold text-[#0F172A] mb-4">Invitar Vendedor</h2>
+                        <form id="form-invitar" onsubmit="invitarAmbassador(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-[#64748B] mb-1">Nombre Completo</label>
+                                <input type="text" id="inv-nombre" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#3B82F6] outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-[#64748B] mb-1">Correo Electrónico</label>
+                                <input type="email" id="inv-email" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#3B82F6] outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-[#64748B] mb-1">Teléfono (WhatsApp)</label>
+                                <input type="text" id="inv-telefono" placeholder="Ej: 56912345678" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#3B82F6] outline-none">
+                            </div>
+                            <button type="submit" id="btn-invitar" class="w-full bg-[#0F172A] hover:bg-slate-800 text-white font-bold text-sm py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                                Crear Vendedor
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: Rendimiento y Comisiones -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <h2 class="text-lg font-bold text-[#0F172A] flex items-center gap-2">
+                                <svg class="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                Rendimiento del Equipo
+                            </h2>
+                            <span class="bg-purple-50 text-[#8B5CF6] text-xs font-bold px-3 py-1.5 rounded-lg">Comisión base: $10.000 CLP / local</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[600px]">
+                                <thead class="bg-[#F8FAFC]">
+                                    <tr>
+                                        <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Vendedor (Ranking)</th>
+                                        <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-center">Locales Activos</th>
+                                        <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-center">Demos / En Proceso</th>
+                                        <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-right">Comisión a Pagar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-tabla-ambassadors" class="divide-y divide-slate-100">
+                                    <tr><td colspan="4" class="text-center py-6 text-sm text-slate-500">Calculando comisiones...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-
+        
     </div>
 
     <script src="admin.js"></script>
