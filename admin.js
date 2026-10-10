@@ -7,9 +7,48 @@ const clienteSupabase = supabase.createClient(supabaseUrl, supabaseKey);
 let todosLosLocales = [];
 let diccionarioAmbassadors = {};
 
+// --- 🔒 SISTEMA DE LOGIN SEGURO CON SUPABASE AUTH ---
+
 window.onload = () => {
-    cargarDatosAdmin();
+    verificarSesionActiva();
 };
+
+async function verificarSesionActiva() {
+    const { data: { session } } = await clienteSupabase.auth.getSession();
+    if (session) {
+        document.getElementById('pantalla-login').classList.add('hidden');
+        cargarDatosAdmin();
+    } else {
+        document.getElementById('pantalla-login').classList.remove('hidden');
+    }
+}
+
+async function iniciarSesionAdmin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorMsg = document.getElementById('login-error');
+
+    const { data, error } = await clienteSupabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        errorMsg.textContent = "⚠️ Credenciales incorrectas o acceso no autorizado";
+        errorMsg.classList.remove('hidden');
+        document.getElementById('login-password').value = '';
+    } else {
+        errorMsg.classList.add('hidden');
+        document.getElementById('pantalla-login').classList.add('hidden');
+        cargarDatosAdmin();
+    }
+}
+
+async function cerrarSesionAdmin() {
+    await clienteSupabase.auth.signOut();
+    location.reload();
+}
 
 // --- MENÚ LATERAL ---
 function cambiarSeccion(seccion) {
