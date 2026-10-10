@@ -73,9 +73,9 @@ function actualizarKPIs(locales) {
     });
 
     document.getElementById('admin-locales-activos').textContent = activos;
-    document.getElementById('admin-mrr').innerHTML = `$${(activos * 10000).toLocaleString('es-CL')} <span class="text-sm text-slate-400 font-medium">CLP</span>`;
+    document.getElementById('admin-mrr').innerHTML = `$${(activos * 20000).toLocaleString('es-CL')} <span class="text-sm text-slate-400 font-medium">CLP</span>`;
     document.getElementById('admin-upgrades-pendientes').textContent = upgradesPendientes;
-    document.getElementById('admin-mrr-potencial').textContent = `+$${(upgradesPendientes * 10000).toLocaleString('es-CL')} CLP en espera`;
+    document.getElementById('admin-mrr-potencial').textContent = `+$${(upgradesPendientes * 20000).toLocaleString('es-CL')} CLP en espera`;
 }
 
 // --- BANDEJA DE UPGRADES (Tarjetas) ---
