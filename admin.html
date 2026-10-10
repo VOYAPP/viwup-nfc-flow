@@ -206,6 +206,53 @@
                     </table>
                 </div>
             </div>
+
+            <!-- SECCIÓN: REGISTRO Y RESUMEN DE PAGOS -->
+            <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-lg font-bold text-[#0F172A] mb-4">Registrar Pago a Vendedor</h2>
+                <form id="form-pago" onsubmit="registrarPago(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Vendedor</label>
+                        <select id="pago-ambassador" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Mes correspondiente</label>
+                        <input type="month" id="pago-mes" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Monto Pagado (CLP)</label>
+                        <input type="number" id="pago-monto" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Link del Comprobante (Drive, etc)</label>
+                        <input type="url" id="pago-comprobante" required placeholder="https://..." class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                    </div>
+                    <div class="md:col-span-4 flex justify-end mt-2">
+                        <button type="submit" id="btn-guardar-pago" class="bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold py-2 px-6 rounded-lg transition-colors">Guardar Pago</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-[#0F172A]">Resumen de Pagos Realizados</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-[#F8FAFC]">
+                            <tr>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Mes</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Vendedor</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-right">Monto</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-center">Comprobante</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-tabla-pagos" class="divide-y divide-slate-100">
+                            <!-- Llenado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         
     </div>
