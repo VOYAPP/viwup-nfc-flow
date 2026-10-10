@@ -356,9 +356,8 @@ function renderizarAmbassadors() {
         html += `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="px-6 py-4">
-                    <button onclick="abrirEdicionVendedor('${v.id}')" class="text-slate-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Editar Vendedor">✏️
-                    </button>
                     <p class="text-[14px] font-bold text-[#0F172A] flex items-center gap-2">${medalla} ${vendedor.nombre}</p>
+                    <button onclick="abrirEdicionVendedor('${v.id}')" class="text-slate-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Editar Vendedor">✏️</button>
                     <p class="text-[11px] text-slate-400">${vendedor.email}</p>
                     ${btnWa}
                 </td>
@@ -650,3 +649,86 @@ document.getElementById('pago-ambassador').addEventListener('change', (e) => {
     // Sugerir monto ($10.000 por local activo)
     document.getElementById('pago-monto').value = activos * 10000;
 });
+
+// ==========================================
+//        FASE: EDICIÓN DE REGISTROS
+// ==========================================
+
+// --- LOCALES ---
+function abrirEdicionLocal(id) {
+    const local = todosLosLocales.find(l => l.id === id);
+    if (!local) return;
+
+    document.getElementById('edit-local-id').value = local.id;
+    document.getElementById('edit-local-nombre').value = local.nombre;
+    document.getElementById('edit-local-estatus').value = local.estatus_comercial;
+
+    document.getElementById('modal-editar-local').classList.remove('hidden');
+}
+
+function cerrarModalEdicionLocal() {
+    document.getElementById('modal-editar-local').classList.add('hidden');
+}
+
+async function guardarEdicionLocal(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-local-id').value;
+    const nombre = document.getElementById('edit-local-nombre').value;
+    const estatus_comercial = document.getElementById('edit-local-estatus').value;
+
+    try {
+        const { error } = await clienteSupabase
+            .from('locales')
+            .update({ nombre, estatus_comercial })
+            .eq('id', id);
+
+        if (error) throw error;
+        
+        cerrarModalEdicionLocal();
+        cargarDatosAdmin();
+    } catch (err) {
+        alert("Error al actualizar el local.");
+    }
+}
+
+// --- VENDEDORES ---
+function abrirEdicionVendedor(id) {
+    // Buscamos en la lista global de vendedores
+    const vendedor = listaVendedores.find(v => v.id === id);
+    if (!vendedor) return;
+
+    document.getElementById('edit-vend-id').value = vendedor.id;
+    document.getElementById('edit-vend-nombre').value = vendedor.nombre;
+    document.getElementById('edit-vend-email').value = vendedor.email;
+    document.getElementById('edit-vend-telefono').value = vendedor.telefono;
+    document.getElementById('edit-vend-frecuencia').value = vendedor.frecuencia_pago || 'Mensual';
+
+    document.getElementById('modal-editar-vendedor').classList.remove('hidden');
+}
+
+function cerrarModalEdicionVendedor() {
+    document.getElementById('modal-editar-vendedor').classList.add('hidden');
+}
+
+async function guardarEdicionVendedor(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-vend-id').value;
+    const nombre = document.getElementById('edit-vend-nombre').value;
+    const email = document.getElementById('edit-vend-email').value;
+    const telefono = document.getElementById('edit-vend-telefono').value;
+    const frecuencia_pago = document.getElementById('edit-vend-frecuencia').value;
+
+    try {
+        const { error } = await clienteSupabase
+            .from('ambassadors')
+            .update({ nombre, email, telefono, frecuencia_pago })
+            .eq('id', id);
+
+        if (error) throw error;
+        
+        cerrarModalEdicionVendedor();
+        cargarDatosAdmin();
+    } catch (err) {
+        alert("Error al actualizar el vendedor. Revisa si el correo ya está registrado.");
+    }
+}
