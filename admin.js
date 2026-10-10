@@ -235,4 +235,124 @@ function exportarCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // ==========================================
+//        FASE 2: GESTIÓN DE AMBASSADORS
+// ==========================================
+
+// 1. Renderizar el Ranking y Comisiones
+function renderizarAmbassadors() {
+    const tbody = document.getElementById('admin-tabla-ambassadors');
+    
+    // Convertir el diccionario en un array para poder ordenarlo
+    let listaVendedores = Object.values(diccionarioAmbassadors);
+    
+    // Excluir si existe un registro base de "Admin" (si corresponde)
+    listaVendedores = listaVendedores.filter(v => v.nombre.toLowerCase() !== 'admin');
+
+    // Mapear contadores a cada vendedor
+    listaVendedores = listaVendedores.map(vendedor => {
+        let activos = 0;
+        let demos = 0;
+
+        todosLosLocales.forEach(local => {
+            if (local.ambassador_id === vendedor.id) {
+                if (local.estatus_comercial === 'activo') activos++;
+                else demos++;
+            }
+        });
+
+        // Comisión (Asumimos $10.000 CLP por local activo, ajustable)
+        const comision = activos * 10000;
+
+        return { ...vendedor, activos, demos, comision };
+    });
+
+    // Ordenar de mayor a menor ventas (Ranking)
+    listaVendedores.sort((a, b) => b.activos - a.activos);
+
+    if (listaVendedores.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay vendedores registrados en el equipo.</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    listaVendedores.forEach((vendedor, index) => {
+        // Medallas para el Top 3
+        let medalla = '';
+        if (index === 0) medalla = '🥇';
+        else if (index === 1) medalla = '🥈';
+        else if (index === 2) medalla = '🥉';
+        else medalla = `<span class="text-slate-400 font-bold ml-1">#${index + 1}</span>`;
+
+        const btnWa = vendedor.telefono ? `<a href="https://wa.me/${vendedor.telefono.replace(/\D/g, '')}" target="_blank" class="text-[11px] text-blue-600 hover:underline flex items-center gap-1 mt-1">WhatsApp ↗</a>` : '';
+
+        html += `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                    <p class="text-[14px] font-bold text-[#0F172A] flex items-center gap-2">${medalla} ${vendedor.nombre}</p>
+                    <p class="text-[11px] text-slate-400">${vendedor.email}</p>
+                    ${btnWa}
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#ECFDF5] text-[#10B981] font-bold text-sm border border-[#A7F3D0]">${vendedor.activos}</span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-sm border border-slate-200">${vendedor.demos}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <p class="text-[15px] font-extrabold text-[#0F172A]">$${vendedor.comision.toLocaleString('es-CL')}</p>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">CLP</p>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+// 2. Crear (Invitar) un nuevo Ambassador a la base de datos
+async function invitarAmbassador(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('btn-invitar');
+    const txtOriginal = btn.innerHTML;
+    
+    const nombre = document.getElementById('inv-nombre').value;
+    const email = document.getElementById('inv-email').value;
+    const telefono = document.getElementById('inv-telefono').value;
+    
+    // Generamos un PIN temporal de 4 dígitos para que pueda entrar la primera vez
+    const pinTemporal = Math.floor(1000 + Math.random() * 9000).toString();
+
+    btn.innerHTML = 'Creando Vendedor...';
+    btn.disabled = true;
+
+    try {
+        const { error } = await clienteSupabase
+            .from('ambassadors')
+            .insert([{ 
+                nombre: nombre, 
+                email: email, 
+                telefono: telefono,
+                pin: pinTemporal // Se guarda el PIN generado
+            }]);
+
+        if (error) throw error;
+
+        // Opcional: Aquí podrías llamar al Webhook de Make que arme el correo de bienvenida.
+        alert(`¡Vendedor creado con éxito!\n\nSu PIN de acceso temporal es: ${pinTemporal}\n\nPídele que ingrese y recupere su contraseña si desea cambiarlo.`);
+        
+        // Limpiar formulario y recargar datos
+        document.getElementById('form-invitar').reset();
+        cargarDatosAdmin(); // Vuelve a consultar la BD para mostrarlo en la tabla
+
+    } catch (err) {
+        console.error("Error al crear:", err);
+        alert("Hubo un error al registrar al vendedor. Asegúrate de que el correo no esté duplicado.");
+    } finally {
+        btn.innerHTML = txtOriginal;
+        btn.disabled = false;
+    }
+
 }
