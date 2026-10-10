@@ -1178,7 +1178,7 @@
 
     async function cargarGarzonesLocal(localId) {
       const { data: garzones, error } = await db
-        .from('garzones_locales')
+        .from('garzones')
         .select('*')
         .eq('local_id', localId);
 
@@ -1213,7 +1213,7 @@
 
       if (texto.toLowerCase().startsWith('agregar ')) {
         const nombreGarzon = texto.substring(8).trim();
-        await db.from('garzones_locales').insert([{ local_id: localIdGlobal, nombre: nombreGarzon }]);
+        await db.from('garzones').insert([{ local_id: localIdGlobal, nombre: nombreGarzon }]);
         input.value = '';
         cargarGarzonesLocal(localIdGlobal);
       } else {
