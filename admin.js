@@ -356,5 +356,6 @@ async function invitarAmbassador(event) {
         btn.innerHTML = txtOriginal;
         btn.disabled = false;
     }
+}
 
 }
