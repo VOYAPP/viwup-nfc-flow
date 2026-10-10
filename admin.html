@@ -20,6 +20,27 @@
 </head>
 <body class="bg-[#F1F5F9] text-[#0F172A] flex min-h-screen">
 
+<!-- ── PANTALLA DE LOGIN / BLOQUEO ── -->
+<div id="pantalla-login" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center border border-slate-100">
+        <div class="w-12 h-12 bg-blue-50 text-[#3B82F6] rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <h2 class="text-xl font-black text-[#0F172A]">ViwUp Admin</h2>
+        <p class="text-xs text-slate-500 mt-1 mb-6">Ingresa tu contraseña maestra para continuar</p>
+
+        <form onsubmit="iniciarSesionAdmin(event)" class="space-y-4">
+            <div>
+                <input type="password" id="login-password" placeholder="••••••••••••" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-sm text-center outline-none focus:ring-2 focus:ring-[#3B82F6]">
+                <p id="login-error" class="text-xs text-red-500 font-bold mt-2 hidden">⚠️ Contraseña incorrecta</p>
+            </div>
+            <button type="submit" class="w-full bg-[#0F172A] hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-md">
+                Desbloquear Panel
+            </button>
+        </form>
+    </div>
+</div>
+    
     <!-- ═══ SIDEBAR (MENÚ LATERAL) ═══ -->
     <aside class="w-64 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="h-16 flex items-center px-6 border-b border-slate-800">
