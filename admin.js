@@ -6,6 +6,7 @@ const clienteSupabase = supabase.createClient(supabaseUrl, supabaseKey);
 // Variables globales para el buscador y filtros rápidos
 let todosLosLocales = [];
 let diccionarioAmbassadors = {};
+let todosLosAmbassadors = [];
 
 // --- 🔒 SISTEMA DE LOGIN SEGURO CON SUPABASE AUTH ---
 
@@ -69,6 +70,7 @@ async function cargarDatosAdmin() {
     try {
         // 1. Traer lista de Ambassadors (Para cruzar IDs con Nombres)
         const { data: ambassadors } = await clienteSupabase.from('ambassadors').select('id, nombre, telefono, email, frecuencia_pago');
+        todosLosAmbassadors = ambassadors;
         if (ambassadors) {
             ambassadors.forEach(amb => diccionarioAmbassadors[amb.id] = amb);
         }
@@ -695,8 +697,8 @@ async function guardarEdicionLocal(e) {
 
 // --- VENDEDORES ---
 function abrirEdicionVendedor(id) {
-    // Buscamos en la lista global de vendedores
-    const vendedor = listaVendedores.find(v => v.id === id);
+    // Buscamos en la variable global correcta
+    const vendedor = todosLosAmbassadors.find(v => v.id === id);
     if (!vendedor) return;
 
     document.getElementById('edit-vend-id').value = vendedor.id;
