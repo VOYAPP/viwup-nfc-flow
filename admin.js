@@ -221,6 +221,8 @@ function renderizarTabla(lista) {
                     ${alertaEstancado}
                 </td>
                 <td class="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="abrirEdicionLocal('${local.id}')" class="text-slate-400 hover:text-blue-500 p-2 rounded-lg hover:bg-blue-50 transition-colors" title="Editar Local">✏️
+                    </button>
                     <button onclick="darDeBajaLocal('${local.id}')" class="text-slate-400 hover:text-orange-500 p-2 rounded-lg hover:bg-orange-50 transition-colors" title="Dar de Baja">📉
                     </button>
                     <button onclick="eliminarLocal('${local.id}')" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Eliminar Local">
@@ -350,10 +352,12 @@ function renderizarAmbassadors() {
         else medalla = `<span class="text-slate-400 font-bold ml-1">#${index + 1}</span>`;
 
         const btnWa = vendedor.telefono ? `<a href="https://wa.me/${vendedor.telefono.replace(/\D/g, '')}" target="_blank" class="text-[11px] text-blue-600 hover:underline flex items-center gap-1 mt-1">WhatsApp ↗</a>` : '';
-
+        
         html += `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="px-6 py-4">
+                    <button onclick="abrirEdicionVendedor('${v.id}')" class="text-slate-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Editar Vendedor">✏️
+                    </button>
                     <p class="text-[14px] font-bold text-[#0F172A] flex items-center gap-2">${medalla} ${vendedor.nombre}</p>
                     <p class="text-[11px] text-slate-400">${vendedor.email}</p>
                     ${btnWa}
