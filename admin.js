@@ -47,6 +47,8 @@ async function cargarDatosAdmin() {
         renderizarUpgrades(locales.filter(l => l.solicitud_upgrade === true));
         filtrarLocales(); // Dibuja la tabla aplicando filtros actuales
 
+        renderizarAmbassadors();
+
     } catch (err) {
         console.error("Error cargando datos:", err);
         alert("Error cargando la base de datos.");
