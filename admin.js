@@ -238,7 +238,9 @@ function exportarCSV() {
     link.click();
     document.body.removeChild(link);
 
-    // ==========================================
+}
+    
+// ==========================================
 //        FASE 2: GESTIÓN DE AMBASSADORS
 // ==========================================
 
@@ -356,6 +358,5 @@ async function invitarAmbassador(event) {
         btn.innerHTML = txtOriginal;
         btn.disabled = false;
     }
-}
 
 }
