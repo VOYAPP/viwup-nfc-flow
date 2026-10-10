@@ -434,6 +434,9 @@ function exportarHistorialCSV() {
 
 // --- FUNCIONES DE PAGOS A VENDEDORES ---
 
+// Variable global para buscar los pagos al abrir el recibo
+let todosLosPagos = [];
+
 async function cargarHistorialPagos() {
     try {
         const { data: pagos, error } = await clienteSupabase
@@ -442,6 +445,7 @@ async function cargarHistorialPagos() {
             .order('mes', { ascending: false });
 
         if (error) throw error;
+        todosLosPagos = pagos; // Guardamos en memoria
         renderizarTablaPagos(pagos);
     } catch (err) {
         console.error("Error cargando pagos:", err);
@@ -463,15 +467,43 @@ function renderizarTablaPagos(pagos) {
                 <td class="px-6 py-4 font-bold text-slate-700">${pago.mes}</td>
                 <td class="px-6 py-4 text-[13px] font-medium">${vendedor.nombre}</td>
                 <td class="px-6 py-4 text-right font-extrabold text-[#10B981]">$${pago.monto.toLocaleString('es-CL')} CLP</td>
-                <td class="px-6 py-4 text-center">
-                    <a href="${pago.comprobante_url}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                        Ver Comprobante ↗
-                    </a>
+                <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                    <a href="${pago.comprobante_url}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1.5 rounded text-[11px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="Ver Link Original">Drive ↗</a>
+                    <button onclick="abrirLiquidacion('${pago.id}')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow-sm">
+                        Generar Liquidación
+                    </button>
                 </td>
             </tr>
         `;
     });
     tbody.innerHTML = html;
+}
+
+// Lógica del Modal del Recibo
+function abrirLiquidacion(idPago) {
+    const pago = todosLosPagos.find(p => p.id === idPago);
+    if (!pago) return;
+
+    const vendedor = diccionarioAmbassadors[pago.ambassador_id] || { nombre: 'Desconocido' };
+    const fechaFormat = new Date(pago.created_at).toLocaleDateString('es-CL');
+
+    // Llenamos los datos en el HTML
+    document.getElementById('liq-id').textContent = pago.id.split('-')[0].toUpperCase(); // Código corto
+    document.getElementById('liq-nombre').textContent = vendedor.nombre;
+    document.getElementById('liq-mes').textContent = pago.mes;
+    document.getElementById('liq-fecha').textContent = fechaFormat;
+    document.getElementById('liq-monto').textContent = `$${pago.monto.toLocaleString('es-CL')}`;
+
+    // Mostramos el modal
+    document.getElementById('modal-liquidacion').classList.remove('hidden');
+}
+
+function cerrarLiquidacion() {
+    document.getElementById('modal-liquidacion').classList.add('hidden');
+}
+
+function imprimirLiquidacion() {
+    window.print();
 }
 
 async function registrarPago(event) {
