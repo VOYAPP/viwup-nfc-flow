@@ -194,13 +194,20 @@ function renderizarTabla(lista) {
     tbody.innerHTML = html;
 }
 
-// --- ACCIONES DE BASE DE DATOS ---
+// --- ACCIONES DE BASE DE DATOS Y TRAZABILIDAD ---
+
+async function registrarAuditoria(localId, accion, detalle) {
+    try {
+        await clienteSupabase.from('logs_locales').insert([{ local_id: localId, accion: accion, detalle: detalle }]);
+    } catch (err) { console.error("Error guardando log", err); }
+}
 
 async function aprobarUpgrade(localId) {
     if (!confirm("¿Confirmas que el pago es válido y activarás este local?")) return;
     try {
         await clienteSupabase.from('locales').update({ estatus_comercial: 'activo', solicitud_upgrade: false }).eq('id', localId);
-        cargarDatosAdmin(); // Refrescar todo
+        await registrarAuditoria(localId, 'ACTIVACIÓN', 'El local pasó a estado ACTIVO tras validar el pago.');
+        cargarDatosAdmin(); 
     } catch (err) { alert("Error al aprobar."); }
 }
 
@@ -208,8 +215,18 @@ async function rechazarUpgrade(localId) {
     if (!confirm("¿Deseas rechazar este Upgrade y devolverlo al estado DEMO?")) return;
     try {
         await clienteSupabase.from('locales').update({ solicitud_upgrade: false }).eq('id', localId);
+        await registrarAuditoria(localId, 'RECHAZO UPGRADE', 'Se rechazó la solicitud de upgrade por falta de pago o error.');
         cargarDatosAdmin(); 
     } catch (err) { alert("Error al rechazar."); }
+}
+
+async function darDeBajaLocal(localId) {
+    if (!confirm("¿Seguro que deseas dar de baja este local? Dejará de sumar comisiones para su vendedor.")) return;
+    try {
+        await clienteSupabase.from('locales').update({ estatus_comercial: 'baja' }).eq('id', localId);
+        await registrarAuditoria(localId, 'BAJA', 'El local fue dado de baja (morosidad o cierre).');
+        cargarDatosAdmin();
+    } catch (err) { alert("Error al dar de baja."); }
 }
 
 async function eliminarLocal(localId) {
@@ -217,6 +234,7 @@ async function eliminarLocal(localId) {
     if (pass !== 'ELIMINAR') return;
     try {
         await clienteSupabase.from('locales').delete().eq('id', localId);
+        // Al eliminar, Supabase borra sus logs automáticamente por el ON DELETE CASCADE
         cargarDatosAdmin();
     } catch (err) { alert("Error al eliminar."); }
 }
@@ -537,3 +555,23 @@ async function registrarPago(event) {
         btn.innerHTML = 'Guardar Pago';
     }
 }
+
+// AUTO-CALCULAR MONTO DE PAGO
+document.getElementById('pago-ambassador').addEventListener('change', (e) => {
+    const ambassadorId = e.target.value;
+    if (!ambassadorId) {
+        document.getElementById('pago-monto').value = '';
+        return;
+    }
+    
+    // Contar cuántos locales activos tiene ese vendedor
+    let activos = 0;
+    todosLosLocales.forEach(local => {
+        if (local.ambassador_id === ambassadorId && local.estatus_comercial === 'activo') {
+            activos++;
+        }
+    });
+    
+    // Sugerir monto ($10.000 por local activo)
+    document.getElementById('pago-monto').value = activos * 10000;
+});
