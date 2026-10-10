@@ -356,8 +356,10 @@ function renderizarAmbassadors() {
         html += `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="px-6 py-4">
-                    <p class="text-[14px] font-bold text-[#0F172A] flex items-center gap-2">${medalla} ${vendedor.nombre}</p>
-                    <button onclick="abrirEdicionVendedor('${vendedor.id}')" class="text-slate-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Editar Vendedor">✏️</button>
+                    <div class="flex items-center justify-between">
+                        <p class="text-[14px] font-bold text-[#0F172A] flex items-center gap-2">${medalla} ${vendedor.nombre}</p>
+                        <button onclick="abrirEdicionVendedor('${vendedor.id}')" class="text-slate-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Editar Vendedor">✏️</button>
+                    </div>
                     <p class="text-[11px] text-slate-400">${vendedor.email}</p>
                     ${btnWa}
                 </td>
