@@ -1367,14 +1367,43 @@
     }
 
     // Acción del Botón Agregar
-    window.agregarGarzonPrompt = async function() {
+    // --- ACCIÓN DE ABRIR SUB-MODAL DE AGREGAR ---
+    window.agregarGarzonPrompt = function() {
+      if (!localIdGlobal) {
+        alert("Primero debes identificar el local.");
+        return;
+      }
+      const inputNombre = document.getElementById('input-nombre-garzon');
+      if (inputNombre) inputNombre.value = ''; // Limpiar campo anterior
+      
+      const subModal = document.getElementById('modal-nuevo-garzon');
+      if (subModal) {
+        subModal.classList.remove('hidden');
+        subModal.classList.add('flex');
+        if (inputNombre) inputNombre.focus(); // Foco automático
+      }
+    }
+
+    window.cerrarModalNuevoGarzon = function() {
+      const subModal = document.getElementById('modal-nuevo-garzon');
+      if (subModal) {
+        subModal.classList.add('hidden');
+        subModal.classList.remove('flex');
+      }
+    }
+
+    // --- GUARDAR NUEVO GARZÓN DESDE EL MODAL ---
+    window.guardarNuevoGarzon = async function(e) {
+      e.preventDefault();
       if (!localIdGlobal) return;
-      const nombreGarzon = prompt("Ingresa el nombre del nuevo garzón:");
-      if (!nombreGarzon || nombreGarzon.trim() === "") return;
+
+      const inputNombre = document.getElementById('input-nombre-garzon');
+      const nombreGarzon = inputNombre.value.trim();
+      if (!nombreGarzon) return;
 
       const { error } = await db.from('garzones').insert([{ 
         local_id: localIdGlobal, 
-        nombre: nombreGarzon.trim(),
+        nombre: nombreGarzon,
         activo: true 
       }]);
 
@@ -1382,6 +1411,8 @@
         alert("Error al agregar garzón: " + error.message);
         return;
       }
+
+      cerrarModalNuevoGarzon();
       cargarGarzonesLocal(localIdGlobal);
     }
 
@@ -1460,6 +1491,28 @@
           <h3 class="font-bold text-sm tracking-wide">Configuración del Local</h3>
         </div>
         <button onclick="cerrarModalGarzones()" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+
+      <!-- ═══ SUB-MODAL: NUEVO GARZÓN ═══ -->
+      <div id="modal-nuevo-garzon" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[10001] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-5 text-white relative">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <h3 class="font-bold text-xs tracking-wide text-slate-200">Registrar Nuevo Garzón</h3>
+            <button onclick="cerrarModalNuevoGarzon()" class="text-slate-400 hover:text-white text-base font-bold cursor-pointer">✕</button>
+          </div>
+
+          <form onsubmit="guardarNuevoGarzon(event)" class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">Nombre Completo</label>
+              <input type="text" id="input-nombre-garzon" required placeholder="Ej: Juan Pérez" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="cerrarModalNuevoGarzon()" class="px-3 py-2 text-xs font-bold text-slate-400 hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancelar</button>
+              <button type="submit" class="px-4 py-2 bg-[#3B82F6] hover:bg-blue-600 text-xs font-bold rounded-xl transition-colors cursor-pointer text-white">Guardar Garzón</button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- ── SECCIÓN 1: GESTIÓN DE GARZONES ── -->
