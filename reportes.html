@@ -1299,84 +1299,111 @@
       contenedor.innerHTML = html;
     }
 
-    // --- ASISTENTE DE CHATBOX AVANZADO (LENGUAJE NATURAL) ---
-    window.procesarComandoGarzon = async function(e) {
-      e.preventDefault();
-      const input = document.getElementById('input-comando-garzon');
-      const textoOriginal = input.value.trim();
-      const textoLower = textoOriginal.toLowerCase();
-      
-      if (!textoLower || !localIdGlobal) return;
-
-      // 1. Comando: AGREGAR / AÑADIR
-      if (textoLower.startsWith('agregar ') || textoLower.startsWith('añadir ')) {
-        const nombreGarzon = textoOriginal.substring(textoOriginal.indexOf(' ') + 1).trim();
-        if (!nombreGarzon) return;
-
-        const { error } = await db.from('garzones').insert([{ local_id: localIdGlobal, nombre: nombreGarzon }]);
-        if (error) {
-          alert("Error al agregar garzón: " + error.message);
-          return;
-        }
-        input.value = '';
+    // --- GESTIÓN DE GARZONES (BOTÓN, TOGGLE Y ELIMINAR) ---
+    window.abrirModalGarzones = function() {
+      const modal = document.getElementById('modal-garzones');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      if (typeof localIdGlobal !== 'undefined' && localIdGlobal) {
         cargarGarzonesLocal(localIdGlobal);
-      } 
-      
-      // 2. Comando: ELIMINAR / BORRAR por nombre
-      else if (textoLower.startsWith('eliminar ') || textoLower.startsWith('borrar ')) {
-        const nombreBuscado = textoOriginal.substring(textoOriginal.indexOf(' ') + 1).trim().toLowerCase();
-        if (!nombreBuscado) return;
-
-        // Consultamos los garzones actuales del local para encontrar coincidencia
-        const { data: garzones, error: errFetch } = await db.from('garzones').select('*').eq('local_id', localIdGlobal);
-        if (errFetch || !garzones) {
-          alert("Error al buscar el garzón.");
-          return;
-        }
-
-        const garzonEncontrado = garzones.find(g => g.nombre.toLowerCase().includes(nombreBuscado));
-
-        if (!garzonEncontrado) {
-          alert(`No se encontró ningún garzón que coincida con "${nombreBuscado}".`);
-          return;
-        }
-
-        if (!confirm(`¿Estás seguro de eliminar a ${garzonEncontrado.nombre}?`)) return;
-
-        const { error: errDel } = await db.from('garzones').delete().eq('id', garzonEncontrado.id);
-        if (errDel) {
-          alert("Error al eliminar el garzón: " + errDel.message);
-          return;
-        }
-
-        input.value = '';
-        cargarGarzonesLocal(localIdGlobal);
-      } 
-      
-      // Comando no reconocido
-      else {
-        alert("Comando no reconocido. Prueba escribiendo:\n• 'Agregar [Nombre]'\n• 'Eliminar [Nombre]'");
+        if (window.localApertura !== undefined) document.getElementById('select-hora-apertura').value = window.localApertura;
+        if (window.localCierre !== undefined) document.getElementById('select-hora-cierre').value = window.localCierre;
+      } else {
+        const contenedor = document.getElementById('lista-garzones-local');
+        if (contenedor) contenedor.innerHTML = `<p class="text-xs text-amber-400 italic">Esperando identificación del local...</p>`;
       }
     }
-    
-    window.eliminarGarzon = async function(garzonId) {
-      if (!confirm("¿Estás seguro de eliminar a este garzón?")) return;
-      
-      const { error } = await db.from('garzones').delete().eq('id', garzonId);
+
+    window.cerrarModalGarzones = function() {
+      const modal = document.getElementById('modal-garzones');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    async function cargarGarzonesLocal(localId) {
+      const contenedor = document.getElementById('lista-garzones-local');
+      if (!contenedor) return;
+
+      const { data: garzones, error } = await db
+        .from('garzones')
+        .select('*')
+        .eq('local_id', localId);
+
       if (error) {
-        alert("Error al eliminar el garzón: " + error.message);
+        console.error("Error al cargar garzones:", error);
+        contenedor.innerHTML = `<p class="text-xs text-red-400 italic">Error al cargar el equipo.</p>`;
+        return;
+      }
+
+      if (!garzones || garzones.length === 0) {
+        contenedor.innerHTML = `<p class="text-xs text-slate-400 italic">No hay garzones registrados en este local.</p>`;
+        return;
+      }
+
+      let html = '';
+      garzones.forEach(g => {
+        const estaActivo = g.activo !== false; // Por defecto activo si es nulo/true
+        
+        html += `
+          <div class="flex items-center justify-between bg-slate-800/90 border border-slate-700/60 px-3 py-2.5 rounded-xl text-xs">
+            <span class="font-medium ${estaActivo ? 'text-slate-200' : 'text-slate-500 line-through'}">👤 ${g.nombre}</span>
+            <div class="flex items-center gap-3">
+              <!-- Toggle Activo / Inactivo -->
+              <label class="relative inline-flex items-center cursor-pointer" title="${estaActivo ? 'Activo (Clic para desactivar)' : 'Inactivo (Clic para activar)'}">
+                <input type="checkbox" ${estaActivo ? 'checked' : ''} onchange="toggleEstadoGarzon('${g.id}', this.checked)" class="sr-only peer">
+                <div class="w-7 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+              <!-- Botón Eliminar -->
+              <button type="button" onclick="eliminarGarzon('${g.id}')" class="text-slate-400 hover:text-red-400 transition-colors font-semibold cursor-pointer p-1" title="Eliminar">✕</button>
+            </div>
+          </div>
+        `;
+      });
+      contenedor.innerHTML = html;
+    }
+
+    // Acción del Botón Agregar
+    window.agregarGarzonPrompt = async function() {
+      if (!localIdGlobal) return;
+      const nombreGarzon = prompt("Ingresa el nombre del nuevo garzón:");
+      if (!nombreGarzon || nombreGarzon.trim() === "") return;
+
+      const { error } = await db.from('garzones').insert([{ 
+        local_id: localIdGlobal, 
+        nombre: nombreGarzon.trim(),
+        activo: true 
+      }]);
+
+      if (error) {
+        alert("Error al agregar garzón: " + error.message);
         return;
       }
       cargarGarzonesLocal(localIdGlobal);
     }
 
-    window.modificarGarzon = async function(garzonId, nombreActual) {
-      const nuevoNombre = prompt("Modificar nombre del garzón:", nombreActual);
-      if (!nuevoNombre || nuevoNombre.trim() === "") return;
+    // Acción del Toggle
+    window.toggleEstadoGarzon = async function(garzonId, nuevoEstado) {
+      const { error } = await db.from('garzones')
+        .update({ activo: nuevoEstado })
+        .eq('id', garzonId);
 
-      const { error } = await db.from('garzones').update({ nombre: nuevoNombre.trim() }).eq('id', garzonId);
       if (error) {
-        alert("Error al actualizar el garzón: " + error.message);
+        alert("Error al actualizar el estado: " + error.message);
+        cargarGarzonesLocal(localIdGlobal); // Recarga para revertir visualmente si falla
+      }
+    }
+
+    // Acción de Eliminar
+    window.eliminarGarzon = async function(garzonId) {
+      if (!confirm("¿Estás seguro de eliminar permanentemente a este garzón?")) return;
+      
+      const { error } = await db.from('garzones').delete().eq('id', garzonId);
+      if (error) {
+        alert("Error al eliminar el garzón: " + error.message);
         return;
       }
       cargarGarzonesLocal(localIdGlobal);
@@ -1437,25 +1464,21 @@
 
       <!-- ── SECCIÓN 1: GESTIÓN DE GARZONES ── -->
       <div class="mb-6">
-        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-          <span>👤</span> Equipo de Garzones
-        </h4>
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide flex items-center gap-2">
+            <span>👤</span> Equipo de Garzones
+          </h4>
+          <button type="button" onclick="agregarGarzonPrompt()" class="bg-[#3B82F6] hover:bg-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer">
+            <span>+</span> Agregar Garzón
+          </button>
+        </div>
         
         <!-- Lista Actual de Garzones -->
-        <div id="lista-garzones-local" class="space-y-2 mb-4 max-h-36 overflow-y-auto pr-1">
+        <div id="lista-garzones-local" class="space-y-2 mb-2 max-h-48 overflow-y-auto pr-1">
           <p class="text-xs text-slate-400 italic">Cargando equipo...</p>
         </div>
-
-        <!-- Interfaz de Chatbox para Garzones -->
-        <form onsubmit="procesarComandoGarzon(event)" class="flex gap-2">
-          <input type="text" id="input-comando-garzon" placeholder="Ej: Agregar Juan..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500">
-          <button type="submit" class="bg-[#3B82F6] hover:bg-blue-600 px-3 py-2 rounded-xl text-xs font-bold transition-colors">
-            Enviar ↵
-          </button>
-        </form>
-        <p class="text-[10px] text-slate-500 mt-1.5">💡 Escribe "Agregar [Nombre]" o gestiona desde la lista.</p>
       </div>
-
+      
       <!-- Separador Visual -->
       <div class="border-t border-slate-800 my-5"></div>
 
