@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             .from('garzones')
             .select('*')
             .eq('local_id', localActual.id)
-            .eq('estado_activo', true);
+            .eq('activo', true); // <-- Cambiado de 'estado_activo' a 'activo'
 
         if (!garzonesError && garzonesData) {
             garzonesActuales = garzonesData;
