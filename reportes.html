@@ -1428,18 +1428,49 @@
       }
     }
 
-    // Acción de Eliminar
-    window.eliminarGarzon = async function(garzonId) {
-      if (!confirm("¿Estás seguro de eliminar permanentemente a este garzón?")) return;
+    // Variable temporal para almacenar el ID del garzón a eliminar
+    let garzonIdAEliminar = null;
+
+    // --- ABRIR MODAL DE ELIMINACIÓN ---
+    window.eliminarGarzon = function(garzonId, nombreGarzon) {
+      garzonIdAEliminar = garzonId;
       
-      const { error } = await db.from('garzones').delete().eq('id', garzonId);
+      const spanNombre = document.getElementById('nombre-garzon-eliminar');
+      if (spanNombre) spanNombre.textContent = nombreGarzon;
+
+      const modalEliminar = document.getElementById('modal-eliminar-garzon');
+      if (modalEliminar) {
+        modalEliminar.classList.remove('hidden');
+        modalEliminar.classList.add('flex');
+      }
+    }
+
+    window.cerrarModalEliminarGarzon = function() {
+      garzonIdAEliminar = null;
+      const modalEliminar = document.getElementById('modal-eliminar-garzon');
+      if (modalEliminar) {
+        modalEliminar.classList.add('hidden');
+        modalEliminar.classList.remove('flex');
+      }
+    }
+
+    // --- EJECUTAR ELIMINACIÓN EN SUPABASE ---
+    window.ejecutarEliminarGarzon = async function() {
+      if (!garzonIdAEliminar) return;
+
+      const { error } = await db.from('garzones').delete().eq('id', garzonIdAEliminar);
+      
       if (error) {
         alert("Error al eliminar el garzón: " + error.message);
         return;
       }
-      cargarGarzonesLocal(localIdGlobal);
-    }
 
+      cerrarModalEliminarGarzon();
+      if (localIdGlobal) {
+        cargarGarzonesLocal(localIdGlobal);
+      }
+    }
+    
     // --- NUEVA FUNCIÓN PARA GUARDAR HORARIOS OPERATIVOS ---
     window.guardarHorariosLocal = async function() {
       if (!localIdGlobal) {
@@ -1512,6 +1543,29 @@
               <button type="submit" class="px-4 py-2 bg-[#3B82F6] hover:bg-blue-600 text-xs font-bold rounded-xl transition-colors cursor-pointer text-white">Guardar Garzón</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- ═══ SUB-MODAL: CONFIRMAR ELIMINACIÓN DE GARZÓN ═══ -->
+      <div id="modal-eliminar-garzon" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[10001] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-5 text-white relative">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <h3 class="font-bold text-xs tracking-wide text-red-400 flex items-center gap-1.5">
+              <span>⚠️</span> Eliminar Garzón
+            </h3>
+            <button onclick="cerrarModalEliminarGarzon()" class="text-slate-400 hover:text-white text-base font-bold cursor-pointer">✕</button>
+          </div>
+
+          <p class="text-xs text-slate-300 mb-6 leading-relaxed">
+            ¿Estás seguro de que deseas eliminar permanentemente a <span id="nombre-garzon-eliminar" class="font-bold text-white underline"></span>? Esta acción no se puede deshacer.
+          </p>
+
+          <input type="hidden" id="id-garzon-eliminar">
+
+          <div class="flex justify-end gap-2 pt-1">
+            <button type="button" onclick="cerrarModalEliminarGarzon()" class="px-3 py-2 text-xs font-bold text-slate-400 hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancelar</button>
+            <button type="button" onclick="ejecutarEliminarGarzon()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-xs font-bold rounded-xl transition-colors cursor-pointer text-white shadow-sm">Sí, Eliminar</button>
+          </div>
         </div>
       </div>
 
