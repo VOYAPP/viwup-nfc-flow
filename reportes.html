@@ -1299,14 +1299,18 @@
       contenedor.innerHTML = html;
     }
 
+    // --- ASISTENTE DE CHATBOX AVANZADO (LENGUAJE NATURAL) ---
     window.procesarComandoGarzon = async function(e) {
       e.preventDefault();
       const input = document.getElementById('input-comando-garzon');
-      const texto = input.value.trim();
-      if (!texto || !localIdGlobal) return;
+      const textoOriginal = input.value.trim();
+      const textoLower = textoOriginal.toLowerCase();
+      
+      if (!textoLower || !localIdGlobal) return;
 
-      if (texto.toLowerCase().startsWith('agregar ')) {
-        const nombreGarzon = texto.substring(8).trim();
+      // 1. Comando: AGREGAR / AÑADIR
+      if (textoLower.startsWith('agregar ') || textoLower.startsWith('añadir ')) {
+        const nombreGarzon = textoOriginal.substring(textoOriginal.indexOf(' ') + 1).trim();
         if (!nombreGarzon) return;
 
         const { error } = await db.from('garzones').insert([{ local_id: localIdGlobal, nombre: nombreGarzon }]);
@@ -1316,11 +1320,45 @@
         }
         input.value = '';
         cargarGarzonesLocal(localIdGlobal);
-      } else {
-        alert("Comando no reconocido. Escribe por ejemplo: 'Agregar Juan Pérez'");
+      } 
+      
+      // 2. Comando: ELIMINAR / BORRAR por nombre
+      else if (textoLower.startsWith('eliminar ') || textoLower.startsWith('borrar ')) {
+        const nombreBuscado = textoOriginal.substring(textoOriginal.indexOf(' ') + 1).trim().toLowerCase();
+        if (!nombreBuscado) return;
+
+        // Consultamos los garzones actuales del local para encontrar coincidencia
+        const { data: garzones, error: errFetch } = await db.from('garzones').select('*').eq('local_id', localIdGlobal);
+        if (errFetch || !garzones) {
+          alert("Error al buscar el garzón.");
+          return;
+        }
+
+        const garzonEncontrado = garzones.find(g => g.nombre.toLowerCase().includes(nombreBuscado));
+
+        if (!garzonEncontrado) {
+          alert(`No se encontró ningún garzón que coincida con "${nombreBuscado}".`);
+          return;
+        }
+
+        if (!confirm(`¿Estás seguro de eliminar a ${garzonEncontrado.nombre}?`)) return;
+
+        const { error: errDel } = await db.from('garzones').delete().eq('id', garzonEncontrado.id);
+        if (errDel) {
+          alert("Error al eliminar el garzón: " + errDel.message);
+          return;
+        }
+
+        input.value = '';
+        cargarGarzonesLocal(localIdGlobal);
+      } 
+      
+      // Comando no reconocido
+      else {
+        alert("Comando no reconocido. Prueba escribiendo:\n• 'Agregar [Nombre]'\n• 'Eliminar [Nombre]'");
       }
     }
-
+    
     window.eliminarGarzon = async function(garzonId) {
       if (!confirm("¿Estás seguro de eliminar a este garzón?")) return;
       
