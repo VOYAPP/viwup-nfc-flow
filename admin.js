@@ -682,12 +682,23 @@ async function guardarEdicionLocal(e) {
     e.preventDefault();
     const id = document.getElementById('edit-local-id').value;
     const nombre = document.getElementById('edit-local-nombre').value;
+    const telefono_admin = document.getElementById('edit-local-telefono').value;
+    const direccion = document.getElementById('edit-local-direccion').value;
+    const correo = document.getElementById('edit-local-correo').value;
+    const google_maps_url = document.getElementById('edit-local-maps').value;
     const estatus_comercial = document.getElementById('edit-local-estatus').value;
 
     try {
         const { error } = await clienteSupabase
             .from('locales')
-            .update({ nombre, estatus_comercial })
+            .update({ 
+                nombre, 
+                telefono_admin, 
+                direccion, 
+                correo, 
+                google_maps_url, 
+                estatus_comercial 
+            })
             .eq('id', id);
 
         if (error) throw error;
@@ -695,6 +706,7 @@ async function guardarEdicionLocal(e) {
         cerrarModalEdicionLocal();
         cargarDatosAdmin();
     } catch (err) {
+        console.error("Error al actualizar:", err);
         alert("Error al actualizar el local.");
     }
 }
