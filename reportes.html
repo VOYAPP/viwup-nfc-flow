@@ -1235,17 +1235,16 @@
     }
 
     // --- GESTIÓN DE GARZONES Y HORARIOS (MODAL FLOTANTE) ---
-    let localIdGlobal = null;
+    // (Ya no declaramos let localIdGlobal porque ya existe en el archivo)
 
     window.abrirModalGarzones = function() {
       const modal = document.getElementById('modal-garzones');
       if (modal) {
         modal.classList.remove('hidden');
-        modal.classList.add('flex'); // Asegura que use flex para centrar correctamente
+        modal.classList.add('flex');
       }
-      if (localIdGlobal) {
+      if (typeof localIdGlobal !== 'undefined' && localIdGlobal) {
         cargarGarzonesLocal(localIdGlobal);
-        // Opcional: precargar los selects de hora si ya tienes los valores globales del local
         if (window.localApertura !== undefined) document.getElementById('select-hora-apertura').value = window.localApertura;
         if (window.localCierre !== undefined) document.getElementById('select-hora-cierre').value = window.localCierre;
       } else {
@@ -1378,5 +1377,6 @@
     }
     
     </script>
+  </div>
 </body>
 </html>
