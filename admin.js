@@ -665,6 +665,10 @@ function abrirEdicionLocal(id) {
 
     document.getElementById('edit-local-id').value = local.id;
     document.getElementById('edit-local-nombre').value = local.nombre;
+    document.getElementById('edit-local-telefono').value = local.telefono_admin || '';
+    document.getElementById('edit-local-direccion').value = local.direccion || '';
+    document.getElementById('edit-local-correo').value = local.correo || '';
+    document.getElementById('edit-local-maps').value = local.google_maps_url || '';
     document.getElementById('edit-local-estatus').value = local.estatus_comercial;
 
     document.getElementById('modal-editar-local').classList.remove('hidden');
