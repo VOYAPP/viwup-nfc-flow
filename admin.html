@@ -363,14 +363,67 @@
 
     <!-- ── MODAL EDITAR LOCAL ── -->
     <div id="modal-editar-local" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-bold text-[#0F172A] mb-4">Editar Local</h3>
             <form id="form-editar-local" onsubmit="guardarEdicionLocal(event)" class="space-y-4">
                 <input type="hidden" id="edit-local-id">
+                
                 <div>
                     <label class="block text-xs font-bold text-[#64748B] mb-1">Nombre del Local</label>
                     <input type="text" id="edit-local-nombre" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
                 </div>
+
+                <!-- Nuevos campos añadidos -->
+                <div>
+                    <label class="block text-xs font-bold text-[#64748B] mb-1">Teléfono Admin</label>
+                    <input type="text" id="edit-local-telefono" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="+569...">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#64748B] mb-1">Dirección</label>
+                    <input type="text" id="edit-local-direccion" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="Av. Principal 123">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#64748B] mb-1">Correo Electrónico</label>
+                    <input type="email" id="edit-local-correo" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="contacto@local.cl">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#64748B] mb-1">URL Google Maps</label>
+                    <input type="text" id="edit-local-maps" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="https://maps.google.com/...">
+                </div>
+
+                <!-- Selector de Horarios Operativos (Punto 3 integrado) -->
+                <div class="space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <label class="block text-xs font-bold text-[#64748B] uppercase tracking-wide">Horario Operativo</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] text-slate-500 block mb-1">Hora Apertura</label>
+                            <select id="edit-local-apertura" class="w-full bg-white border border-slate-200 text-[#0F172A] text-xs rounded-lg p-2 outline-none">
+                                <script>
+                                  for(let i=0; i<24; i++) {
+                                    document.write(`<option value="${i}">${i.toString().padStart(2, '0')}:00 hrs</option>`);
+                                  }
+                                </script>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-500 block mb-1">Hora Cierre</label>
+                            <select id="edit-local-cierre" class="w-full bg-white border border-slate-200 text-[#0F172A] text-xs rounded-lg p-2 outline-none">
+                                <script>
+                                  for(let i=0; i<24; i++) {
+                                    document.write(`<option value="${i}">${i.toString().padStart(2, '0')}:00 hrs</option>`);
+                                  }
+                                </script>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded-lg leading-relaxed">
+                      ⚠️ <strong>Nota:</strong> Si hay horarios variables en la semana, elige el rango más amplio (Ej: Lunes 17:00 a 01:00 y Martes 13:00 a 01:00, elige el del martes).
+                    </p>
+                </div>
+
                 <div>
                     <label class="block text-xs font-bold text-[#64748B] mb-1">Estatus Comercial</label>
                     <select id="edit-local-estatus" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
@@ -379,6 +432,7 @@
                         <option value="baja">Dado de Baja</option>
                     </select>
                 </div>
+
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="cerrarModalEdicionLocal()" class="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
                     <button type="submit" class="px-4 py-2 bg-[#3B82F6] hover:bg-blue-600 text-white text-sm font-bold rounded-lg shadow-sm">Guardar Cambios</button>
