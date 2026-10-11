@@ -418,4 +418,7 @@ async function solicitarUpgrade(localId) {
 }
 
 // Iniciar sistema al cargar la página
-window.onload = iniciarPanel;
+window.iniciarPanel = function() {
+      // Código de inicialización de tu panel o lógica necesaria
+      console.log("Panel iniciado correctamente");
+    }
