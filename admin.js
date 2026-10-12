@@ -795,7 +795,9 @@ function exportarHistorialCSV() {
     document.body.removeChild(link);
 }
 
+// ==========================================
 // ── 5. REGISTRO Y HISTORIAL DE PAGOS A VENDEDORES ──
+// ==========================================
 
 let todosLosPagos = [];
 
@@ -811,6 +813,9 @@ async function cargarHistorialPagos() {
         renderizarTablaPagos(pagos);
         renderizarBonosAdmin();
         renderizarComisionesAdmin();
+        
+        // Poblar automáticamente el select con los vendedores que tienen cobros pendientes
+        poblarSelectVendedoresConPagosPendientes();
     } catch (err) {
         console.error("Error cargando pagos:", err);
     }
@@ -946,14 +951,109 @@ async function registrarPago(event) {
     }
 }
 
+// ── VENDEDORES Y MOTIVOS DINÁMICOS ──
+
+function poblarSelectVendedoresConPagosPendientes() {
+    const selectAmbassador = document.getElementById('pago-ambassador');
+    if (!selectAmbassador) return;
+
+    const hoy = new Date();
+    const vendedoresConPendientes = new Set();
+
+    todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo').forEach(local => {
+        if (!local.ambassador_id) return;
+
+        let tieneBono = false;
+        let tieneComision = false;
+
+        if (local.fecha_contratacion) {
+            const diasDiff = Math.floor((hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24));
+
+            if (diasDiff <= 30 && !local.viene_de_baja) {
+                const pagoBono = todosLosPagos.find(p => p.ambassador_id === local.ambassador_id && p.motivo === 'bono_activacion' && p.comprobante_url);
+                if (!pagoBono) tieneBono = true;
+            } else if (diasDiff > 30) {
+                const pagoCom = todosLosPagos.find(p => p.ambassador_id === local.ambassador_id && p.motivo === 'comision' && p.comprobante_url);
+                if (!pagoCom) tieneComision = true;
+            }
+        }
+
+        if (tieneBono || tieneComision) {
+            vendedoresConPendientes.add(local.ambassador_id);
+        }
+    });
+
+    if (vendedoresConPendientes.size === 0) {
+        selectAmbassador.innerHTML = `<option value="">No hay vendedores con pagos pendientes</option>`;
+        document.getElementById('pago-monto').value = '0';
+        return;
+    }
+
+    let htmlOptions = `<option value="">-- Seleccionar Vendedor --</option>`;
+    vendedoresConPendientes.forEach(id => {
+        const amb = diccionarioAmbassadors[id];
+        if (amb) htmlOptions += `<option value="${amb.id}">${amb.nombre}</option>`;
+    });
+
+    selectAmbassador.innerHTML = htmlOptions;
+}
+
+function actualizarMotivosPagoSegunVendedor() {
+    const ambassadorId = document.getElementById('pago-ambassador')?.value;
+    const selectMotivo = document.getElementById('pago-motivo');
+    const inputMonto = document.getElementById('pago-monto');
+
+    if (!selectMotivo) return;
+
+    if (!ambassadorId) {
+        selectMotivo.innerHTML = `<option value="">-- Seleccione un vendedor primero --</option>`;
+        if (inputMonto) inputMonto.value = '0';
+        return;
+    }
+
+    const hoy = new Date();
+    const localesAmb = todosLosLocales.filter(l => l.ambassador_id === ambassadorId && l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
+
+    let bonoPendiente = false;
+    let comisionPendiente = false;
+
+    localesAmb.forEach(local => {
+        if (local.fecha_contratacion) {
+            const diasDiff = Math.floor((hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24));
+
+            if (diasDiff <= 30 && !local.viene_de_baja) {
+                const pagado = todosLosPagos.find(p => p.ambassador_id === ambassadorId && p.motivo === 'bono_activacion' && p.comprobante_url);
+                if (!pagado) bonoPendiente = true;
+            } else if (diasDiff > 30) {
+                const pagado = todosLosPagos.find(p => p.ambassador_id === ambassadorId && p.motivo === 'comision' && p.comprobante_url);
+                if (!pagado) comisionPendiente = true;
+            }
+        }
+    });
+
+    let htmlMotivos = '';
+    if (bonoPendiente) htmlMotivos += `<option value="bono_activacion">Bono de Activación ($10.000 CLP)</option>`;
+    if (comisionPendiente) htmlMotivos += `<option value="comision">Comisión Recurrente</option>`;
+
+    if (!htmlMotivos) {
+        htmlMotivos = `<option value="">Sin cobros pendientes para este vendedor</option>`;
+    }
+
+    selectMotivo.innerHTML = htmlMotivos;
+    recalcularMontoPago();
+}
+
 // ── 6. AUTO-CÁLCULO DE PAGOS SEGÚN MOTIVO ──
 
 function recalcularMontoPago() {
     const ambassadorId = document.getElementById('pago-ambassador')?.value;
-    const motivo = document.getElementById('pago-motivo')?.value || 'bono_activacion';
+    const motivo = document.getElementById('pago-motivo')?.value;
     const inputMonto = document.getElementById('pago-monto');
 
-    if (!ambassadorId || !inputMonto) return;
+    if (!ambassadorId || !motivo || !inputMonto) {
+        if (inputMonto) inputMonto.value = '0';
+        return;
+    }
 
     const hoy = new Date();
     const localesAmb = todosLosLocales.filter(l => 
@@ -965,7 +1065,6 @@ function recalcularMontoPago() {
     let totalLiquidar = 0;
 
     if (motivo === 'bono_activacion') {
-        // Sumar $10.000 únicamente por locales en Mes 1 (<= 30 días) que no vengan de baja
         localesAmb.forEach(local => {
             if (local.viene_de_baja) return;
             if (local.fecha_contratacion) {
@@ -975,8 +1074,7 @@ function recalcularMontoPago() {
                 totalLiquidar += BONO_ACTIVACION;
             }
         });
-    } else {
-        // Sumar comisiones recurrentes escalonadas para locales con > 30 días
+    } else if (motivo === 'comision') {
         const cantidadActivos = localesAmb.length;
         let porcentajeComision = 0.25;
         if (cantidadActivos >= 6 && cantidadActivos <= 10) porcentajeComision = 0.30;
@@ -995,8 +1093,8 @@ function recalcularMontoPago() {
     inputMonto.value = Math.round(totalLiquidar);
 }
 
-// Listeners para actualizar el monto al cambiar de vendedor o motivo
-document.getElementById('pago-ambassador')?.addEventListener('change', recalcularMontoPago);
+// Listeners reactivos para el formulario
+document.getElementById('pago-ambassador')?.addEventListener('change', actualizarMotivosPagoSegunVendedor);
 document.getElementById('pago-motivo')?.addEventListener('change', recalcularMontoPago);
 
 // ── 7. REGLA DE FECHAS DE CORTE ──
@@ -1006,10 +1104,8 @@ function cumpleFechaDeCorte(modalidad = 'mensual') {
     const diaActual = hoy.getDate();
 
     if (modalidad.toLowerCase() === 'bisemanal') {
-        // Ventanas de liquidación quincenal: días 14-28 (corte quincena 1) o 29-13 (corte quincena 2)
         return (diaActual >= 14 && diaActual <= 28) || (diaActual >= 29 || diaActual <= 13);
     } else {
-        // Modalidad mensual: A partir del día 28 de cada mes
         return diaActual >= 28;
     }
 }
