@@ -254,20 +254,34 @@ async function registrarAuditoria(localId, accion, detalle) {
 async function aprobarUpgrade(localId) {
     if (!confirm("¿Confirmas que el pago es válido y activarás este local?")) return;
     try {
-        const fechaHoy = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        // Obtenemos el local actual para verificar si antes estuvo en 'baja'
+        const { data: localActual } = await clienteSupabase
+            .from('locales')
+            .select('*')
+            .eq('id', localId)
+            .single();
+
+        const eraBaja = localActual && localActual.estatus_comercial === 'baja';
+        const fechaHoy = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
         await clienteSupabase
             .from('locales')
             .update({ 
                 estatus_comercial: 'activo', 
                 solicitud_upgrade: false,
-                fecha_contratacion: fechaHoy // <-- Inicia los 30 días para el Bono de Activación ($10.000)
+                fecha_contratacion: fechaHoy,
+                viene_de_baja: eraBaja // Marcador para excluir del bono de activación
             })
             .eq('id', localId);
 
-        await registrarAuditoria(localId, 'ACTIVACIÓN', 'El local pasó a estado ACTIVO tras validar el pago.');
+        let mensajeAuditoria = eraBaja 
+            ? 'Local reactivado desde baja (Aplica solo para comisiones futuras).' 
+            : 'Local pasó a ACTIVO por primera vez (Genera Bono de Activación inmediato).';
+
+        await registrarAuditoria(localId, 'ACTIVACIÓN', mensajeAuditoria);
         cargarDatosAdmin(); 
     } catch (err) { 
+        console.error(err);
         alert("Error al aprobar."); 
     }
 }
@@ -829,6 +843,23 @@ if (selectAmbassadorPago) {
 
         document.getElementById('pago-monto').value = Math.round(totalLiquidar);
     });
+}
+
+/**
+ * Valida si la fecha actual cumple con la fecha de cierre/corte según la modalidad del embajador
+ */
+function cumpleFechaDeCorte(modalidad = 'mensual') {
+    const hoy = new Date();
+    const diaActual = hoy.getDate();
+
+    if (modalidad.toLowerCase() === 'bisemanal') {
+        // Cortes: del 29 al 13, o del 14 al 28
+        // Esto se habilita permanentemente en esos rangos o al finalizar el ciclo
+        return true; // O puedes filtrar si el día coincide exactamente con el cierre de quincena (ej. día 13 o día 28)
+    } else {
+        // Mensual: El cierre estricto es el día 28 de cada mes
+        return diaActual >= 28; 
+    }
 }
 
 // ==========================================
