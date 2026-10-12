@@ -75,13 +75,23 @@ function cambiarSeccion(seccion) {
 async function cargarDatosAdmin() {
     try {
         // 1. Traer lista de Ambassadors (Para cruzar IDs con Nombres)
-        const { data: ambassadors } = await clienteSupabase.from('ambassadors').select('id, nombre, telefono, email, frecuencia_pago');
-        todosLosAmbassadors = ambassadors;
+        const { data: ambassadors } = await clienteSupabase
+            .from('ambassadors')
+            .select('id, nombre, telefono, email, frecuencia_pago');
+        
+        window.todosLosAmbassadors = ambassadors || [];
+        window.diccionarioAmbassadors = {};
         if (ambassadors) {
-            ambassadors.forEach(amb => diccionarioAmbassadors[amb.id] = amb);
+            ambassadors.forEach(amb => window.diccionarioAmbassadors[amb.id] = amb);
         }
 
-        // 2. Traer todos los Locales
+        // 2. Traer la lista de pagos de ambassadors
+        const { data: pagos } = await clienteSupabase
+            .from('pagos_ambassadors')
+            .select('*');
+        window.todosLosPagos = pagos || [];
+
+        // 3. Traer todos los Locales
         const { data: locales, error } = await clienteSupabase
             .from('locales')
             .select('*')
@@ -89,9 +99,9 @@ async function cargarDatosAdmin() {
 
         if (error) throw error;
         
-        todosLosLocales = locales;
+        window.todosLosLocales = locales || [];
         
-        // 3. Procesar datos (KPIs y Bandejas)
+        // 4. Procesar datos (KPIs y Bandejas)
         actualizarKPIs(locales);
         renderizarUpgrades(locales.filter(l => l.solicitud_upgrade === true));
         filtrarLocales(); // Dibuja la tabla aplicando filtros actuales
@@ -100,7 +110,7 @@ async function cargarDatosAdmin() {
         renderizarBonosAdmin();
         renderizarComisionesAdmin();
 
-        // ¡LLAMADA CLAVE AQUÍ!
+        // 5. Poblar selector de vendedores con pagos pendientes
         poblarSelectVendedoresConPagosPendientes();
 
     } catch (err) {
@@ -956,25 +966,18 @@ async function registrarPago(event) {
 
 function poblarSelectVendedoresConPagosPendientes() {
     const selectAmbassador = document.getElementById('pago-ambassador');
-    if (!selectAmbassador) {
-        console.error("❌ ERROR: No se encontró el elemento HTML #pago-ambassador en el DOM.");
-        return;
-    }
+    if (!selectAmbassador) return;
 
-    console.log("🔍 [DEBUG] Ejecutando poblarSelectVendedoresConPagosPendientes...");
-    console.log("🔍 [DEBUG] todosLosLocales:", window.todosLosLocales);
-    console.log("🔍 [DEBUG] diccionarioAmbassadors:", window.diccionarioAmbassadors);
-
-    if (!window.todosLosLocales || todosLosLocales.length === 0) {
-        console.warn("⚠️ ADVERTENCIA: todosLosLocales está vacío o no definido aún.");
-        selectAmbassador.innerHTML = `<option value="">Cargando vendedores...</option>`;
+    // Si los locales no se han cargado aún, esperamos 200ms y reintentamos automáticamente
+    if (!window.todosLosLocales || window.todosLosLocales.length === 0) {
+        setTimeout(poblarSelectVendedoresConPagosPendientes, 200);
         return;
     }
 
     const hoy = new Date();
     const mapVendedores = new Map();
 
-    todosLosLocales.forEach((local, index) => {
+    window.todosLosLocales.forEach(local => {
         if (!local.estatus_comercial || local.estatus_comercial.toLowerCase() !== 'activo') return;
         if (local.viene_de_baja) return;
 
@@ -985,7 +988,8 @@ function poblarSelectVendedoresConPagosPendientes() {
         }
 
         if (esMes1 && local.ambassador_id) {
-            const pagado = todosLosPagos && todosLosPagos.find(p => 
+            // Comprobamos si el bono ya fue pagado
+            const pagado = window.todosLosPagos && window.todosLosPagos.find(p => 
                 String(p.ambassador_id) === String(local.ambassador_id) && 
                 (p.motivo === 'bono_activacion' || !p.motivo) && 
                 p.comprobante_url
@@ -993,19 +997,19 @@ function poblarSelectVendedoresConPagosPendientes() {
 
             if (!pagado) {
                 const idAmb = String(local.ambassador_id);
-                // Búsqueda robusta en el diccionario
-                const ambObj = diccionarioAmbassadors[idAmb] || Object.values(diccionarioAmbassadors).find(a => String(a.id) === idAmb);
-                const nombre = ambObj ? ambObj.nombre : `Vendedor ID: ${idAmb.slice(0, 6)}`;
+                const ambObj = window.diccionarioAmbassadors[idAmb] || 
+                               Object.values(window.diccionarioAmbassadors).find(a => String(a.id) === idAmb);
                 
-                console.log(`✅ [ENCONTRADO] Vendedor con bono pendiente: ${nombre} (ID: ${idAmb})`);
+                const nombre = ambObj ? ambObj.nombre : `Vendedor ID: ${idAmb.slice(0, 6)}`;
                 mapVendedores.set(idAmb, nombre);
             }
         }
     });
 
     if (mapVendedores.size === 0) {
-        console.warn("⚠️ No se encontraron vendedores con bonos pendientes tras evaluar los locales.");
         selectAmbassador.innerHTML = `<option value="">No hay vendedores con pagos pendientes</option>`;
+        const inputMonto = document.getElementById('pago-monto');
+        if (inputMonto) inputMonto.value = '0';
         return;
     }
 
@@ -1015,9 +1019,10 @@ function poblarSelectVendedoresConPagosPendientes() {
     });
 
     selectAmbassador.innerHTML = html;
-    console.log("🎉 [ÉXITO] Select de vendedores poblado correctamente con:", mapVendedores.size, "opciones.");
     
-    actualizarMotivosPagoSegunVendedor();
+    if (typeof actualizarMotivosPagoSegunVendedor === 'function') {
+        actualizarMotivosPagoSegunVendedor();
+    }
 }
 
 function actualizarMotivosPagoSegunVendedor() {
