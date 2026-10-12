@@ -3,6 +3,12 @@ const supabaseUrl = 'https://syoypjljkwmwlrpuwxwh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5b3lwamxqa3dtd2xycHV3eHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MDA1OTgsImV4cCI6MjEwMzA3NjU5OH0.BvGcxpDWYn1uOSScG2GHLEOAcTZWW336FRE0JsWwsRc';
 const clienteSupabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+// ==========================================
+// CONFIGURACIÓN Y CONSTANTES GLOBALES
+// ==========================================
+const VALOR_BASE_SUSCRIPCION = 29900;
+const BONO_ACTIVACION = 10000;
+
 // Variables globales para el buscador y filtros rápidos
 let todosLosLocales = [];
 let diccionarioAmbassadors = {};
@@ -319,10 +325,6 @@ function exportarCSV() {
 // ==========================================
 //        FASE 2: GESTIÓN DE AMBASSADORS
 // ==========================================
-
-// Constantes financieras del sistema ViwUp
-const VALOR_BASE_SUSCRIPCION = 29900;
-const BONO_ACTIVACION = 10000;
 
 /**
  * Calcula las ganancias totales (Bonos + Comisiones Recurrentes) de una lista de locales de un embajador
