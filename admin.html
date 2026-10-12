@@ -224,18 +224,25 @@
         </div>
 
         <!-- ── VISTA 3: AUDITORÍA E HISTORIAL ── -->
-        <div id="vista-historial" class="space-y-6 hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div id="vista-historial" class="space-y-8 hidden">
+
+            <!-- ───────────────────────────────────────── -->
+            <!-- ÁREA 1: BONOS DE ACTIVACIÓN (INMEDIATOS) -->
+            <!-- ───────────────────────────────────────── -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     <div>
-                        <h2 class="text-lg font-bold text-[#0F172A]">Historial de Activaciones</h2>
-                        <p class="text-sm text-slate-500 mt-1">Registro de locales activos y facturación validada.</p>
+                        <h2 class="text-lg font-bold text-[#0F172A]">1. Bonos de Activación</h2>
+                        <p class="text-sm text-slate-500 mt-1">Bono de $10.000 CLP generado inmediatamente al pasar de Demo a Activo (Excluye reactivaciones de baja).</p>
                     </div>
-                    <button onclick="exportarHistorialCSV()" class="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Exportar Reporte
-                    </button>
+                    <!-- Top Bar de Filtros: Bonos -->
+                    <div class="flex gap-1.5 bg-slate-100 p-1 rounded-xl">
+                        <button onclick="filtrarBonosAdmin('activos')" id="tab-bono-activos" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-slate-900 text-white transition-all shadow-sm">Activos</button>
+                        <button onclick="filtrarBonosAdmin('pagados')" id="tab-bono-pagados" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all">Pagados</button>
+                        <button onclick="filtrarBonosAdmin('todo')" id="tab-bono-todo" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all">Todo</button>
+                    </div>
                 </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead class="bg-[#F8FAFC]">
@@ -243,43 +250,113 @@
                                 <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Local / Fecha Inicio</th>
                                 <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Vendedor Responsable</th>
                                 <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-center">Estado del Pago</th>
-                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-right">Ingreso Generado</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-right">Bono Generado</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-tabla-historial" class="divide-y divide-slate-100">
+                        <tbody id="admin-tabla-bonos" class="divide-y divide-slate-100">
                             <!-- Llenado por JS -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- SECCIÓN: REGISTRO Y RESUMEN DE PAGOS -->
-            <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <!-- ───────────────────────────────────────── -->
+            <!-- ÁREA 2: COMISIONES RECURRENTES (CICLOS)  -->
+            <!-- ───────────────────────────────────────── -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-[#0F172A]">2. Comisiones Recurrentes</h2>
+                        <p class="text-sm text-slate-500 mt-1">Comisiones escalonadas a partir del segundo mes, sujetas a fechas de cierre (Día 28 o quincenales).</p>
+                    </div>
+            
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Filtro auxiliar para separar mensual / quincenal -->
+                        <select id="filtro-modalidad-comisiones" onchange="renderizarComisionesAdmin()" class="bg-[#F8FAFC] border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none">
+                            <option value="todos">Todas las modalidades</option>
+                            <option value="mensual">Mensual (Corte 28)</option>
+                            <option value="bisemanal">Quincenal (29-13 / 14-28)</option>
+                        </select>
+
+                        <!-- Top Bar de Filtros: Comisiones -->
+                        <div class="flex gap-1.5 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="filtrarComisionesAdmin('activos')" id="tab-com-activos" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-slate-900 text-white transition-all shadow-sm">Activos</button>
+                            <button onclick="filtrarComisionesAdmin('pagados')" id="tab-com-pagados" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all">Pagados</button>
+                            <button onclick="filtrarComisionesAdmin('todo')" id="tab-com-todo" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all">Todo</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-[#F8FAFC]">
+                            <tr>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Ciclo / Local</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Vendedor Responsable</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-center">Estado del Pago</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-right">Comisión Generada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-tabla-comisiones" class="divide-y divide-slate-100">
+                            <!-- Llenado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ───────────────────────────────────────── -->
+            <!-- SECCIÓN: REGISTRO Y RESUMEN DE PAGOS    -->
+            <!-- ───────────────────────────────────────── -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <h2 class="text-lg font-bold text-[#0F172A] mb-4">Registrar Pago a Vendedor</h2>
-                <form id="form-pago" onsubmit="registrarPago(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <form id="form-pago" onsubmit="registrarPago(event)" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            
+                    <!-- Vendedor -->
                     <div>
                         <label class="block text-xs font-bold text-[#64748B] mb-1">Vendedor</label>
                         <select id="pago-ambassador" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none"></select>
                     </div>
+
+                    <!-- Motivo de Pago (PASO 4 INCLUIDO) -->
                     <div>
-                        <label class="block text-xs font-bold text-[#64748B] mb-1">Mes correspondiente</label>
-                        <input type="month" id="pago-mes" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Motivo de Pago</label>
+                        <select id="pago-motivo" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                            <option value="bono_activacion">Bono de Activación ($10.000)</option>
+                            <option value="comision">Comisión Recurrente</option>
+                        </select>
                     </div>
+
+                    <!-- Mes / Ciclo correspondiente -->
+                    <div>
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Mes / Ciclo correspondiente</label>
+                        <input type="text" id="pago-mes" required placeholder="Ej: Octubre 2026" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                    </div>
+
+                    <!-- Monto Pagado (CLP) -->
                     <div>
                         <label class="block text-xs font-bold text-[#64748B] mb-1">Monto Pagado (CLP)</label>
-                        <input type="number" id="pago-monto" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                        <input type="number" id="pago-monto" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="$ 0">
                     </div>
+
+                    <!-- Adjuntar Comprobante -->
                     <div>
-                        <label class="block text-xs font-bold text-[#64748B] mb-1">Adjuntar Comprobante (PDF / Imagen)</label>
+                        <label class="block text-xs font-bold text-[#64748B] mb-1">Comprobante (PDF / Imagen)</label>
                         <input type="file" id="pago-archivo" accept="image/*,application/pdf" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-2 py-1.5 text-xs outline-none file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300">
                     </div>
-                    <div class="md:col-span-4 flex justify-end mt-2">
-                        <button type="submit" id="btn-guardar-pago" class="bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold py-2 px-6 rounded-lg transition-colors">Guardar Pago</button>
+
+                    <!-- Botones de Acción -->
+                    <div class="md:col-span-5 flex justify-between items-center mt-2">
+                        <button type="button" onclick="exportarHistorialCSV()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Exportar Reportes CSV
+                        </button>
+                        <button type="submit" id="btn-guardar-pago" class="bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold py-2 px-6 rounded-lg transition-colors shadow-sm">Guardar Pago con Comprobante</button>
                     </div>
                 </form>
             </div>
 
-            <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- Resumen de Pagos Realizados -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-6 border-b border-slate-100">
                     <h2 class="text-lg font-bold text-[#0F172A]">Resumen de Pagos Realizados</h2>
                 </div>
@@ -287,7 +364,7 @@
                     <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead class="bg-[#F8FAFC]">
                             <tr>
-                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Mes</th>
+                                <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Mes / Ciclo</th>
                                 <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase">Vendedor</th>
                                 <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-right">Monto</th>
                                 <th class="px-6 py-3 text-[11px] font-bold text-[#64748B] uppercase text-center">Comprobante</th>
@@ -301,8 +378,6 @@
             </div>
         </div>
         
-    </div>
-
     <script src="admin.js"></script>
 
     <!-- ── MODAL LIQUIDACIÓN DE PAGO ── -->
