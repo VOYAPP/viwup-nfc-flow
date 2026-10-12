@@ -953,72 +953,63 @@ async function registrarPago(event) {
 
 function poblarSelectVendedoresConPagosPendientes() {
     const selectAmbassador = document.getElementById('pago-ambassador');
-    if (!selectAmbassador) return;
+    if (!selectAmbassador) {
+        console.warn("No se encontró el elemento #pago-ambassador en el DOM.");
+        return;
+    }
 
     const hoy = new Date();
-    const vendedoresMap = new Map(); // Almacena ID -> Nombre del vendedor de forma segura
+    const mapVendedores = new Map();
 
-    // 1. Recorrer locales activos para detectar pendientes exactamente igual que en la tabla superior
-    todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo').forEach(local => {
-        if (!local.ambassador_id) return;
+    // Verificamos que existan locales cargados
+    if (window.todosLosLocales && Array.isArray(todosLosLocales)) {
+        todosLosLocales.forEach(local => {
+            // Evaluamos exactamente lo mismo que muestra la tabla superior de bonos
+            if (!local.estatus_comercial || local.estatus_comercial.toLowerCase() !== 'activo') return;
+            if (local.viene_de_baja) return;
 
-        let tieneBonoPendiente = false;
-        let tieneComisionPendiente = false;
+            let esMes1 = true;
+            if (local.fecha_contratacion) {
+                const diasDiff = Math.floor((hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24));
+                esMes1 = (diasDiff <= 30);
+            }
 
-        if (local.fecha_contratacion) {
-            const fechaContratacion = new Date(local.fecha_contratacion);
-            const diasDiff = Math.floor((hoy - fechaContratacion) / (1000 * 60 * 60 * 24));
-
-            if (diasDiff <= 30 && !local.viene_de_baja) {
-                const pagoBono = todosLosPagos && todosLosPagos.find(p => 
+            if (esMes1 && local.ambassador_id) {
+                // Comprobamos si el bono ya tiene pago registrado
+                const pagado = todosLosPagos && todosLosPagos.find(p => 
                     String(p.ambassador_id) === String(local.ambassador_id) && 
                     (p.motivo === 'bono_activacion' || !p.motivo) && 
                     p.comprobante_url
                 );
-                if (!pagoBono) tieneBonoPendiente = true;
-            } else if (diasDiff > 30) {
-                const pagoCom = todosLosPagos && todosLosPagos.find(p => 
-                    String(p.ambassador_id) === String(local.ambassador_id) && 
-                    (p.motivo === 'comision' || !p.motivo) && 
-                    p.comprobante_url
-                );
-                if (!pagoCom) tieneComisionPendiente = true;
+
+                if (!pagado) {
+                    const idAmb = String(local.ambassador_id);
+                    // Buscamos el nombre en el diccionario de forma segura
+                    const ambObj = diccionarioAmbassadors[idAmb] || Object.values(diccionarioAmbassadors).find(a => String(a.id) === idAmb);
+                    const nombre = ambObj ? ambObj.nombre : `Vendedor ID: ${idAmb.slice(0, 6)}`;
+                    
+                    mapVendedores.set(idAmb, nombre);
+                }
             }
-        } else {
-            const pagoBono = todosLosPagos && todosLosPagos.find(p => 
-                String(p.ambassador_id) === String(local.ambassador_id) && 
-                p.comprobante_url
-            );
-            if (!pagoBono) tieneBonoPendiente = true;
-        }
+        });
+    }
 
-        if (tieneBonoPendiente || tieneComisionPendiente) {
-            const ambId = String(local.ambassador_id);
-            
-            // Búsqueda segura del nombre en el diccionario o usando respaldo
-            const ambObj = diccionarioAmbassadors[ambId] || Object.values(diccionarioAmbassadors).find(a => String(a.id) === ambId);
-            const nombreAmb = ambObj ? ambObj.nombre : (local.vendedor_nombre || `Vendedor ID: ${ambId.slice(0, 6)}`);
-            
-            vendedoresMap.set(ambId, nombreAmb);
-        }
-    });
-
-    // 2. Construir las opciones del select
-    if (vendedoresMap.size === 0) {
-        selectAmbassador.innerHTML = `<option value="">No hay vendedores con pagos pendientes</option>`;
+    // Dibujar las opciones en el HTML
+    if (mapVendedores.size === 0) {
+        selectAmbassador.innerHTML = `<option value="">No hay vendedores con bonos pendientes</option>`;
         const inputMonto = document.getElementById('pago-monto');
         if (inputMonto) inputMonto.value = '';
         return;
     }
 
-    let htmlOptions = `<option value="">-- Seleccionar Vendedor --</option>`;
-    vendedoresMap.forEach((nombre, id) => {
-        htmlOptions += `<option value="${id}">${nombre}</option>`;
+    let html = `<option value="">-- Seleccionar Vendedor --</option>`;
+    mapVendedores.forEach((nombre, id) => {
+        html += `<option value="${id}">${nombre}</option>`;
     });
 
-    selectAmbassador.innerHTML = htmlOptions;
+    selectAmbassador.innerHTML = html;
     
-    // Disparar la actualización de motivos para el primer vendedor listado si aplica
+    // Actualizar los motivos de pago correspondientes
     actualizarMotivosPagoSegunVendedor();
 }
 
