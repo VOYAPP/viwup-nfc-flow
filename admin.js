@@ -805,16 +805,14 @@ async function cargarHistorialPagos() {
     try {
         const { data: pagos, error } = await clienteSupabase
             .from('pagos_ambassadors')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select('*'); // Traemos todos los registros sin restricciones de orden si alguna columna da conflicto
 
         if (error) throw error;
-        todosLosPagos = pagos;
-        renderizarTablaPagos(pagos);
+        todosLosPagos = pagos || [];
+        
+        renderizarTablaPagos(todosLosPagos);
         renderizarBonosAdmin();
         renderizarComisionesAdmin();
-        
-        // Poblar automáticamente el select con los vendedores que tienen cobros pendientes
         poblarSelectVendedoresConPagosPendientes();
     } catch (err) {
         console.error("Error cargando pagos:", err);
