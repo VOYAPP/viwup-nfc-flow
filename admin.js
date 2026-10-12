@@ -320,35 +320,103 @@ function exportarCSV() {
 //        FASE 2: GESTIÓN DE AMBASSADORS
 // ==========================================
 
+// Constantes financieras del sistema ViwUp
+const VALOR_BASE_SUSCRIPCION = 29900;
+const BONO_ACTIVACION = 10000;
+
+/**
+ * Calcula las ganancias totales (Bonos + Comisiones Recurrentes) de una lista de locales de un embajador
+ */
+function calcularGananciasAmbassadorAdmin(localesAmbassador, modalidad = 'mensual') {
+    let bonosTotal = 0;
+    let recurrenteTotal = 0;
+    const hoy = new Date();
+
+    // 1. Filtrar únicamente los locales con estatus comercial ACTIVO
+    const localesActivos = localesAmbassador.filter(l => 
+        l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo'
+    );
+    const cantidadActivos = localesActivos.length;
+
+    // 2. Determinar el porcentaje de comisión según la escala por volumen total de activos
+    let porcentajeComision = 0.25; // 1 a 5 locales
+    if (cantidadActivos >= 6 && cantidadActivos <= 10) porcentajeComision = 0.30; // 6 a 10 locales
+    if (cantidadActivos > 10) porcentajeComision = 0.35; // 10+ locales
+
+    // 3. Evaluar cada local activo (Bono de $10k vs. Comisión Recurrente Escalonada)
+    localesActivos.forEach(local => {
+        if (local.fecha_contratacion) {
+            const fechaContratacion = new Date(local.fecha_contratacion);
+            const diasDiferencia = (hoy - fechaContratacion) / (1000 * 60 * 60 * 24);
+
+            // Primeros 30 días desde la aprobación/contratación: Genera Bono de Activación
+            if (diasDiferencia <= 30) {
+                bonosTotal += BONO_ACTIVACION;
+            } else {
+                // A partir del mes 2: Genera comisión recurrente según la escala
+                recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
+            }
+        } else {
+            // Si no tiene fecha_contratacion registrada por legado, entra como recurrente por defecto
+            recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
+        }
+    });
+
+    // 4. Calcular subtotal y aplicar el corte según modalidad (Mensual vs Bisemanal)
+    let totalLiquidar = bonosTotal + recurrenteTotal;
+
+    if (modalidad && modalidad.toLowerCase() === 'bisemanal') {
+        totalLiquidar = totalLiquidar / 2; // Fraccionado para los cortes quincenales
+    }
+
+    return {
+        localesActivos: cantidadActivos,
+        porcentajeAplicado: `${Math.round(porcentajeComision * 100)}%`,
+        bonosTotal: bonosTotal,
+        recurrenteTotal: Math.round(recurrenteTotal),
+        totalLiquidar: Math.round(totalLiquidar)
+    };
+}
+
 // 1. Renderizar el Ranking y Comisiones
 function renderizarAmbassadors() {
     const tbody = document.getElementById('admin-tabla-ambassadors');
+    if (!tbody) return;
     
     // Convertir el diccionario en un array para poder ordenarlo
     let listaVendedores = Object.values(diccionarioAmbassadors);
     
-    // Excluir si existe un registro base de "Admin" (si corresponde)
+    // Excluir si existe un registro base de "Admin"
     listaVendedores = listaVendedores.filter(v => v.nombre.toLowerCase() !== 'admin');
 
-    // Mapear contadores a cada vendedor
+    // Mapear contadores y cálculos financieros a cada vendedor
     listaVendedores = listaVendedores.map(vendedor => {
         let activos = 0;
         let demos = 0;
 
-        todosLosLocales.forEach(local => {
-            if (local.ambassador_id === vendedor.id) {
-                if (local.estatus_comercial === 'activo') activos++;
-                else demos++;
+        // Obtener todos los locales de este vendedor específico
+        const localesDelVendedor = todosLosLocales.filter(l => l.ambassador_id === vendedor.id);
+
+        localesDelVendedor.forEach(local => {
+            if (local.estatus_comercial && local.estatus_comercial.toLowerCase() === 'activo') {
+                activos++;
+            } else {
+                demos++;
             }
         });
 
-        // Comisión (Asumimos $10.000 CLP por local activo, ajustable)
-        const comision = activos * 10000;
+        // Usar la función centralizada para calcular la comisión total real (Bonos + Recurrentes)
+        const resultadoFinanciero = calcularGananciasAmbassadorAdmin(localesDelVendedor, vendedor.modalidad_pago);
 
-        return { ...vendedor, activos, demos, comision };
+        return { 
+            ...vendedor, 
+            activos, 
+            demos, 
+            comision: resultadoFinanciero.totalLiquidar 
+        };
     });
 
-    // Ordenar de mayor a menor ventas (Ranking)
+    // Ordenar de mayor a menor ventas (Ranking por locales activos)
     listaVendedores.sort((a, b) => b.activos - a.activos);
 
     if (listaVendedores.length === 0) {
@@ -393,8 +461,6 @@ function renderizarAmbassadors() {
 
     tbody.innerHTML = html;
 }
-
-
 
 // 2. Crear (Invitar) un nuevo Ambassador a la base de datos
 async function invitarAmbassador(event) {
@@ -446,10 +512,13 @@ async function invitarAmbassador(event) {
 //        FASE 3: AUDITORÍA E HISTORIAL
 // ==========================================
 
+const VALOR_BASE_SUSCRIPCION = 29900;
+const BONO_ACTIVACION = 10000;
+
 function renderizarHistorial() {
     const tbody = document.getElementById('admin-tabla-historial');
-    // Filtramos solo los locales que están activos (activaciones pasadas/aprobadas)
-    const localesActivos = todosLosLocales.filter(l => l.estatus_comercial === 'activo');
+    // Filtramos solo los locales que están activos
+    const localesActivos = todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
 
     if (localesActivos.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay historial de activaciones aún.</td></tr>`;
@@ -457,9 +526,38 @@ function renderizarHistorial() {
     }
 
     let html = '';
+    const hoy = new Date();
+
     localesActivos.forEach(local => {
         const vendedor = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Registro Directo / Admin' };
-        const fechaFormat = new Date(local.created_at).toLocaleDateString('es-CL');
+        const fechaFormat = local.fecha_contratacion ? new Date(local.fecha_contratacion).toLocaleDateString('es-CL') : new Date(local.created_at).toLocaleDateString('es-CL');
+
+        // Determinar si genera bono o comisión recurrente para este local individualmente
+        let tipoIngreso = "Comisión Recurrente";
+        let montoIngreso = 0;
+        let colorClase = "text-[#3B82F6]";
+
+        if (local.fecha_contratacion) {
+            const fechaContratacion = new Date(local.fecha_contratacion);
+            const diasDiff = (hoy - fechaContratacion) / (1000 * 60 * 60 * 24);
+
+            if (diasDiff <= 30) {
+                tipoIngreso = "Bono de Activación (Mes 1)";
+                montoIngreso = BONO_ACTIVACION;
+                colorClase = "text-[#10B981]";
+            } else {
+                // Calcular escala general del vendedor para este local recurrente
+                const localesDelAmb = todosLosLocales.filter(l => l.ambassador_id === local.ambassador_id && l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
+                let porcentaje = 0.25;
+                if (localesDelAmb.length >= 6 && localesDelAmb.length <= 10) porcentaje = 0.30;
+                if (localesDelAmb.length > 10) porcentaje = 0.35;
+
+                montoIngreso = Math.round(VALOR_BASE_SUSCRIPCION * porcentaje);
+                tipoIngreso = `Comisión Recurrente (${Math.round(porcentaje * 100)}%)`;
+            }
+        } else {
+            montoIngreso = Math.round(VALOR_BASE_SUSCRIPCION * 0.25);
+        }
 
         html += `
             <tr class="hover:bg-slate-50 transition-colors">
@@ -469,6 +567,7 @@ function renderizarHistorial() {
                 </td>
                 <td class="px-6 py-4">
                     <p class="text-[13px] font-medium text-slate-700">${vendedor.nombre}</p>
+                    <p class="text-[10px] text-slate-400">${tipoIngreso}</p>
                 </td>
                 <td class="px-6 py-4 text-center">
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">
@@ -477,8 +576,8 @@ function renderizarHistorial() {
                     </span>
                 </td>
                 <td class="px-6 py-4 text-right">
-                    <p class="text-[14px] font-extrabold text-[#10B981]">+$10.000</p>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">CLP / Mes</p>
+                    <p class="text-[14px] font-extrabold ${colorClase}">+$${montoIngreso.toLocaleString('es-CL')}</p>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">CLP</p>
                 </td>
             </tr>
         `;
@@ -487,15 +586,27 @@ function renderizarHistorial() {
 }
 
 function exportarHistorialCSV() {
-    const localesActivos = todosLosLocales.filter(l => l.estatus_comercial === 'activo');
+    const localesActivos = todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
     if(localesActivos.length === 0) return alert("No hay pagos registrados para exportar.");
     
-    let csvContent = "data:text/csv;charset=utf-8,Fecha,Local,Vendedor Responsable,Estado,Ingreso Mensual (CLP)\n";
+    let csvContent = "data:text/csv;charset=utf-8,Fecha,Local,Vendedor Responsable,Tipo Ingreso,Monto (CLP)\n";
+    const hoy = new Date();
     
     localesActivos.forEach(local => {
         const v = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Admin' };
-        const fecha = new Date(local.created_at).toLocaleDateString('es-CL');
-        const row = `"${fecha}","${local.nombre}","${v.nombre}","Pago Validado","10000"`;
+        const fecha = local.fecha_contratacion ? new Date(local.fecha_contratacion).toLocaleDateString('es-CL') : new Date(local.created_at).toLocaleDateString('es-CL');
+        
+        let monto = 10000;
+        let tipo = "Bono de Activación";
+        if (local.fecha_contratacion) {
+            const dias = (hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24);
+            if (dias > 30) {
+                tipo = "Comisión Recurrente";
+                monto = Math.round(VALOR_BASE_SUSCRIPCION * 0.25); // Estimado base
+            }
+        }
+
+        const row = `"${fecha}","${local.nombre}","${v.nombre}","${tipo}","${monto}"`;
         csvContent += row + "\n";
     });
 
@@ -510,7 +621,6 @@ function exportarHistorialCSV() {
 
 // --- FUNCIONES DE PAGOS A VENDEDORES ---
 
-// Variable global para buscar los pagos al abrir el recibo
 let todosLosPagos = [];
 
 async function cargarHistorialPagos() {
@@ -521,7 +631,7 @@ async function cargarHistorialPagos() {
             .order('mes', { ascending: false });
 
         if (error) throw error;
-        todosLosPagos = pagos; // Guardamos en memoria
+        todosLosPagos = pagos;
         renderizarTablaPagos(pagos);
     } catch (err) {
         console.error("Error cargando pagos:", err);
@@ -555,7 +665,6 @@ function renderizarTablaPagos(pagos) {
     tbody.innerHTML = html;
 }
 
-// Lógica del Modal del Recibo
 function abrirLiquidacion(idPago) {
     const pago = todosLosPagos.find(p => p.id === idPago);
     if (!pago) return;
@@ -563,14 +672,12 @@ function abrirLiquidacion(idPago) {
     const vendedor = diccionarioAmbassadors[pago.ambassador_id] || { nombre: 'Desconocido' };
     const fechaFormat = new Date(pago.created_at).toLocaleDateString('es-CL');
 
-    // Llenamos los datos en el HTML
-    document.getElementById('liq-id').textContent = pago.id.split('-')[0].toUpperCase(); // Código corto
+    document.getElementById('liq-id').textContent = pago.id.split('-')[0].toUpperCase();
     document.getElementById('liq-nombre').textContent = vendedor.nombre;
     document.getElementById('liq-mes').textContent = pago.mes;
     document.getElementById('liq-fecha').textContent = fechaFormat;
     document.getElementById('liq-monto').textContent = `$${pago.monto.toLocaleString('es-CL')}`;
 
-    // Mostramos el modal
     document.getElementById('modal-liquidacion').classList.remove('hidden');
 }
 
@@ -602,11 +709,9 @@ async function registrarPago(event) {
     }
 
     try {
-        // 1. Crear un nombre único para el archivo basado en la fecha
         const ext = archivo.name.split('.').pop();
         const nombreArchivo = `${pAmbassador}_${pMes}_${Date.now()}.${ext}`;
 
-        // 2. Subir el archivo al bucket "comprobantes"
         const { data: uploadData, error: uploadError } = await clienteSupabase
             .storage
             .from('comprobantes')
@@ -614,7 +719,6 @@ async function registrarPago(event) {
 
         if (uploadError) throw uploadError;
 
-        // 3. Obtener la URL pública del archivo subido
         const { data: publicUrlData } = clienteSupabase
             .storage
             .from('comprobantes')
@@ -622,7 +726,6 @@ async function registrarPago(event) {
 
         const comprobanteUrl = publicUrlData.publicUrl;
 
-        // 4. Guardar el registro en la base de datos
         const { error: dbError } = await clienteSupabase
             .from('pagos_ambassadors')
             .insert([{
@@ -636,7 +739,7 @@ async function registrarPago(event) {
 
         alert("¡Pago y comprobante guardados exitosamente!");
         document.getElementById('form-pago').reset();
-        cargarHistorialPagos(); // Recargar la tabla
+        cargarHistorialPagos();
     } catch (err) {
         console.error("Error al registrar pago:", err);
         alert("Hubo un error al subir el comprobante o guardar el pago. Revisa la consola.");
@@ -646,7 +749,7 @@ async function registrarPago(event) {
     }
 }
 
-// AUTO-CALCULAR MONTO DE PAGO
+// AUTO-CALCULAR MONTO DE PAGO BASADO EN LA NUEVA LÓGICA (Bonos + Comisiones Tramos)
 document.getElementById('pago-ambassador').addEventListener('change', (e) => {
     const ambassadorId = e.target.value;
     if (!ambassadorId) {
@@ -654,16 +757,38 @@ document.getElementById('pago-ambassador').addEventListener('change', (e) => {
         return;
     }
     
-    // Contar cuántos locales activos tiene ese vendedor
-    let activos = 0;
-    todosLosLocales.forEach(local => {
-        if (local.ambassador_id === ambassadorId && local.estatus_comercial === 'activo') {
-            activos++;
+    // Filtrar locales activos del vendedor
+    const localesAmb = todosLosLocales.filter(l => l.ambassador_id === ambassadorId && l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
+    const cantidadActivos = localesAmb.length;
+
+    let bonosTotal = 0;
+    let recurrenteTotal = 0;
+    const hoy = new Date();
+
+    // Determinar porcentaje según escala
+    let porcentajeComision = 0.25;
+    if (cantidadActivos >= 6 && cantidadActivos <= 10) porcentajeComision = 0.30;
+    if (cantidadActivos > 10) porcentajeComision = 0.35;
+
+    localesAmb.forEach(local => {
+        if (local.fecha_contratacion) {
+            const fechaContratacion = new Date(local.fecha_contratacion);
+            const diasDiff = (hoy - fechaContratacion) / (1000 * 60 * 60 * 24);
+
+            if (diasDiff <= 30) {
+                bonosTotal += BONO_ACTIVACION; // $10.000 por cliente nuevo
+            } else {
+                recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
+            }
+        } else {
+            recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
         }
     });
-    
-    // Sugerir monto ($10.000 por local activo)
-    document.getElementById('pago-monto').value = activos * 10000;
+
+    let totalCalculado = bonosTotal + recurrenteTotal;
+
+    // Asignar el monto exacto calculado al input del formulario de pagos
+    document.getElementById('pago-monto').value = Math.round(totalCalculado);
 });
 
 // ==========================================
