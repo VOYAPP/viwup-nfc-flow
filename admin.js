@@ -748,7 +748,7 @@ async function registrarPago(event) {
     }
 }
 
-// AUTO-CALCULAR MONTO DE PAGO BASADO EN LA NUEVA LÓGICA (Bonos + Comisiones Tramos)
+// AUTO-CALCULAR MONTO DE PAGO (Sincronizado con Bonos de Activación y Comisiones Recurrentes)
 document.getElementById('pago-ambassador').addEventListener('change', (e) => {
     const ambassadorId = e.target.value;
     if (!ambassadorId) {
@@ -756,15 +756,18 @@ document.getElementById('pago-ambassador').addEventListener('change', (e) => {
         return;
     }
     
-    // Filtrar locales activos del vendedor
-    const localesAmb = todosLosLocales.filter(l => l.ambassador_id === ambassadorId && l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
+    // Filtrar locales activos del vendedor seleccionado
+    const localesAmb = todosLosLocales.filter(l => 
+        l.ambassador_id === ambassadorId && 
+        l.estatus_comercial && 
+        l.estatus_comercial.toLowerCase() === 'activo'
+    );
+    
     const cantidadActivos = localesAmb.length;
-
-    let bonosTotal = 0;
-    let recurrenteTotal = 0;
+    let totalLiquidar = 0;
     const hoy = new Date();
 
-    // Determinar porcentaje según escala
+    // Determinar el porcentaje de comisión recurrente según escala (1-5: 25%, 6-10: 30%, 10+: 35%)
     let porcentajeComision = 0.25;
     if (cantidadActivos >= 6 && cantidadActivos <= 10) porcentajeComision = 0.30;
     if (cantidadActivos > 10) porcentajeComision = 0.35;
@@ -774,20 +777,21 @@ document.getElementById('pago-ambassador').addEventListener('change', (e) => {
             const fechaContratacion = new Date(local.fecha_contratacion);
             const diasDiff = (hoy - fechaContratacion) / (1000 * 60 * 60 * 24);
 
+            // Si está dentro de los primeros 30 días, otorga el Bono de Activación de $10.000 CLP
             if (diasDiff <= 30) {
-                bonosTotal += BONO_ACTIVACION; // $10.000 por cliente nuevo
+                totalLiquidar += BONO_ACTIVACION;
             } else {
-                recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
+                // A partir del segundo mes en adelante, aplica la comisión recurrente escalonada
+                totalLiquidar += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
             }
         } else {
-            recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
+            // Fallback por seguridad si algún registro antiguo no tuviera fecha
+            totalLiquidar += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
         }
     });
 
-    let totalCalculado = bonosTotal + recurrenteTotal;
-
-    // Asignar el monto exacto calculado al input del formulario de pagos
-    document.getElementById('pago-monto').value = Math.round(totalCalculado);
+    // Asignar el monto redondeado al input del formulario de pagos
+    document.getElementById('pago-monto').value = Math.round(totalLiquidar);
 });
 
 // ==========================================
