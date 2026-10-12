@@ -100,6 +100,9 @@ async function cargarDatosAdmin() {
         renderizarBonosAdmin();
         renderizarComisionesAdmin();
 
+        // ¡LLAMADA CLAVE AQUÍ!
+        poblarSelectVendedoresConPagosPendientes();
+
     } catch (err) {
         console.error("Error cargando datos:", err);
         alert("Error cargando la base de datos.");
