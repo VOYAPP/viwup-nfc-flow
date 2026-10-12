@@ -74,22 +74,24 @@ function cambiarSeccion(seccion) {
 // --- MOTOR PRINCIPAL DE DATOS ---
 async function cargarDatosAdmin() {
     try {
-        // 1. Traer lista de Ambassadors (Para cruzar IDs con Nombres)
+        // 1. Traer lista de Ambassadors
         const { data: ambassadors } = await clienteSupabase
             .from('ambassadors')
             .select('id, nombre, telefono, email, frecuencia_pago');
         
-        window.todosLosAmbassadors = ambassadors || [];
-        window.diccionarioAmbassadors = {};
+        todosLosAmbassadors = ambassadors || [];
+        diccionarioAmbassadors = {};
         if (ambassadors) {
-            ambassadors.forEach(amb => window.diccionarioAmbassadors[amb.id] = amb);
+            ambassadors.forEach(amb => {
+                diccionarioAmbassadors[amb.id] = amb;
+            });
         }
 
         // 2. Traer la lista de pagos de ambassadors
         const { data: pagos } = await clienteSupabase
             .from('pagos_ambassadors')
             .select('*');
-        window.todosLosPagos = pagos || [];
+        todosLosPagos = pagos || [];
 
         // 3. Traer todos los Locales
         const { data: locales, error } = await clienteSupabase
@@ -99,19 +101,26 @@ async function cargarDatosAdmin() {
 
         if (error) throw error;
         
-        window.todosLosLocales = locales || [];
+        todosLosLocales = locales || [];
         
         // 4. Procesar datos (KPIs y Bandejas)
-        actualizarKPIs(locales);
-        renderizarUpgrades(locales.filter(l => l.solicitud_upgrade === true));
-        filtrarLocales(); // Dibuja la tabla aplicando filtros actuales
+        if (typeof actualizarKPIs === 'function') actualizarKPIs(todosLosLocales);
+        if (typeof renderizarUpgrades === 'function') renderizarUpgrades(todosLosLocales.filter(l => l.solicitud_upgrade === true));
+        
+        // Renderizado del Directorio General de Locales
+        if (typeof filtrarLocales === 'function') {
+            filtrarLocales(); 
+        }
 
-        renderizarAmbassadors();
-        renderizarBonosAdmin();
-        renderizarComisionesAdmin();
+        // Renderizado de Secciones
+        if (typeof renderizarAmbassadors === 'function') renderizarAmbassadors();
+        if (typeof renderizarBonosAdmin === 'function') renderizarBonosAdmin();
+        if (typeof renderizarComisionesAdmin === 'function') renderizarComisionesAdmin();
 
-        // 5. Poblar selector de vendedores con pagos pendientes
-        poblarSelectVendedoresConPagosPendientes();
+        // 5. Poblar el selector de pagos
+        if (typeof poblarSelectVendedoresConPagosPendientes === 'function') {
+            poblarSelectVendedoresConPagosPendientes();
+        }
 
     } catch (err) {
         console.error("Error cargando datos:", err);
@@ -968,16 +977,15 @@ function poblarSelectVendedoresConPagosPendientes() {
     const selectAmbassador = document.getElementById('pago-ambassador');
     if (!selectAmbassador) return;
 
-    // Si los locales no se han cargado aún, esperamos 200ms y reintentamos automáticamente
-    if (!window.todosLosLocales || window.todosLosLocales.length === 0) {
-        setTimeout(poblarSelectVendedoresConPagosPendientes, 200);
+    if (!todosLosLocales || todosLosLocales.length === 0) {
+        setTimeout(poblarSelectVendedoresConPagosPendientes, 250);
         return;
     }
 
     const hoy = new Date();
     const mapVendedores = new Map();
 
-    window.todosLosLocales.forEach(local => {
+    todosLosLocales.forEach(local => {
         if (!local.estatus_comercial || local.estatus_comercial.toLowerCase() !== 'activo') return;
         if (local.viene_de_baja) return;
 
@@ -988,8 +996,7 @@ function poblarSelectVendedoresConPagosPendientes() {
         }
 
         if (esMes1 && local.ambassador_id) {
-            // Comprobamos si el bono ya fue pagado
-            const pagado = window.todosLosPagos && window.todosLosPagos.find(p => 
+            const pagado = todosLosPagos && todosLosPagos.find(p => 
                 String(p.ambassador_id) === String(local.ambassador_id) && 
                 (p.motivo === 'bono_activacion' || !p.motivo) && 
                 p.comprobante_url
@@ -997,10 +1004,9 @@ function poblarSelectVendedoresConPagosPendientes() {
 
             if (!pagado) {
                 const idAmb = String(local.ambassador_id);
-                const ambObj = window.diccionarioAmbassadors[idAmb] || 
-                               Object.values(window.diccionarioAmbassadors).find(a => String(a.id) === idAmb);
-                
+                const ambObj = diccionarioAmbassadors ? (diccionarioAmbassadors[idAmb] || Object.values(diccionarioAmbassadors).find(a => String(a.id) === idAmb)) : null;
                 const nombre = ambObj ? ambObj.nombre : `Vendedor ID: ${idAmb.slice(0, 6)}`;
+                
                 mapVendedores.set(idAmb, nombre);
             }
         }
