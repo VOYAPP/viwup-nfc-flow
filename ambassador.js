@@ -240,60 +240,64 @@ async function cargarLocales() {
     let htmlTabla = '';
     const hoy = new Date();
 
-    const VALOR_BASE = 29900;
+    const VALOR_BASE_SUSCRIPCION = 29900;
     const BONO_ACTIVACION = 10000;
 
-    // Primero contamos cuántos activos hay en total para saber la escala (25%, 30% o 35%)
-    const totalActivosGlobal = locales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo').length;
+    // Contar cuántos locales están Activos comercialmente para definir la escala (25%, 30%, 35%)
+    const localesActivosList = locales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
+    activosCount = localesActivosList.length;
 
-    // Definir porcentaje según escala
-    let porcentajeComision = 0.25;
-    if (totalActivosGlobal >= 6 && totalActivosGlobal <= 10) porcentajeComision = 0.30;
-    if (totalActivosGlobal > 10) porcentajeComision = 0.35;
+    // Definir porcentaje de comisión según el volumen de activos
+    let porcentajeComision = 0.25; // 1 a 5 locales
+    if (activosCount >= 6 && activosCount <= 10) porcentajeComision = 0.30; // 6 a 10 locales
+    if (activosCount > 10) porcentajeComision = 0.35; // 10+ locales
     let porcTexto = `${Math.round(porcentajeComision * 100)}%`;
 
     locales.forEach(local => {
-        const esActivo = local.estatus_comercial && local.estatus_comercial.toLowerCase() === 'activo';
+        const estatus = local.estatus_comercial ? local.estatus_comercial.toLowerCase() : 'demo';
+        const esActivo = estatus === 'activo';
         
         if (esActivo) {
-            activosCount++;
-
-            // Validar si aplica Bono de Activación (<= 30 días desde su contratación)
+            // Validar si tiene fecha_contratacion para el bono de activación (primeros 30 días)
             if (local.fecha_contratacion) {
                 const fechaContratacion = new Date(local.fecha_contratacion);
                 const diasDiff = (hoy - fechaContratacion) / (1000 * 60 * 60 * 24);
                 
+                // Si lleva 30 días o menos desde su contratación/activación, aplica el bono de $10.000
                 if (diasDiff <= 30) {
-                    bonosTotal += BONO_ACTIVACION;
+                    bonosTotal += BONO_ACTIVACION; 
                 } else {
-                    recurrenteTotal += (VALOR_BASE * porcentajeComision);
+                    // Si ya pasaron más de 30 días, pasa a comisión recurrente escalonada
+                    recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision); 
                 }
             } else {
-                // Si por alguna razón antigua no tiene fecha, lo tratamos como recurrente
-                recurrenteTotal += (VALOR_BASE * porcentajeComision);
+                // Si está activo pero no tiene fecha registrada, por seguridad va a recurrente
+                recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
             }
         }
         
-        // 1. Botón WhatsApp Estilizado
+        // Botón WhatsApp
         const numeroLimpio = local.telefono_admin ? local.telefono_admin.replace(/\D/g, '') : '';
         const btnWhatsApp = numeroLimpio ? `<a href="https://wa.me/${numeroLimpio}" target="_blank" class="inline-flex items-center justify-center bg-[#25D366] hover:bg-[#1DA851] text-white p-1.5 rounded-md transition-colors ml-3" title="Chat Admin">
             <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
         </a>` : '';
         
-        // 2. Lógica visual de Estados y Botones
         let estadoBadge = '';
         let botonAccion = '';
 
-        if (!esActivo) {
+        if (estatus === 'demo') {
             estadoBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#F1F5F9] text-[#64748B]">DEMO</span>`;
             if (local.solicitud_upgrade) {
                 botonAccion = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FFF7ED] text-[#EA580C]"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Upgrade Solicitado</span>`;
             } else {
                 botonAccion = `<button onclick="solicitarUpgrade('${local.id}')" class="px-3 py-1.5 bg-white border border-slate-200 text-[#0F172A] text-[12px] font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">Solicitar Upgrade</button>`;
             }
-        } else {
+        } else if (estatus === 'activo') {
             estadoBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#ECFDF5] text-[#10B981]">ACTIVO</span>`;
             botonAccion = `<span class="text-[12px] font-bold text-[#10B981]">Generando Comisión</span>`;
+        } else {
+            estadoBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-red-50 text-red-600">BAJA</span>`;
+            botonAccion = `<span class="text-[12px] font-bold text-slate-400">Inactivo</span>`;
         }
 
         htmlTabla += `
@@ -318,15 +322,13 @@ async function cargarLocales() {
         totalBrutoPeriodo = totalBrutoPeriodo / 2;
     }
 
-    // Actualizar DOM en las tarjetas métricas
+    // Actualizar las tarjetas visuales en el DOM
     document.getElementById('tabla-locales').innerHTML = htmlTabla;
     document.getElementById('locales-activos').textContent = activosCount;
     document.getElementById('amb-porcentaje-comision').textContent = `Comisión actual: ${porcTexto}`;
     document.getElementById('amb-total-bonos').innerHTML = `$${bonosTotal.toLocaleString('es-CL')} <span class="text-lg text-slate-400 font-medium">CLP</span>`;
     document.getElementById('mrr-total').innerHTML = `$${Math.round(totalBrutoPeriodo).toLocaleString('es-CL')} <span class="text-lg text-slate-400 font-medium">CLP</span>`; 
-    document.getElementById('amb-modalidad-label').textContent = `Modalidad: ${modalidad.toUpperCase()} (Corte día 28)`;
 
-    // Cargar historial de pagos (simulado o conectado a tabla de pagos)
     cargarHistorialPagosAmbassador();
 }
 
