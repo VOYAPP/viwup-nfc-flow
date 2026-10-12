@@ -248,10 +248,22 @@ async function registrarAuditoria(localId, accion, detalle) {
 async function aprobarUpgrade(localId) {
     if (!confirm("¿Confirmas que el pago es válido y activarás este local?")) return;
     try {
-        await clienteSupabase.from('locales').update({ estatus_comercial: 'activo', solicitud_upgrade: false }).eq('id', localId);
+        const fechaHoy = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+        await clienteSupabase
+            .from('locales')
+            .update({ 
+                estatus_comercial: 'activo', 
+                solicitud_upgrade: false,
+                fecha_contratacion: fechaHoy // <-- Inicia los 30 días para el Bono de Activación ($10.000)
+            })
+            .eq('id', localId);
+
         await registrarAuditoria(localId, 'ACTIVACIÓN', 'El local pasó a estado ACTIVO tras validar el pago.');
         cargarDatosAdmin(); 
-    } catch (err) { alert("Error al aprobar."); }
+    } catch (err) { 
+        alert("Error al aprobar."); 
+    }
 }
 
 async function rechazarUpgrade(localId) {
