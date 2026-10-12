@@ -958,42 +958,71 @@ function poblarSelectVendedoresConPagosPendientes() {
     const hoy = new Date();
     const vendedoresConPendientes = new Set();
 
+    // 1. Recorrer todos los locales activos para detectar pendientes
     todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo').forEach(local => {
         if (!local.ambassador_id) return;
 
-        let tieneBono = false;
-        let tieneComision = false;
+        let tieneBonoPendiente = false;
+        let tieneComCorte = false;
 
         if (local.fecha_contratacion) {
-            const diasDiff = Math.floor((hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24));
+            const fechaContratacion = new Date(local.fecha_contratacion);
+            const diasDiff = Math.floor((hoy - fechaContratacion) / (1000 * 60 * 60 * 24));
 
             if (diasDiff <= 30 && !local.viene_de_baja) {
-                const pagoBono = todosLosPagos.find(p => p.ambassador_id === local.ambassador_id && p.motivo === 'bono_activacion' && p.comprobante_url);
-                if (!pagoBono) tieneBono = true;
+                // Verificar si existe un pago registrado para este bono
+                const pagoBono = todosLosPagos && todosLosPagos.find(p => 
+                    String(p.ambassador_id) === String(local.ambassador_id) && 
+                    (p.motivo === 'bono_activacion' || !p.motivo) && 
+                    p.comprobante_url
+                );
+                if (!pagoBono) tieneBonoPendiente = true;
             } else if (diasDiff > 30) {
-                const pagoCom = todosLosPagos.find(p => p.ambassador_id === local.ambassador_id && p.motivo === 'comision' && p.comprobante_url);
-                if (!pagoCom) tieneComision = true;
+                // Verificar comisión recurrente
+                const pagoCom = todosLosPagos && todosLosPagos.find(p => 
+                    String(p.ambassador_id) === String(local.ambassador_id) && 
+                    (p.motivo === 'comision' || !p.motivo) && 
+                    p.comprobante_url
+                );
+                if (!pagoCom) tieneComisionCorte = true;
             }
+        } else {
+            // Fallback si no tiene fecha de contratación (lo tratamos como bono pendiente)
+            const pagoBono = todosLosPagos && todosLosPagos.find(p => 
+                String(p.ambassador_id) === String(local.ambassador_id) && 
+                p.comprobante_url
+            );
+            if (!pagoBono) tieneBonoPendiente = true;
         }
 
-        if (tieneBono || tieneComision) {
-            vendedoresConPendientes.add(local.ambassador_id);
+        if (tieneBonoPendiente || tieneComCorte) {
+            vendedoresConPendientes.add(String(local.ambassador_id));
         }
     });
 
+    // 2. Construir las opciones del select
     if (vendedoresConPendientes.size === 0) {
         selectAmbassador.innerHTML = `<option value="">No hay vendedores con pagos pendientes</option>`;
-        document.getElementById('pago-monto').value = '0';
+        const inputMonto = document.getElementById('pago-monto');
+        if (inputMonto) inputMonto.value = '';
         return;
     }
 
     let htmlOptions = `<option value="">-- Seleccionar Vendedor --</option>`;
-    vendedoresConPendientes.forEach(id => {
-        const amb = diccionarioAmbassadors[id];
-        if (amb) htmlOptions += `<option value="${amb.id}">${amb.nombre}</option>`;
+    
+    vendedoresConPendientes.forEach(idAmb => {
+        // Buscamos de manera segura en el diccionario de embajadores
+        const amb = diccionarioAmbassadors[idAmb] || Object.values(diccionarioAmbassadors).find(a => String(a.id) === String(idAmb));
+        
+        if (amb) {
+            htmlOptions += `<option value="${amb.id}">${amb.nombre}</option>`;
+        }
     });
 
     selectAmbassador.innerHTML = htmlOptions;
+    
+    // Disparamos la actualización de motivos por si hay una opción seleccionada por defecto
+    actualizarMotivosPagoSegunVendedor();
 }
 
 function actualizarMotivosPagoSegunVendedor() {
