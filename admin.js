@@ -334,41 +334,36 @@ function calcularGananciasAmbassadorAdmin(localesAmbassador, modalidad = 'mensua
     let recurrenteTotal = 0;
     const hoy = new Date();
 
-    // 1. Filtrar únicamente los locales con estatus comercial ACTIVO
     const localesActivos = localesAmbassador.filter(l => 
         l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo'
     );
     const cantidadActivos = localesActivos.length;
 
-    // 2. Determinar el porcentaje de comisión según la escala por volumen total de activos
-    let porcentajeComision = 0.25; // 1 a 5 locales
-    if (cantidadActivos >= 6 && cantidadActivos <= 10) porcentajeComision = 0.30; // 6 a 10 locales
-    if (cantidadActivos > 10) porcentajeComision = 0.35; // 10+ locales
+    let porcentajeComision = 0.25;
+    if (cantidadActivos >= 6 && cantidadActivos <= 10) porcentajeComision = 0.30;
+    if (cantidadActivos > 10) porcentajeComision = 0.35;
 
-    // 3. Evaluar cada local activo (Bono de $10k vs. Comisión Recurrente Escalonada)
     localesActivos.forEach(local => {
         if (local.fecha_contratacion) {
             const fechaContratacion = new Date(local.fecha_contratacion);
             const diasDiferencia = (hoy - fechaContratacion) / (1000 * 60 * 60 * 24);
 
-            // Primeros 30 días desde la aprobación/contratación: Genera Bono de Activación
             if (diasDiferencia <= 30) {
+                // Mes 1: Solo Bono de Activación
                 bonosTotal += BONO_ACTIVACION;
             } else {
-                // A partir del mes 2: Genera comisión recurrente según la escala
+                // Mes 2 en adelante: Solo Comisión Recurrente
                 recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
             }
         } else {
-            // Si no tiene fecha_contratacion registrada por legado, entra como recurrente por defecto
             recurrenteTotal += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
         }
     });
 
-    // 4. Calcular subtotal y aplicar el corte según modalidad (Mensual vs Bisemanal)
     let totalLiquidar = bonosTotal + recurrenteTotal;
 
     if (modalidad && modalidad.toLowerCase() === 'bisemanal') {
-        totalLiquidar = totalLiquidar / 2; // Fraccionado para los cortes quincenales
+        totalLiquidar = totalLiquidar / 2;
     }
 
     return {
@@ -514,9 +509,14 @@ async function invitarAmbassador(event) {
 //        FASE 3: AUDITORÍA E HISTORIAL
 // ==========================================
 
+const VALOR_BASE_SUSCRIPCION = 29900;
+const BONO_ACTIVACION = 10000;
+
 function renderizarHistorial() {
     const tbody = document.getElementById('admin-tabla-historial');
-    // Filtramos solo los locales que están activos
+    if (!tbody) return;
+
+    // Filtramos solo los locales activos
     const localesActivos = todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
 
     if (localesActivos.length === 0) {
@@ -531,31 +531,53 @@ function renderizarHistorial() {
         const vendedor = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Registro Directo / Admin' };
         const fechaFormat = local.fecha_contratacion ? new Date(local.fecha_contratacion).toLocaleDateString('es-CL') : new Date(local.created_at).toLocaleDateString('es-CL');
 
-        // Determinar si genera bono o comisión recurrente para este local individualmente
-        let tipoIngreso = "Comisión Recurrente";
+        let tipoIngreso = "";
         let montoIngreso = 0;
-        let colorClase = "text-[#3B82F6]";
+        let colorClase = "";
 
         if (local.fecha_contratacion) {
             const fechaContratacion = new Date(local.fecha_contratacion);
             const diasDiff = (hoy - fechaContratacion) / (1000 * 60 * 60 * 24);
 
             if (diasDiff <= 30) {
+                // Mes 1: Únicamente Bono de Activación ($10.000)
                 tipoIngreso = "Bono de Activación (Mes 1)";
                 montoIngreso = BONO_ACTIVACION;
                 colorClase = "text-[#10B981]";
             } else {
-                // Calcular escala general del vendedor para este local recurrente
+                // Mes 2 en adelante (> 30 días): Únicamente Comisión Recurrente (sin bono)
                 const localesDelAmb = todosLosLocales.filter(l => l.ambassador_id === local.ambassador_id && l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
                 let porcentaje = 0.25;
                 if (localesDelAmb.length >= 6 && localesDelAmb.length <= 10) porcentaje = 0.30;
                 if (localesDelAmb.length > 10) porcentaje = 0.35;
 
                 montoIngreso = Math.round(VALOR_BASE_SUSCRIPCION * porcentaje);
-                tipoIngreso = `Comisión Recurrente (${Math.round(porcentaje * 100)}%)`;
+                tipoIngreso = `Comisión Recurrente (${Math.round(porcentaje * 100)}% - Mes 2+)`;
+                colorClase = "text-[#3B82F6]";
             }
         } else {
             montoIngreso = Math.round(VALOR_BASE_SUSCRIPCION * 0.25);
+            tipoIngreso = "Comisión Recurrente";
+            colorClase = "text-[#3B82F6]";
+        }
+
+        // Validar si el embajador tiene un pago real registrado con comprobante adjunto
+        const pagoRegistrado = todosLosPagos && todosLosPagos.find(p => p.ambassador_id === local.ambassador_id);
+
+        let badgeEstado = '';
+        if (pagoRegistrado && pagoRegistrado.comprobante_url) {
+            badgeEstado = `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                    Pago Validado
+                </span>
+            `;
+        } else {
+            badgeEstado = `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600">
+                    ⏳ Pendiente de Pago
+                </span>
+            `;
         }
 
         html += `
@@ -569,10 +591,7 @@ function renderizarHistorial() {
                     <p class="text-[10px] text-slate-400">${tipoIngreso}</p>
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                        Pago Validado
-                    </span>
+                    ${badgeEstado}
                 </td>
                 <td class="px-6 py-4 text-right">
                     <p class="text-[14px] font-extrabold ${colorClase}">+$${montoIngreso.toLocaleString('es-CL')}</p>
