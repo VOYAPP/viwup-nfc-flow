@@ -509,9 +509,6 @@ async function invitarAmbassador(event) {
 //        FASE 3: AUDITORÍA E HISTORIAL
 // ==========================================
 
-const VALOR_BASE_SUSCRIPCION = 29900;
-const BONO_ACTIVACION = 10000;
-
 function renderizarHistorial() {
     const tbody = document.getElementById('admin-tabla-historial');
     if (!tbody) return;
