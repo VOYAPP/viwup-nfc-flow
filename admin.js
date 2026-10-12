@@ -97,7 +97,8 @@ async function cargarDatosAdmin() {
         filtrarLocales(); // Dibuja la tabla aplicando filtros actuales
 
         renderizarAmbassadors();
-        renderizarHistorial();
+        renderizarBonosAdmin();
+        renderizarComisionesAdmin();
 
     } catch (err) {
         console.error("Error cargando datos:", err);
