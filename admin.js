@@ -523,78 +523,96 @@ async function invitarAmbassador(event) {
 //        FASE 3: AUDITORÍA E HISTORIAL
 // ==========================================
 
-function renderizarHistorial() {
-    const tbody = document.getElementById('admin-tabla-historial');
+let filtroEstadoBonos = 'activos'; // 'activos', 'pagados', 'todo'
+let filtroEstadoComisiones = 'activos';
+
+// ── 1. FILTROS DE PESTAÑAS (TOP BARS) ──
+
+function filtrarBonosAdmin(estado) {
+    filtroEstadoBonos = estado;
+    ['activos', 'pagados', 'todo'].forEach(e => {
+        const btn = document.getElementById(`tab-bono-${e}`);
+        if (!btn) return;
+        if (e === estado) {
+            btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-slate-900 text-white transition-all shadow-sm";
+        } else {
+            btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all";
+        }
+    });
+    renderizarBonosAdmin();
+}
+
+function filtrarComisionesAdmin(estado) {
+    filtroEstadoComisiones = estado;
+    ['activos', 'pagados', 'todo'].forEach(e => {
+        const btn = document.getElementById(`tab-com-${e}`);
+        if (!btn) return;
+        if (e === estado) {
+            btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-slate-900 text-white transition-all shadow-sm";
+        } else {
+            btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all";
+        }
+    });
+    renderizarComisionesAdmin();
+}
+
+// ── 2. RENDERIZADO ÁREA 1: BONOS DE ACTIVACIÓN ──
+
+function renderizarBonosAdmin() {
+    const tbody = document.getElementById('admin-tabla-bonos');
     if (!tbody) return;
 
-    // Filtramos solo los locales comerciales en estado 'activo'
-    const localesActivos = todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
+    const hoy = new Date();
 
-    if (localesActivos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay historial de activaciones aún.</td></tr>`;
+    // Locales activos dentro del mes 1 (<= 30 días) que no provengan de 'baja'
+    const localesBonificables = todosLosLocales.filter(l => {
+        if (!l.estatus_comercial || l.estatus_comercial.toLowerCase() !== 'activo') return false;
+        if (l.viene_de_baja) return false; // Excluye reactivaciones desde baja
+
+        if (l.fecha_contratacion) {
+            const fechaContratacion = new Date(l.fecha_contratacion);
+            const diasDiff = Math.floor((hoy - fechaContratacion) / (1000 * 60 * 60 * 24));
+            return diasDiff <= 30;
+        }
+        return true; // Retrocompatibilidad para registros sin fecha
+    });
+
+    if (localesBonificables.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay bonos de activación registrados aún.</td></tr>`;
         return;
     }
 
     let html = '';
-    const hoy = new Date();
+    let visibles = 0;
 
-    localesActivos.forEach(local => {
+    localesBonificables.forEach(local => {
         const vendedor = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Registro Directo / Admin' };
-        
-        // Formato seguro de fecha
-        const fechaRef = local.fecha_contratacion ? local.fecha_contratacion : local.created_at;
-        const fechaFormat = new Date(fechaRef).toLocaleDateString('es-CL');
+        const fechaFormat = local.fecha_contratacion ? new Date(local.fecha_contratacion).toLocaleDateString('es-CL') : new Date(local.created_at).toLocaleDateString('es-CL');
 
-        let tipoIngreso = "";
-        let montoIngreso = 0;
-        let colorClase = "";
+        // Validar si el bono de este embajador ya cuenta con comprobante registrado
+        const bonoPagado = todosLosPagos && todosLosPagos.find(p => 
+            p.ambassador_id === local.ambassador_id && 
+            p.motivo === 'bono_activacion' && 
+            p.comprobante_url
+        );
 
-        if (local.fecha_contratacion) {
-            const fechaContratacion = new Date(local.fecha_contratacion);
-            // Normalización de diferencia en días
-            const diasDiff = Math.floor((hoy - fechaContratacion) / (1000 * 60 * 60 * 24));
+        const esPagado = Boolean(bonoPagado);
 
-            if (diasDiff <= 30) {
-                // MES 1: Únicamente Bono de Activación ($10.000 CLP)
-                tipoIngreso = "Bono de Activación (Mes 1)";
-                montoIngreso = BONO_ACTIVACION;
-                colorClase = "text-[#10B981]";
-            } else {
-                // MES 2 EN ADELANTE (> 30 días): Comisión Recurrente escalonada según volumen
-                const localesDelAmb = todosLosLocales.filter(l => l.ambassador_id === local.ambassador_id && l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
-                let porcentaje = 0.25;
-                if (localesDelAmb.length >= 6 && localesDelAmb.length <= 10) porcentaje = 0.30;
-                if (localesDelAmb.length > 10) porcentaje = 0.35;
+        if (filtroEstadoBonos === 'activos' && esPagado) return;
+        if (filtroEstadoBonos === 'pagados' && !esPagado) return;
 
-                montoIngreso = Math.round(VALOR_BASE_SUSCRIPCION * porcentaje);
-                tipoIngreso = `Comisión Recurrente (${Math.round(porcentaje * 100)}% - Mes 2+)`;
-                colorClase = "text-[#3B82F6]";
-            }
-        } else {
-            // Caso sin fecha_contratacion registrada (retrocompatibilidad)
-            montoIngreso = BONO_ACTIVACION;
-            tipoIngreso = "Bono de Activación (Mes 1)";
-            colorClase = "text-[#10B981]";
-        }
+        visibles++;
 
-        // Validación estricta: Requiere pago registrado con URL de comprobante
-        const pagoRegistrado = todosLosPagos && todosLosPagos.find(p => p.ambassador_id === local.ambassador_id && p.comprobante_url);
-
-        let badgeEstado = '';
-        if (pagoRegistrado) {
-            badgeEstado = `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                    Pago Validado
-                </span>
-            `;
-        } else {
-            badgeEstado = `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600">
-                    ⏳ Pendiente de Pago
-                </span>
-            `;
-        }
+        const badgeEstado = esPagado ? `
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                ✓ Bono Pagado
+            </span>
+        ` : `
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600">
+                ⏳ Pendiente de Pago
+            </span>
+        `;
 
         html += `
             <tr class="hover:bg-slate-50 transition-colors">
@@ -604,39 +622,156 @@ function renderizarHistorial() {
                 </td>
                 <td class="px-6 py-4">
                     <p class="text-[13px] font-medium text-slate-700">${vendedor.nombre}</p>
-                    <p class="text-[10px] text-slate-400">${tipoIngreso}</p>
+                    <p class="text-[10px] text-slate-400">Bono de Activación (Mes 1)</p>
                 </td>
                 <td class="px-6 py-4 text-center">
                     ${badgeEstado}
                 </td>
                 <td class="px-6 py-4 text-right">
-                    <p class="text-[14px] font-extrabold ${colorClase}">+$${montoIngreso.toLocaleString('es-CL')}</p>
+                    <p class="text-[14px] font-extrabold text-[#10B981]">+$${BONO_ACTIVACION.toLocaleString('es-CL')}</p>
                     <p class="text-[10px] text-slate-400 uppercase tracking-wide">CLP</p>
                 </td>
             </tr>
         `;
     });
+
+    if (visibles === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay bonos para este filtro.</td></tr>`;
+        return;
+    }
+
     tbody.innerHTML = html;
 }
 
+// ── 3. RENDERIZADO ÁREA 2: COMISIONES RECURRENTES ──
+
+function renderizarComisionesAdmin() {
+    const tbody = document.getElementById('admin-tabla-comisiones');
+    if (!tbody) return;
+
+    const modalidadFiltro = document.getElementById('filtro-modalidad-comisiones')?.value || 'todos';
+    const hoy = new Date();
+
+    // 1. Filtrar locales activos con antigüedad mayor a 30 días (Mes 2 en adelante)
+    const localesComisionables = todosLosLocales.filter(l => {
+        if (!l.estatus_comercial || l.estatus_comercial.toLowerCase() !== 'activo') return false;
+        if (!l.fecha_contratacion) return false;
+
+        const fechaContratacion = new Date(l.fecha_contratacion);
+        const diasDiff = Math.floor((hoy - fechaContratacion) / (1000 * 60 * 60 * 24));
+        return diasDiff > 30;
+    });
+
+    if (localesComisionables.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay comisiones recurrentes aún (los locales deben superar los 30 días de antigüedad).</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    let visibles = 0;
+
+    localesComisionables.forEach(local => {
+        const vendedor = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Desconocido', modalidad_pago: 'mensual' };
+        const modalid = vendedor.modalidad_pago || 'mensual';
+
+        // Filtro opcional por modalidad en el selector del header
+        if (modalidadFiltro !== 'todos' && modalid.toLowerCase() !== modalidadFiltro.toLowerCase()) return;
+
+        // Validar si la fecha actual cumple con el cierre para mostrar la comisión en pendientes
+        const habilParaCobro = cumpleFechaDeCorte(modalid);
+
+        // Escala de comisión según total de activos del embajador
+        const localesDelAmb = todosLosLocales.filter(l => l.ambassador_id === local.ambassador_id && l.estatus_comercial === 'activo');
+        let porcentaje = 0.25;
+        if (localesDelAmb.length >= 6 && localesDelAmb.length <= 10) porcentaje = 0.30;
+        if (localesDelAmb.length > 10) porcentaje = 0.35;
+
+        const montoComision = Math.round(VALOR_BASE_SUSCRIPCION * porcentaje);
+
+        // Comprobar si existe un pago registrado con comprobante para este motivo
+        const comisionPagada = todosLosPagos && todosLosPagos.find(p => 
+            p.ambassador_id === local.ambassador_id && 
+            p.motivo === 'comision' && 
+            p.comprobante_url
+        );
+
+        const esPagado = Boolean(comisionPagada);
+
+        if (filtroEstadoComisiones === 'activos' && esPagado) return;
+        if (filtroEstadoComisiones === 'pagados' && !esPagado) return;
+
+        visibles++;
+
+        let badgeEstado = '';
+        if (esPagado) {
+            badgeEstado = `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#ECFDF5] text-[#10B981]">
+                    ✓ Comisión Pagada
+                </span>
+            `;
+        } else if (habilParaCobro) {
+            badgeEstado = `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600">
+                    ⏳ Pendiente (Cierre Alcanzado)
+                </span>
+            `;
+        } else {
+            badgeEstado = `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500">
+                    🔒 En Curso (Cierre Próximo)
+                </span>
+            `;
+        }
+
+        html += `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                    <p class="text-[14px] font-bold text-[#0F172A]">${local.nombre}</p>
+                    <p class="text-[11px] text-slate-400">Modalidad: ${modalid.toUpperCase()}</p>
+                </td>
+                <td class="px-6 py-4">
+                    <p class="text-[13px] font-medium text-slate-700">${vendedor.nombre}</p>
+                    <p class="text-[10px] text-slate-400">Escala: ${Math.round(porcentaje * 100)}% (${localesDelAmb.length} activos)</p>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    ${badgeEstado}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <p class="text-[14px] font-extrabold text-[#3B82F6]">+$${montoComision.toLocaleString('es-CL')}</p>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">CLP</p>
+                </td>
+            </tr>
+        `;
+    });
+
+    if (visibles === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-sm text-slate-500">No hay comisiones para este filtro.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = html;
+}
+
+// ── 4. EXPORTAR REPORTE CSV GENERAL ──
+
 function exportarHistorialCSV() {
     const localesActivos = todosLosLocales.filter(l => l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
-    if (localesActivos.length === 0) return alert("No hay registros para exportar.");
-    
+    if (localesActivos.length === 0) return alert("No hay registros activos para exportar.");
+
     let csvContent = "data:text/csv;charset=utf-8,Fecha,Local,Vendedor Responsable,Tipo Ingreso,Monto (CLP)\n";
     const hoy = new Date();
-    
+
     localesActivos.forEach(local => {
         const v = diccionarioAmbassadors[local.ambassador_id] || { nombre: 'Admin' };
         const fecha = local.fecha_contratacion ? new Date(local.fecha_contratacion).toLocaleDateString('es-CL') : new Date(local.created_at).toLocaleDateString('es-CL');
-        
+
         let monto = BONO_ACTIVACION;
         let tipo = "Bono de Activación";
 
         if (local.fecha_contratacion) {
             const dias = Math.floor((hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24));
             if (dias > 30) {
-                const localesDelAmb = todosLosLocales.filter(l => l.ambassador_id === local.ambassador_id && l.estatus_comercial && l.estatus_comercial.toLowerCase() === 'activo');
+                const localesDelAmb = todosLosLocales.filter(l => l.ambassador_id === local.ambassador_id && l.estatus_comercial === 'activo');
                 let porcentaje = 0.25;
                 if (localesDelAmb.length >= 6 && localesDelAmb.length <= 10) porcentaje = 0.30;
                 if (localesDelAmb.length > 10) porcentaje = 0.35;
@@ -659,7 +794,7 @@ function exportarHistorialCSV() {
     document.body.removeChild(link);
 }
 
-// --- FUNCIONES DE PAGOS A VENDEDORES ---
+// ── 5. REGISTRO Y HISTORIAL DE PAGOS A VENDEDORES ──
 
 let todosLosPagos = [];
 
@@ -668,12 +803,13 @@ async function cargarHistorialPagos() {
         const { data: pagos, error } = await clienteSupabase
             .from('pagos_ambassadors')
             .select('*')
-            .order('mes', { ascending: false });
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
         todosLosPagos = pagos;
         renderizarTablaPagos(pagos);
-        renderizarHistorial(); // Refresca las etiquetas "Pago Validado" al cargar pagos
+        renderizarBonosAdmin();
+        renderizarComisionesAdmin();
     } catch (err) {
         console.error("Error cargando pagos:", err);
     }
@@ -691,9 +827,14 @@ function renderizarTablaPagos(pagos) {
     let html = '';
     pagos.forEach(pago => {
         const vendedor = diccionarioAmbassadors[pago.ambassador_id] || { nombre: 'Desconocido' };
+        const tipoTexto = pago.motivo === 'bono_activacion' ? 'Bono de Activación' : 'Comisión Recurrente';
+
         html += `
             <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-6 py-4 font-bold text-slate-700">${pago.mes}</td>
+                <td class="px-6 py-4">
+                    <p class="font-bold text-slate-700">${pago.mes}</p>
+                    <p class="text-[10px] text-slate-400">${tipoTexto}</p>
+                </td>
                 <td class="px-6 py-4 text-[13px] font-medium">${vendedor.nombre}</td>
                 <td class="px-6 py-4 text-right font-extrabold text-[#10B981]">$${Number(pago.monto).toLocaleString('es-CL')} CLP</td>
                 <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
@@ -739,30 +880,31 @@ async function registrarPago(event) {
     btn.innerHTML = 'Subiendo comprobante...';
 
     const pAmbassador = document.getElementById('pago-ambassador').value;
+    const pMotivo = document.getElementById('pago-motivo')?.value || 'comision';
     const pMes = document.getElementById('pago-mes').value;
     const pMonto = document.getElementById('pago-monto').value;
     const archivoInput = document.getElementById('pago-archivo');
     const archivo = archivoInput ? archivoInput.files[0] : null;
 
     if (!pAmbassador || !pMes || !pMonto) {
-        alert("Por favor completa los campos del formulario.");
+        alert("Por favor completa los campos obligatorios.");
         btn.disabled = false;
-        btn.innerHTML = 'Guardar Pago';
+        btn.innerHTML = 'Guardar Pago con Comprobante';
         return;
     }
 
     if (!archivo) {
         alert("Por favor selecciona un archivo de comprobante.");
         btn.disabled = false;
-        btn.innerHTML = 'Guardar Pago';
+        btn.innerHTML = 'Guardar Pago con Comprobante';
         return;
     }
 
     try {
         const ext = archivo.name.split('.').pop();
-        const nombreArchivo = `${pAmbassador}_${pMes}_${Date.now()}.${ext}`;
+        const nombreArchivo = `${pAmbassador}_${pMotivo}_${Date.now()}.${ext}`;
 
-        // 1. Subida del archivo al Storage
+        // 1. Subida del archivo al Storage bucket 'comprobantes'
         const { data: uploadData, error: uploadError } = await clienteSupabase
             .storage
             .from('comprobantes')
@@ -778,11 +920,12 @@ async function registrarPago(event) {
 
         const comprobanteUrl = publicUrlData.publicUrl;
 
-        // 3. Inserción en la base de datos
+        // 3. Inserción con el nuevo campo 'motivo'
         const { error: dbError } = await clienteSupabase
             .from('pagos_ambassadors')
             .insert([{
                 ambassador_id: pAmbassador,
+                motivo: pMotivo,
                 mes: pMes,
                 monto: parseFloat(pMonto),
                 comprobante_url: comprobanteUrl
@@ -792,73 +935,81 @@ async function registrarPago(event) {
 
         alert("¡Pago y comprobante guardados exitosamente!");
         document.getElementById('form-pago').reset();
-        await cargarHistorialPagos(); // Recarga historial de pagos y actualiza auditoría a "Pago Validado"
+        await cargarHistorialPagos();
     } catch (err) {
         console.error("Error al registrar pago:", err);
         alert("Hubo un error al subir el comprobante o guardar el pago. Revisa la consola.");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = 'Guardar Pago';
+        btn.innerHTML = 'Guardar Pago con Comprobante';
     }
 }
 
-// AUTO-CALCULAR MONTO DE PAGO
-const selectAmbassadorPago = document.getElementById('pago-ambassador');
-if (selectAmbassadorPago) {
-    selectAmbassadorPago.addEventListener('change', (e) => {
-        const ambassadorId = e.target.value;
-        if (!ambassadorId) {
-            document.getElementById('pago-monto').value = '';
-            return;
-        }
-        
-        const localesAmb = todosLosLocales.filter(l => 
-            l.ambassador_id === ambassadorId && 
-            l.estatus_comercial && 
-            l.estatus_comercial.toLowerCase() === 'activo'
-        );
-        
-        const cantidadActivos = localesAmb.length;
-        let totalLiquidar = 0;
-        const hoy = new Date();
+// ── 6. AUTO-CÁLCULO DE PAGOS SEGÚN MOTIVO ──
 
+function recalcularMontoPago() {
+    const ambassadorId = document.getElementById('pago-ambassador')?.value;
+    const motivo = document.getElementById('pago-motivo')?.value || 'bono_activacion';
+    const inputMonto = document.getElementById('pago-monto');
+
+    if (!ambassadorId || !inputMonto) return;
+
+    const hoy = new Date();
+    const localesAmb = todosLosLocales.filter(l => 
+        l.ambassador_id === ambassadorId && 
+        l.estatus_comercial && 
+        l.estatus_comercial.toLowerCase() === 'activo'
+    );
+
+    let totalLiquidar = 0;
+
+    if (motivo === 'bono_activacion') {
+        // Sumar $10.000 únicamente por locales en Mes 1 (<= 30 días) que no vengan de baja
+        localesAmb.forEach(local => {
+            if (local.viene_de_baja) return;
+            if (local.fecha_contratacion) {
+                const diasDiff = Math.floor((hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24));
+                if (diasDiff <= 30) totalLiquidar += BONO_ACTIVACION;
+            } else {
+                totalLiquidar += BONO_ACTIVACION;
+            }
+        });
+    } else {
+        // Sumar comisiones recurrentes escalonadas para locales con > 30 días
+        const cantidadActivos = localesAmb.length;
         let porcentajeComision = 0.25;
         if (cantidadActivos >= 6 && cantidadActivos <= 10) porcentajeComision = 0.30;
         if (cantidadActivos > 10) porcentajeComision = 0.35;
 
         localesAmb.forEach(local => {
             if (local.fecha_contratacion) {
-                const fechaContratacion = new Date(local.fecha_contratacion);
-                const diasDiff = Math.floor((hoy - fechaContratacion) / (1000 * 60 * 60 * 24));
-
-                if (diasDiff <= 30) {
-                    totalLiquidar += BONO_ACTIVACION; // $10.000 Mes 1
-                } else {
-                    totalLiquidar += (VALOR_BASE_SUSCRIPCION * porcentajeComision); // Mes 2+
+                const diasDiff = Math.floor((hoy - new Date(local.fecha_contratacion)) / (1000 * 60 * 60 * 24));
+                if (diasDiff > 30) {
+                    totalLiquidar += (VALOR_BASE_SUSCRIPCION * porcentajeComision);
                 }
-            } else {
-                totalLiquidar += BONO_ACTIVACION;
             }
         });
+    }
 
-        document.getElementById('pago-monto').value = Math.round(totalLiquidar);
-    });
+    inputMonto.value = Math.round(totalLiquidar);
 }
 
-/**
- * Valida si la fecha actual cumple con la fecha de cierre/corte según la modalidad del embajador
- */
+// Listeners para actualizar el monto al cambiar de vendedor o motivo
+document.getElementById('pago-ambassador')?.addEventListener('change', recalcularMontoPago);
+document.getElementById('pago-motivo')?.addEventListener('change', recalcularMontoPago);
+
+// ── 7. REGLA DE FECHAS DE CORTE ──
+
 function cumpleFechaDeCorte(modalidad = 'mensual') {
     const hoy = new Date();
     const diaActual = hoy.getDate();
 
     if (modalidad.toLowerCase() === 'bisemanal') {
-        // Cortes: del 29 al 13, o del 14 al 28
-        // Esto se habilita permanentemente en esos rangos o al finalizar el ciclo
-        return true; // O puedes filtrar si el día coincide exactamente con el cierre de quincena (ej. día 13 o día 28)
+        // Ventanas de liquidación quincenal: días 14-28 (corte quincena 1) o 29-13 (corte quincena 2)
+        return (diaActual >= 14 && diaActual <= 28) || (diaActual >= 29 || diaActual <= 13);
     } else {
-        // Mensual: El cierre estricto es el día 28 de cada mes
-        return diaActual >= 28; 
+        // Modalidad mensual: A partir del día 28 de cada mes
+        return diaActual >= 28;
     }
 }
 
