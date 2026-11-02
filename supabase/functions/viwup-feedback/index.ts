@@ -143,13 +143,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   // Protección inicial: rechazar campos administrativos.
-  const forbidden = [
-    "telefonoAdministrador",
-    "webhook_url",
-    "token_dashboard",
-  ];
+  
+  // VIWUP | EF-03A
+  // Lista explícita de campos permitidos.
 
-  if (forbidden.some((field) => field in data)) {
+  const allowedFields = new Set([
+    "idLocal",
+    "rating",
+    "tipo",
+    "garzon",
+    "motivos",
+    "comentario",
+  ]);
+
+  const unexpectedFields = Object.keys(data)
+    .filter((field) => !allowedFields.has(field));
+
+  if (unexpectedFields.length > 0) {
     return response(
       { error: "Campos no permitidos" },
       422,
