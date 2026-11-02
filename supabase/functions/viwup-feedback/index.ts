@@ -9,6 +9,8 @@
  * No registra evaluaciones.
  */
 
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 const allowedOrigins = new Set([
   "https://viwup.cl",
   "https://www.viwup.cl",
@@ -154,16 +156,102 @@ Deno.serve(async (req: Request): Promise<Response> => {
       origin,
     );
   }
+  
+  // ================================================
+  // VIWUP | EF-02
+  // Validación privada de restaurante
+  // MODO DRY_RUN - SIN ENVÍOS NI ESCRITURAS
+  // ================================================
 
-  // EF-01: solo prueba de validación.
-  // NO registra, NO llama a Make, NO envía WhatsApp.
+  // 1. Leer configuración interna de Supabase.
+  // Nunca imprimir ni devolver las credenciales.
+  let supabaseUrl: string;
+  let secretKey: string;
+
+  try {
+    supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+
+    const secretKeys = JSON.parse(
+      Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}",
+    ) as Record<string, string>;
+
+    secretKey = secretKeys["default"] ?? "";
+
+    if (!supabaseUrl || !secretKey) {
+      throw new Error("Configuración incompleta");
+    }
+  } catch {
+    console.error("EF-02: configuración interna inválida");
+
+    return response(
+      { error: "Servicio temporalmente no disponible" },
+      503,
+      origin,
+    );
+  }
+
+  // 2. Crear cliente exclusivo del servidor.
+  // La Secret Key nunca llega al navegador.
+  const supabaseAdmin = createClient(
+    supabaseUrl,
+    secretKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    },
+  );
+
+  // 3. Consultar solamente los campos necesarios.
+  const { data: local, error: localError } =
+    await supabaseAdmin
+      .from("locales")
+      .select("id, estado_activo")
+      .eq("id", data.idLocal as string)
+      .maybeSingle();
+
+  // 4. No revelar detalles internos de PostgreSQL.
+  if (localError) {
+    console.error(
+      "EF-02: error consultando restaurante",
+      localError.code,
+    );
+
+    return response(
+      { error: "No se pudo validar el restaurante" },
+      503,
+      origin,
+    );
+  }
+
+  // 5. Restaurante inexistente.
+  if (!local) {
+    return response(
+      { error: "Restaurante no encontrado" },
+      404,
+      origin,
+    );
+  }
+
+  // 6. Solo aceptar restaurantes activos.
+  if (local.estado_activo !== true) {
+    return response(
+      { error: "Servicio del restaurante inactivo" },
+      403,
+      origin,
+    );
+  }
+
+  // 7. Prueba exitosa, sin efectos externos.
   return response(
     {
       status: "dry_run",
       valid: true,
+      local_verified: true,
       forwarded: false,
       saved: false,
-      message: "Validación correcta. Envío deshabilitado.",
+      message: "Restaurante validado. Envío deshabilitado.",
     },
     200,
     origin,
