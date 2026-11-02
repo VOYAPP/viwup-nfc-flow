@@ -1,27 +1,11 @@
 
--- ==================================================
 -- VIWUP | M00-C2-01
--- PROTECCIÓN INICIAL DE TABLAS SENSIBLES
--- ESTADO: BORRADOR PARA APROBACIÓN
--- ==================================================
---
--- Tablas:
---   public.ambassadors
---   public.pagos_ambassadors
---   public.logs_locales
---
--- Objetivo:
--- Bloquear acceso directo de clientes anon
--- y authenticated durante la reconstrucción.
---
--- No elimina registros ni tablas.
--- Ejecutar solo tras aprobar la migración.
--- ==================================================
+-- Protección de tablas sensibles
+-- REVISADO - Pendiente de ejecución
 
 BEGIN;
 
--- 1. Mantener RLS habilitado
-
+-- Mantener RLS activo
 ALTER TABLE public.ambassadors
 ENABLE ROW LEVEL SECURITY;
 
@@ -31,27 +15,51 @@ ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.logs_locales
 ENABLE ROW LEVEL SECURITY;
 
-
--- 2. Revocar permisos directos de clientes
-
+-- Bloquear acceso directo de clientes
 REVOKE ALL PRIVILEGES
-ON TABLE public.ambassadors
+ON TABLE
+    public.ambassadors,
+    public.pagos_ambassadors,
+    public.logs_locales
 FROM anon, authenticated;
 
-REVOKE ALL PRIVILEGES
-ON TABLE public.pagos_ambassadors
-FROM anon, authenticated;
-
-REVOKE ALL PRIVILEGES
-ON TABLE public.logs_locales
-FROM anon, authenticated;
-
-
--- 3. Mantener el acceso privilegiado
--- del backend mediante service_role.
--- No introducir su clave en el frontend.
---
--- No se modifican sus GRANT existentes.
-
+-- Comprobación de privilegios efectivos.
+-- Si queda algún permiso, abortar la transacción.
+DO $$
+DECLARE
+    t text;
+    r text;
+BEGIN
+    FOREACH t IN ARRAY ARRAY[
+        'ambassadors',
+        'pagos_ambassadors',
+        'logs_locales'
+    ]
+    LOOP
+        FOREACH r IN ARRAY ARRAY[
+            'anon',
+            'authenticated'
+        ]
+        LOOP
+            IF has_table_privilege(
+                r, 'public.' || t, 'SELECT'
+            )
+            OR has_table_privilege(
+                r, 'public.' || t, 'INSERT'
+            )
+            OR has_table_privilege(
+                r, 'public.' || t, 'UPDATE'
+            )
+            OR has_table_privilege(
+                r, 'public.' || t, 'DELETE'
+            )
+            THEN
+                RAISE EXCEPTION
+                    'Permisos restantes: tabla %, rol %',
+                    t, r;
+            END IF;
+        END LOOP;
+    END LOOP;
+END $$;
 
 COMMIT;
