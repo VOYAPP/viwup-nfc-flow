@@ -101,17 +101,27 @@ BEGIN
     THEN
         RETURN FALSE;
     END IF;
-
+    
     UPDATE viwup_private.feedback_requests
     SET
         status = p_status,
-        last_error_code = p_error_code,
-        completed_at = now(),
-        updated_at = now()
+        last_error_code = CASE
+            WHEN p_status = 'sent' THEN NULL
+            ELSE p_error_code
+        END,
+        completed_at = pg_catalog.now(),
+        updated_at = pg_catalog.now()
     WHERE local_id = p_local_id
       AND request_id = p_request_id
       AND claim_token = p_claim_token
-      AND status = 'processing'
+      AND (
+          status = 'processing'
+          OR (
+              status = 'review_required'
+              AND last_error_code = 'PROCESSING_TIMEOUT'
+              AND p_status = 'sent'
+          )
+      )
     RETURNING id INTO v_updated_id;
 
     RETURN v_updated_id IS NOT NULL;
