@@ -82,7 +82,7 @@ CREATE FUNCTION public.viwup_reserve_feedback(
 )
 RETURNS text
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = ''
 AS $$
 DECLARE
