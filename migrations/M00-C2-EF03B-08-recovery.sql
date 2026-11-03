@@ -32,10 +32,13 @@ BEGIN
     END IF;
 
     UPDATE viwup_private.feedback_requests
+
     SET
         status = 'review_required',
         last_error_code = 'PROCESSING_TIMEOUT',
+        completed_at = pg_catalog.now(),
         updated_at = pg_catalog.now()
+
     WHERE status = 'processing'
       AND claimed_at IS NOT NULL
       AND claimed_at < (
