@@ -252,7 +252,54 @@ Deno.serve(async (req: Request): Promise<Response> => {
       origin,
     );
   }
+  
+  // ================================================
+  // VIWUP | EF-04.1
+  // Monitoreo privado mediante RPC
+  // SOLO LECTURA - DRY_RUN
+  // ================================================
 
+  const { data: feedbackVolume, error: volumeError } =
+    await supabaseAdmin.rpc("viwup_feedback_volume", {
+      p_local_id: data.idLocal as string,
+    });
+
+  if (volumeError) {
+    // Solo registrar el código técnico, nunca secretos.
+    console.error(
+      "EF-04.1: error en RPC de monitoreo",
+      volumeError.code,
+    );
+
+    return response(
+      { error: "Servicio temporalmente no disponible" },
+      503,
+      origin,
+    );
+  }
+
+  if (
+    typeof feedbackVolume !== "number" ||
+    !Number.isSafeInteger(feedbackVolume) ||
+    feedbackVolume < 0
+  ) {
+    console.error(
+      "EF-04.1: resultado de volumen inesperado",
+    );
+
+    return response(
+      { error: "Servicio temporalmente no disponible" },
+      503,
+      origin,
+    );
+  }
+
+  // Diagnóstico interno: no devolver el conteo al cliente.
+  console.info(
+    "EF-04.1: consulta de volumen correcta",
+    { feedback_volume: feedbackVolume },
+  );
+  
   // 7. Prueba exitosa, sin efectos externos.
   return response(
     {
