@@ -46,6 +46,43 @@ function isUuid(value: unknown): value is string {
       .test(value);
 }
 
+// VIWUP | EF-04.2
+// SHA-256 en hexadecimal.
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// Comparar credenciales sin terminar en la primera diferencia.
+async function matchesTestToken(
+  provided: string,
+  expected: string,
+): Promise<boolean> {
+  if (expected.length < 32 || provided.length > 4096) {
+    return false;
+  }
+
+  const [a, b] = await Promise.all([
+    sha256Hex(provided),
+    sha256Hex(expected),
+  ]);
+
+  let difference = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    difference |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return difference === 0;
+}
+
+
+
+
 Deno.serve(async (req: Request): Promise<Response> => {
   const origin = req.headers.get("origin");
 
@@ -123,7 +160,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     typeof data.rating === "number" &&
     data.rating >= 1 &&
     data.rating <= 5 &&
-    (data.tipo === "SOS" || data.tipo === "SEO") &&
+    (data.tipo === "SOS" || data.tipo === "SEO") &&  
+    (data.requestId === undefined ||
+      isUuid(data.requestId)) &&
     (data.garzon === undefined ||
       (typeof data.garzon === "string" &&
         data.garzon.length <= 100)) &&
@@ -149,6 +188,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const allowedFields = new Set([
     "idLocal",
+    "requestId",
     "rating",
     "tipo",
     "garzon",
@@ -299,6 +339,157 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "EF-04.1: consulta de volumen correcta",
     { feedback_volume: feedbackVolume },
   );
+  
+  // ================================================
+  // VIWUP | EF-04.2
+  // Reserva idempotente para pruebas autorizadas.
+  // Make sigue desactivado.
+  // ================================================
+
+  const providedTestToken =
+    req.headers.get("x-viwup-test-token");
+
+  // Sin credencial: mantener el dry_run existente.
+  if (providedTestToken !== null) {
+    const expectedTestToken =
+      Deno.env.get("VIWUP_WRITE_TEST_TOKEN") ?? "";
+
+    // Sin configuración privada, fallar de forma segura.
+    if (expectedTestToken.length < 32) {
+      console.error("EF-04.2: prueba no configurada");
+
+      return response(
+        { error: "Servicio temporalmente no disponible" },
+        503,
+        origin,
+      );
+    }
+
+    const authorized = await matchesTestToken(
+      providedTestToken,
+      expectedTestToken,
+    );
+
+    if (!authorized) {
+      return response(
+        { error: "Prueba no autorizada" },
+        403,
+        origin,
+      );
+    }
+
+    // El identificador es obligatorio solo para reservar.
+    if (!isUuid(data.requestId)) {
+      return response(
+        { error: "requestId inválido o ausente" },
+        422,
+        origin,
+      );
+    }
+
+    // Normalización: orden fijo, campos validados
+    // y ausencia representada de forma consistente.
+    const canonicalPayload = JSON.stringify([
+      (data.idLocal as string).toLowerCase(),
+      data.rating,
+      data.tipo,
+      data.garzon ?? null,
+      data.motivos ?? null,
+      data.comentario ?? null,
+    ]);
+
+    const payloadHash = await sha256Hex(canonicalPayload);
+
+    const { data: reservation, error: reservationError } =
+      await supabaseAdmin.rpc("viwup_reserve_feedback", {
+        p_local_id: (data.idLocal as string).toLowerCase(),
+        p_request_id: (data.requestId as string).toLowerCase(),
+        p_payload_hash: payloadHash,
+      });
+
+    if (reservationError) {
+      console.error(
+        "EF-04.2: error de reserva RPC",
+        reservationError.code,
+      );
+
+      return response(
+        { error: "Servicio temporalmente no disponible" },
+        503,
+        origin,
+      );
+    }
+
+    if (reservation === "reserved") {
+      return response(
+        {
+          status: "reservation_only",
+          reservation: "reserved",
+          reservation_created: true,
+          saved: false,
+          forwarded: false,
+        },
+        201,
+        origin,
+      );
+    }
+
+    if (reservation === "duplicate") {
+      return response(
+        {
+          status: "reservation_only",
+          reservation: "duplicate",
+          reservation_created: false,
+          saved: false,
+          forwarded: false,
+        },
+        200,
+        origin,
+      );
+    }
+
+    if (reservation === "conflict") {
+      return response(
+        {
+          error: "Identificador reutilizado con otro contenido",
+          reservation: "conflict",
+          forwarded: false,
+        },
+        409,
+        origin,
+      );
+    }
+
+    if (reservation === "retry") {
+      return response(
+        {
+          error: "Reserva temporalmente no disponible",
+          reservation: "retry",
+          forwarded: false,
+        },
+        503,
+        origin,
+      );
+    }
+
+    if (reservation === "inactive_or_missing") {
+      return response(
+        { error: "Restaurante no disponible" },
+        403,
+        origin,
+      );
+    }
+
+    console.error(
+      "EF-04.2: respuesta de reserva inesperada",
+    );
+
+    return response(
+      { error: "Servicio temporalmente no disponible" },
+      503,
+      origin,
+    );
+  }
   
   // 7. Prueba exitosa, sin efectos externos.
   return response(
