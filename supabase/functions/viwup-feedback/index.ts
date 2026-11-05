@@ -20,7 +20,7 @@ const allowedOrigins = new Set([
 // VIWUP | EF-05.7A
 // Observacion preparada, escrituras desactivadas.
 //
-const OBSERVATION_WRITES_ENABLED = true;
+const OBSERVATION_WRITES_ENABLED = false;
 
 function response(
   body: Record<string, unknown>,
