@@ -16,6 +16,12 @@ const allowedOrigins = new Set([
   "https://www.viwup.cl",
 ]);
 
+//
+// VIWUP | EF-05.7A
+// Observacion preparada, escrituras desactivadas.
+//
+const OBSERVATION_WRITES_ENABLED = false;
+
 function response(
   body: Record<string, unknown>,
   status: number,
@@ -53,6 +59,47 @@ async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", bytes);
 
   return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// VIWUP | EF-05.7A
+// HMAC-SHA256 para futuras senales seudonimizadas.
+// No se invoca en esta etapa.
+async function hmacSha256Hex(
+  secret: string,
+  scope: "device" | "ip",
+  localId: string,
+  identifier: string,
+): Promise<string> {
+  if (new TextEncoder().encode(secret).length < 32) {
+    throw new Error("Configuracion HMAC invalida");
+  }
+
+  const encoder = new TextEncoder();
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const message = [
+    "viwup-rate-v1",
+    scope,
+    localId.toLowerCase(),
+    identifier.toLowerCase(),
+  ].join(":");
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(message),
+  );
+
+  return Array.from(new Uint8Array(signature))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 }
@@ -391,14 +438,67 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Solo se procesa tras validar el token privado.
     const testAction =
       req.headers.get("x-viwup-test-action");
-
+    
     if (
       testAction !== null &&
-      testAction !== "simulate-review"
+      testAction !== "simulate-review" &&
+      testAction !== "observe-only"
     ) {
+
       return response(
         { error: "Acción de prueba no permitida" },
         422,
+        origin,
+      );
+    }
+    
+    // ================================================
+    // VIWUP | EF-05.7A
+    // Preparacion de observacion privada.
+    // SIN RPC, SIN RESERVAS, SIN MAKE.
+    // ================================================
+    
+    if (testAction === "observe-only") {
+      const deviceId = req.headers.get(
+        "x-viwup-test-device-id",
+      );
+    
+      // La observacion requiere una señal de dispositivo
+      // valida. No se registra ni almacena todavia.
+      if (!isUuid(deviceId)) {
+        return response(
+          {
+            error: "Identificador de dispositivo invalido",
+            forwarded: false,
+          },
+          422,
+          origin,
+        );
+      }
+    
+      if (!OBSERVATION_WRITES_ENABLED) {
+        return response(
+          {
+            status: "observation_prepared",
+            observation_enabled: false,
+            reservation_created: false,
+            saved: false,
+            forwarded: false,
+          },
+          200,
+          origin,
+        );
+      }
+    
+      // Falla cerrada: activar el interruptor NO basta
+      // para habilitar escrituras.
+      // La RPC se incorporara en EF-05.7C.
+      return response(
+        {
+          error: "Observacion persistente no implementada",
+          forwarded: false,
+        },
+        503,
         origin,
       );
     }
