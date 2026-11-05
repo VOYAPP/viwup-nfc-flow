@@ -535,7 +535,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
           origin,
         );
       }
-
+      
+      // Restaurante autorizado para la prueba.
+      const allowedLocalId =
+        Deno.env.get("VIWUP_OBSERVATION_TEST_LOCAL_ID") ??
+        "";
+      
       // Limitar la prueba a una solicitud y un
       // dispositivo ficticio previamente autorizados.
       const allowedRequestId =
@@ -547,7 +552,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
         "";
 
       // Si falta alguna configuracion, fallar cerrado.
+      
       if (
+        !isUuid(allowedLocalId) ||
         !isUuid(allowedRequestId) ||
         !isUuid(allowedDeviceId)
       ) {
@@ -564,9 +571,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
           origin,
         );
       }
-
-      // Solo se admite la pareja exacta de prueba.
+      
+      // Solo admitir el restaurante y los
+      // identificadores exactos de la prueba.
       if (
+        (data.idLocal as string).toLowerCase() !==
+          allowedLocalId.toLowerCase() ||
         (data.requestId as string).toLowerCase() !==
           allowedRequestId.toLowerCase() ||
         deviceId.toLowerCase() !==
