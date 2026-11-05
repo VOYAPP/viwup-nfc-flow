@@ -63,6 +63,26 @@ async function sha256Hex(value: string): Promise<string> {
     .join("");
 }
 
+//
+// VIWUP | EF-05.7C.1
+// Canonicalizacion compartida con EF-04.2.
+// Mantener este orden para preservar idempotencia.
+//
+async function feedbackPayloadHash(
+  data: Record<string, unknown>,
+): Promise<string> {
+  const canonicalPayload = JSON.stringify([
+    (data.idLocal as string).toLowerCase(),
+    data.rating,
+    data.tipo,
+    data.garzon ?? null,
+    data.motivos ?? null,
+    data.comentario ?? null,
+  ]);
+
+  return await sha256Hex(canonicalPayload);
+}
+
 // VIWUP | EF-05.7A
 // HMAC-SHA256 para futuras senales seudonimizadas.
 // No se invoca en esta etapa.
@@ -489,32 +509,224 @@ Deno.serve(async (req: Request): Promise<Response> => {
           origin,
         );
       }
-    
-      // Falla cerrada: activar el interruptor NO basta
-      // para habilitar escrituras.
-      // La RPC se incorporara en EF-05.7C.
-      return response(
-        {
-          error: "Observacion persistente no implementada",
-          forwarded: false,
-        },
-        503,
-        origin,
-      );
+      
+      // ================================================
+      // VIWUP | EF-05.7C.1
+      // Observacion persistente preparada.
+      // Solo accesible con token privado y flag activo.
+      // EF-05.7C.1: el flag permanece en false.
+      // ================================================
+      
+      const hmacSecret =
+        Deno.env.get("VIWUP_RATE_HMAC_KEY") ?? "";
+      
+      // Fallar cerrado si no existe una clave valida.
+      // No registrar ni devolver la clave.
+      if (new TextEncoder().encode(hmacSecret).length < 32) {
+        console.error(
+          "EF-05.7C: configuracion HMAC no disponible",
+        );
+      
+        return response(
+          {
+            error: "Observacion temporalmente no disponible",
+            forwarded: false,
+          },
+          503,
+          origin,
+        );
+      }
+      
+      try {
+        const localId = (data.idLocal as string).toLowerCase();
+        const requestId = (data.requestId as string).toLowerCase();
+      
+        // HMAC del dispositivo, separado por restaurante.
+        const deviceHash = await hmacSha256Hex(
+          hmacSecret,
+          "device",
+          localId,
+          deviceId,
+        );
+      
+        // Exactamente el mismo hash utilizado en EF-04.2.
+        const payloadHash = await feedbackPayloadHash(data);
+      
+        // IP desactivada hasta verificar cabecera confiable.
+        const { data: observation, error: observationError } =
+          await supabaseAdmin.rpc(
+            "viwup_observe_feedback_rate",
+            {
+              p_local_id: localId,
+              p_request_id: requestId,
+              p_payload_hash: payloadHash,
+              p_device_hash: deviceHash,
+              p_ip_hash: null,
+            },
+          );
+      
+        if (observationError) {
+          console.error(
+            "EF-05.7C: error RPC",
+            observationError.code,
+          );
+      
+          return response(
+            {
+              error: "Observacion temporalmente no disponible",
+              forwarded: false,
+            },
+            503,
+            origin,
+          );
+        }
+      
+        if (
+          !observation ||
+          typeof observation !== "object" ||
+          Array.isArray(observation)
+        ) {
+          console.error(
+            "EF-05.7C: respuesta RPC invalida",
+          );
+      
+          return response(
+            {
+              error: "Respuesta de observacion invalida",
+              forwarded: false,
+            },
+            503,
+            origin,
+          );
+        }
+      
+        const result = observation as Record<string, unknown>;
+        const decision = result.decision;
+      
+        if (decision === "observed") {
+          const deviceCount = result.device_count;
+          const deviceOverLimit = result.device_over_limit;
+      
+          if (
+            !Number.isSafeInteger(deviceCount) ||
+            typeof deviceCount !== "number" ||
+            deviceCount < 1 ||
+            typeof deviceOverLimit !== "boolean" ||
+            result.ip_count !== null ||
+            result.ip_over_limit !== false ||
+            typeof result.window_start !== "string"
+          ) {
+            console.error(
+              "EF-05.7C: contadores inesperados",
+            );
+      
+            return response(
+              {
+                error: "Resultado de observacion invalido",
+                forwarded: false,
+              },
+              503,
+              origin,
+            );
+          }
+      
+          return response(
+            {
+              status: "observation_recorded",
+              decision: "observed",
+              device_count: deviceCount,
+              device_over_limit: deviceOverLimit,
+              ip_observed: false,
+              reservation_created: false,
+              saved: false,
+              forwarded: false,
+            },
+            200,
+            origin,
+          );
+        }
+      
+        if (decision === "duplicate") {
+          return response(
+            {
+              status: "observation_duplicate",
+              decision: "duplicate",
+              reservation_created: false,
+              saved: false,
+              forwarded: false,
+            },
+            200,
+            origin,
+          );
+        }
+      
+        if (decision === "conflict") {
+          return response(
+            {
+              error: "Identificador reutilizado con otro contenido",
+              decision: "conflict",
+              reservation_created: false,
+              forwarded: false,
+            },
+            409,
+            origin,
+          );
+        }
+      
+        if (decision === "invalid") {
+          return response(
+            {
+              error: "Observacion invalida",
+              forwarded: false,
+            },
+            422,
+            origin,
+          );
+        }
+      
+        if (decision === "inactive_or_missing") {
+          return response(
+            {
+              error: "Restaurante no disponible",
+              forwarded: false,
+            },
+            403,
+            origin,
+          );
+        }
+      
+        console.error(
+          "EF-05.7C: decision RPC inesperada",
+        );
+      
+        return response(
+          {
+            error: "Resultado de observacion inesperado",
+            forwarded: false,
+          },
+          503,
+          origin,
+        );
+      } catch {
+        console.error(
+          "EF-05.7C: fallo interno de observacion",
+        );
+      
+        return response(
+          {
+            error: "Observacion temporalmente no disponible",
+            forwarded: false,
+          },
+          503,
+          origin,
+        );
+      }
+
     }
-
-    // Normalización: orden fijo, campos validados
-    // y ausencia representada de forma consistente.
-    const canonicalPayload = JSON.stringify([
-      (data.idLocal as string).toLowerCase(),
-      data.rating,
-      data.tipo,
-      data.garzon ?? null,
-      data.motivos ?? null,
-      data.comentario ?? null,
-    ]);
-
-    const payloadHash = await sha256Hex(canonicalPayload);
+    
+    // VIWUP | EF-05.7C.1
+    // Hash compartido entre reserva y observacion.
+    const payloadHash = await feedbackPayloadHash(data);
 
     const { data: reservation, error: reservationError } =
       await supabaseAdmin.rpc("viwup_reserve_feedback", {
