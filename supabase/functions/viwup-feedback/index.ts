@@ -386,6 +386,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
         origin,
       );
     }
+    
+    // EF-04.5: acción opcional de prueba.
+    // Solo se procesa tras validar el token privado.
+    const testAction =
+      req.headers.get("x-viwup-test-action");
+
+    if (
+      testAction !== null &&
+      testAction !== "simulate-review"
+    ) {
+      return response(
+        { error: "Acción de prueba no permitida" },
+        422,
+        origin,
+      );
+    }
 
     // Normalización: orden fijo, campos validados
     // y ausencia representada de forma consistente.
@@ -419,17 +435,83 @@ Deno.serve(async (req: Request): Promise<Response> => {
         origin,
       );
     }
-
+    
     if (reservation === "reserved") {
+      // Conservar la reserva normal de EF-04.2.
+      if (testAction !== "simulate-review") {
+        return response(
+          {
+            status: "reservation_only",
+            reservation: "reserved",
+            reservation_created: true,
+            saved: false,
+            forwarded: false,
+          },
+          201,
+          origin,
+        );
+      }
+
+      // EF-04.5: reclamar sin contactar Make.
+      const { data: claimToken, error: claimError } =
+        await supabaseAdmin.rpc("viwup_claim_feedback", {
+          p_local_id: (data.idLocal as string).toLowerCase(),
+          p_request_id: (data.requestId as string).toLowerCase(),
+          p_payload_hash: payloadHash,
+        });
+
+      if (claimError || !isUuid(claimToken)) {
+        console.error(
+          "EF-04.5: fallo de reclamación",
+          claimError?.code ?? "INVALID_CLAIM",
+        );
+
+        return response(
+          {
+            error: "No se pudo reclamar la solicitud",
+            forwarded: false,
+          },
+          503,
+          origin,
+        );
+      }
+
+      // Cierre simulado: jamás marcar como enviado.
+      const { data: finished, error: finishError } =
+        await supabaseAdmin.rpc("viwup_finish_feedback", {
+          p_local_id: (data.idLocal as string).toLowerCase(),
+          p_request_id: (data.requestId as string).toLowerCase(),
+          p_claim_token: claimToken,
+          p_status: "review_required",
+          p_error_code: "SIMULATED_NO_DELIVERY",
+        });
+
+      if (finishError || finished !== true) {
+        console.error(
+          "EF-04.5: fallo de cierre simulado",
+          finishError?.code ?? "FINISH_REJECTED",
+        );
+
+        return response(
+          {
+            error: "Cierre simulado no confirmado",
+            forwarded: false,
+          },
+          503,
+          origin,
+        );
+      }
+
       return response(
         {
-          status: "reservation_only",
+          status: "simulated_review",
           reservation: "reserved",
           reservation_created: true,
+          claim_completed: true,
           saved: false,
           forwarded: false,
         },
-        201,
+        200,
         origin,
       );
     }
