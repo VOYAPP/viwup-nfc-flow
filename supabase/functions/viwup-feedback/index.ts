@@ -511,6 +511,78 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
       
       // ================================================
+      // VIWUP | EF-05.7C.5A
+      // Segunda barrera para observacion persistente.
+      // NO activar en esta etapa.
+      // ================================================
+
+      const observationTestEnabled =
+        Deno.env.get("VIWUP_OBSERVATION_TEST_ENABLED") ===
+        "enabled";
+
+      // La activacion debe ser explicita.
+      // Cualquier otro valor bloquea la escritura.
+      if (!observationTestEnabled) {
+        return response(
+          {
+            error: "Observacion persistente desactivada",
+            observation_enabled: false,
+            reservation_created: false,
+            saved: false,
+            forwarded: false,
+          },
+          503,
+          origin,
+        );
+      }
+
+      // Limitar la prueba a una solicitud y un
+      // dispositivo ficticio previamente autorizados.
+      const allowedRequestId =
+        Deno.env.get("VIWUP_OBSERVATION_TEST_REQUEST_ID") ??
+        "";
+
+      const allowedDeviceId =
+        Deno.env.get("VIWUP_OBSERVATION_TEST_DEVICE_ID") ??
+        "";
+
+      // Si falta alguna configuracion, fallar cerrado.
+      if (
+        !isUuid(allowedRequestId) ||
+        !isUuid(allowedDeviceId)
+      ) {
+        console.error(
+          "EF-05.7C.5A: configuracion de prueba incompleta",
+        );
+
+        return response(
+          {
+            error: "Prueba de observacion no configurada",
+            forwarded: false,
+          },
+          503,
+          origin,
+        );
+      }
+
+      // Solo se admite la pareja exacta de prueba.
+      if (
+        (data.requestId as string).toLowerCase() !==
+          allowedRequestId.toLowerCase() ||
+        deviceId.toLowerCase() !==
+          allowedDeviceId.toLowerCase()
+      ) {
+        return response(
+          {
+            error: "Solicitud fuera del alcance autorizado",
+            forwarded: false,
+          },
+          403,
+          origin,
+        );
+      }
+      
+      // ================================================
       // VIWUP | EF-05.7C.1
       // Observacion persistente preparada.
       // Solo accesible con token privado y flag activo.
