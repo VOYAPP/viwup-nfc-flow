@@ -14,16 +14,6 @@ CREATE TABLE viwup_private.feedback_rate_decisions (
     request_id uuid NOT NULL,
     payload_hash text NOT NULL
         CHECK (payload_hash ~ '^[a-f0-9]{64}$'),
-    device_hash text
-        CHECK (
-            device_hash IS NULL OR
-            device_hash ~ '^[a-f0-9]{64}$'
-        ),
-    ip_hash text
-        CHECK (
-            ip_hash IS NULL OR
-            ip_hash ~ '^[a-f0-9]{64}$'
-        ),
     verdict text NOT NULL DEFAULT 'observed'
         CHECK (verdict = 'observed'),
     created_at timestamptz NOT NULL
@@ -75,8 +65,13 @@ FROM PUBLIC, anon, authenticated;
 GRANT USAGE ON SCHEMA viwup_private
 TO service_role;
 
+-- Decisiones: permisos minimos.
+GRANT SELECT, INSERT ON
+    viwup_private.feedback_rate_decisions
+TO service_role;
+
+-- Contadores: incremento y limpieza controlada.
 GRANT SELECT, INSERT, UPDATE, DELETE ON
-    viwup_private.feedback_rate_decisions,
     viwup_private.feedback_rate_buckets
 TO service_role;
 
@@ -167,22 +162,18 @@ BEGIN
             ) / 600
         ) * 600
     );
-
+    
     -- Registrar una sola decision por solicitud.
     INSERT INTO viwup_private.feedback_rate_decisions (
         local_id,
         request_id,
         payload_hash,
-        device_hash,
-        ip_hash,
         verdict
     )
     VALUES (
         p_local_id,
         p_request_id,
         p_payload_hash,
-        p_device_hash,
-        p_ip_hash,
         'observed'
     );
 
