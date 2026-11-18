@@ -20,7 +20,7 @@ button:disabled{opacity:.6}section[hidden]{display:none}#message{margin-top:16px
 <p id="message" role="status" aria-live="polite"></p><p><a href="./admin.html">Volver a Admin</a></p>
 </main><script>
 const SUPABASE_URL = "https://syoypjljkwmwlrpuwxwh.supabase.co";
-const PUBLISHABLE_KEY = "sb_publishable_dZPm-Pvy_CybZjW4J-j1xA_7OCqk9ZN"; // Solo clave publica, nunca Secret Key.
+const PUBLISHABLE_KEY = "REEMPLAZAR_CON_SB_PUBLISHABLE_KEY"; // Solo clave publica, nunca Secret Key.
 const $ = id => document.getElementById(id);
 const msg = text => $('message').textContent = text;
 const isConfigured = PUBLISHABLE_KEY.startsWith('sb_publishable_');
@@ -29,43 +29,101 @@ if(!isConfigured) {
   $('requestBtn').disabled = true;
   msg('Falta configurar la Publishable Key en este archivo.');
 } else {
-  const auth = window.supabase.createClient(SUPABASE_URL,PUBLISHABLE_KEY,{auth:{detectSessionInUrl:true}});
-  const showChange = () => {recoveryVerified=true;$('request').hidden=true;$('change').hidden=false;msg('Enlace validado. Puedes crear una contraseña nueva.');};
-  auth.auth.onAuthStateChange((event,session) => {
-    if(event==='PASSWORD_RECOVERY' && session) showChange();
+  const auth = window.supabase.createClient(
+    SUPABASE_URL, PUBLISHABLE_KEY,
+    {auth: {detectSessionInUrl: true, persistSession: true, autoRefreshToken: true}}
+  );
+  const showChange = () => {
+    recoveryVerified = true;
+    $('request').hidden = true;
+    $('change').hidden = false;
+    msg('Enlace verificado. Escribe tu nueva contraseña.');
+  };
+  auth.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY' && session) showChange();
   });
-  // Para redirecciones PKCE u otros enlaces autenticados que redirijan con ?code,
-  // esperar a que supabase-js procese el código antes de habilitar el formulario.
-  if(new URLSearchParams(location.search).has('code') || new URLSearchParams(location.hash.slice(1)).get('type')==='recovery') {
-    setTimeout(async () => {
-      const {data,error}=await auth.auth.getSession();
-      if(!error && data.session) showChange();
-      else if(!recoveryVerified) msg('No se pudo validar el enlace. Solicita uno nuevo.');
-    },1000);
-  }
-  $('requestForm').addEventListener('submit',async e=>{
-    e.preventDefault(); $('requestBtn').disabled=true;
-    const {error}=await auth.auth.resetPasswordForEmail($('email').value.trim(),{
-      redirectTo: new URL('./recuperar-admin.html',location.href).href
-    });
-    msg(error ? (error.status===429 ? 'Límite de correos alcanzado. No repitas la solicitud por ahora.' : error.message)
-      : 'Solicitud aceptada. Si corresponde, recibirás un enlace en tu correo; revisa Spam.');
-    $('requestBtn').disabled=false;
-  });
-  $('changeForm').addEventListener('submit',async e=>{
+
+  // La plantilla de correo usa:
+  // {{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery
+  // La verificación del token tiene que ocurrir antes de mostrar el formulario.
+  (async () => {
+    const params = new URLSearchParams(location.search);
+    const tokenHash = params.get('token_hash');
+    const type = params.get('type');
+    if (tokenHash) {
+      if (type !== 'recovery') {
+        msg('El enlace no corresponde a recuperación de contraseña.');
+        return;
+      }
+      const {data, error} = await auth.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: 'recovery'
+      });
+      // No dejar el token en la barra de direcciones.
+      history.replaceState(null, '', location.pathname);
+      if (error || !data.session) {
+        msg('El enlace venció o ya se utilizó. Solicita uno nuevo.');
+        return;
+      }
+      showChange();
+      return;
+    }
+    // Compatibilidad con correos estándar de Supabase (.ConfirmationURL)
+    // que redirigen con type=recovery en el fragmento de la URL.
+    const fragment = new URLSearchParams(location.hash.slice(1));
+    if (fragment.get('type') === 'recovery') {
+      const {data, error} = await auth.auth.getSession();
+      if (!error && data.session) {
+        history.replaceState(null, '', location.pathname);
+        showChange();
+        return;
+      }
+      msg('No se pudo validar el enlace. Solicita uno nuevo.');
+    }
+  })();
+
+  $('requestForm').addEventListener('submit', async e => {
     e.preventDefault();
-    if(!recoveryVerified) return msg('Primero abre un enlace de recuperación válido.');
-    const password=$('pwd').value;
-    if(password.length<12 || password!==$('again').value) return msg('Las contraseñas deben coincidir y tener al menos 12 caracteres.');
-    $('changeBtn').disabled=true;
-    const {error}=await auth.auth.updateUser({password});
-    if(error) {msg(error.message);$('changeBtn').disabled=false;return;}
-    $('pwd').value='';$('again').value='';
-    await auth.auth.signOut();
-    history.replaceState({},'',location.pathname);
-    $('change').hidden=true; $('request').hidden=false;recoveryVerified=false;
-    msg('Contraseña actualizada. Ya puedes iniciar sesión en Admin.');
-    $('changeBtn').disabled=false;
+    $('requestBtn').disabled = true;
+    const redirectTo = new URL('./recuperar-admin.html', location.href).href;
+    try {
+      const {error} = await auth.auth.resetPasswordForEmail(
+        $('email').value.trim(), {redirectTo}
+      );
+      if (error) throw error;
+      msg('Solicitud aceptada. Revisa tu correo (y Spam). Usa el enlace más reciente.');
+    } catch(error) {
+      msg(error?.status === 429
+        ? 'Límite de envío de correos alcanzado. No repitas la solicitud todavía.'
+        : 'Error solicitando recuperación: ' + (error?.message || 'desconocido'));
+    } finally {
+      $('requestBtn').disabled = false;
+    }
+  });
+  $('changeForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!recoveryVerified) return msg('Primero abre un enlace de recuperación válido.');
+    const password = $('pwd').value;
+    if (password.length < 12 || password !== $('again').value) {
+      return msg('Ambas contraseñas deben coincidir y tener al menos 12 caracteres.');
+    }
+    $('changeBtn').disabled = true;
+    try {
+      const {error} = await auth.auth.updateUser({password});
+      if (error) throw error;
+      $('pwd').value = '';
+      $('again').value = '';
+      await auth.auth.signOut();
+      history.replaceState(null, '', location.pathname);
+      recoveryVerified = false;
+      $('change').hidden = true;
+      $('request').hidden = false;
+      msg('Contraseña actualizada en Supabase. Ya puedes volver al panel Admin.');
+    } catch(error) {
+      msg('No se pudo actualizar la contraseña: ' + (error?.message || 'desconocido'));
+    } finally {
+      $('changeBtn').disabled = false;
+    }
   });
 }
 </script></body></html>
